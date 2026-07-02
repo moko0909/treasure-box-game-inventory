@@ -122,7 +122,7 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
       mapRef.current = new Map(containerRef.current, {
         center: SEOUL,
         zoom: 13,
-        mapId: 'TREASURE_BOX_DARK',
+        // mapId와 styles는 함께 사용할 수 없으므로 styles만 사용
         styles: DARK_STYLE,
         disableDefaultUI: true,
         gestureHandling: 'greedy',
@@ -191,7 +191,7 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
           zIndex: isSelected ? 100 : 10,
           title: store.name,
         })
-        marker.addListener('click', () => {
+        marker.addListener('gmp-click', () => {
           onSelectStore(store.id)
           infoRef.current?.setContent(infoContent(store))
           infoRef.current?.open({ map, anchor: marker })
