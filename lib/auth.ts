@@ -16,6 +16,9 @@ export const auth = betterAuth({
   },
   trustedOrigins: [
     'http://localhost:3000',
+    // v0 preview iframes are served from rotating *.vusercontent.net
+    // subdomains, so trust the whole family rather than one exact URL.
+    'https://*.vusercontent.net',
     ...(process.env.V0_RUNTIME_URL ? [process.env.V0_RUNTIME_URL] : []),
     ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
     ...(process.env.VERCEL_PROJECT_PRODUCTION_URL
