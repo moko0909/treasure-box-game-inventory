@@ -98,8 +98,8 @@ export function AppShell({
 
   return (
     <div className="flex items-start justify-center min-h-dvh bg-[#070D1A]">
-      <div className="phone-shell relative overflow-hidden" style={{ minHeight: '100dvh' }}>
-        <main className="h-dvh flex flex-col overflow-hidden">
+      <div className="phone-shell relative" style={{ minHeight: '100dvh', overflow: 'clip' }}>
+        <main className="relative h-dvh">
           {gameDetail && (
             <div className="absolute inset-0 z-40 bg-background overflow-hidden flex flex-col">
               <GameDetailView
@@ -112,10 +112,15 @@ export function AppShell({
             </div>
           )}
 
-          <div className="flex-1 overflow-hidden relative">
-            <div className={activeTab === 'stores' ? 'flex flex-col h-full' : 'hidden'}>
+          {/* 매장 탭: 전체 화면 — Leaflet canvas가 다른 탭을 가리지 않도록 비활성 시 완전히 unmount */}
+          {activeTab === 'stores' && (
+            <div className="absolute inset-0">
               <StoresView onViewGame={openGameDetail} />
             </div>
+          )}
+
+          {/* 나머지 탭: stores가 아닐 때만 렌더, 상단부터 네비바 위까지 */}
+          <div className={`absolute inset-0 bottom-16 flex flex-col overflow-hidden ${activeTab === 'stores' ? 'hidden' : ''}`}>
             <div className={activeTab === 'reservations' ? 'flex flex-col h-full' : 'hidden'}>
               <ReservationsView
                 reservations={reservations}
@@ -149,8 +154,11 @@ export function AppShell({
             )}
           </div>
 
+          {/* 네비바: 항상 하단에 고정 */}
           {!gameDetail && (
-            <BottomNav active={activeTab} onNavigate={handleNavigate} showAdmin={isOwner} />
+            <div className="absolute bottom-0 left-0 right-0 z-30">
+              <BottomNav active={activeTab} onNavigate={handleNavigate} showAdmin={isOwner} />
+            </div>
           )}
         </main>
       </div>

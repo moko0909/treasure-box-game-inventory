@@ -149,6 +149,7 @@
   scroll-behavior: smooth;
 }
 
+
 /* Hide scrollbar */
 .scrollbar-hide {
   -ms-overflow-style: none;

@@ -98,7 +98,7 @@ export function SettingsPanel({ role, onBack }: SettingsPanelProps) {
         <button
           type="button"
           onClick={onBack}
-          aria-label="Go back"
+          aria-label="뒤로가기"
           className="w-9 h-9 rounded-full bg-[#0F172A] border border-[#334155] flex items-center justify-center flex-shrink-0"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8FAFC" strokeWidth="2" aria-hidden="true">
