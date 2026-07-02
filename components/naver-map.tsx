@@ -39,8 +39,15 @@ let sdkLoaded = false
 let sdkLoading = false
 const sdkCallbacks: Array<() => void> = []
 
+function waitForTmapv2(onReady: () => void, retries = 30) {
+  // script.onload 직후엔 Tmapv2.LatLng 등이 아직 없을 수 있으므로 polling
+  if (window.Tmapv2?.LatLng) { onReady(); return }
+  if (retries <= 0) return
+  setTimeout(() => waitForTmapv2(onReady, retries - 1), 100)
+}
+
 function loadTmapSdk(onReady: () => void) {
-  if (sdkLoaded) { onReady(); return }
+  if (sdkLoaded) { waitForTmapv2(onReady); return }
   sdkCallbacks.push(onReady)
   if (sdkLoading) return
   sdkLoading = true
@@ -50,10 +57,12 @@ function loadTmapSdk(onReady: () => void) {
   script.onload = () => {
     sdkLoaded = true
     sdkLoading = false
-    sdkCallbacks.forEach((cb) => cb())
-    sdkCallbacks.length = 0
+    // LatLng 등 내부 API가 완전히 초기화될 때까지 대기 후 콜백 실행
+    const pending = sdkCallbacks.splice(0)
+    pending.forEach((cb) => waitForTmapv2(cb))
   }
   script.onerror = () => {
+    sdkLoaded = false
     sdkLoading = false
     sdkCallbacks.length = 0
   }
