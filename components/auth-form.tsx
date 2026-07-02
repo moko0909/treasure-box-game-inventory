@@ -43,15 +43,15 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
           businessNumber: isOwner ? businessNumber : undefined,
           storeLocation: isOwner ? storeLocation : undefined,
         })
-        if (error) throw new Error(error.message || 'Sign up failed')
+        if (error) throw new Error(error.message || '회원가입에 실패했습니다')
       } else {
         const { error } = await authClient.signIn.email({ email, password })
-        if (error) throw new Error(error.message || 'Sign in failed')
+        if (error) throw new Error(error.message || '로그인에 실패했습니다')
       }
       router.push('/')
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setError(err instanceof Error ? err.message : '문제가 발생했습니다')
       setLoading(false)
     }
   }
@@ -64,19 +64,19 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
             <Gamepad2 className="h-7 w-7 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white">
-            {isSignUp ? 'Create your account' : 'Welcome back'}
+            {isSignUp ? '계정 만들기' : '다시 오신 걸 환영해요'}
           </h1>
           <p className="mt-2 text-sm text-slate-400">
             {isSignUp
-              ? 'Join Treasure Box to reserve games near you'
-              : 'Sign in to manage your reservations'}
+              ? '보물상자에 가입하고 내 주변 게임을 예약하세요'
+              : '로그인하고 예약을 관리하세요'}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {isSignUp && (
             <div className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-slate-300">Account type</span>
+              <span className="text-sm font-medium text-slate-300">계정 유형</span>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -111,7 +111,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
           {isSignUp && (
             <div className="flex flex-col gap-1.5">
               <label htmlFor="name" className="text-sm font-medium text-slate-300">
-                {isOwner ? '점주 이름' : 'Name'}
+                {isOwner ? '점주 이름' : '이름'}
               </label>
               <input
                 id="name"
@@ -120,14 +120,14 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="rounded-xl border border-[#243049] bg-[#111A2E] px-4 py-3 text-white placeholder:text-slate-500 outline-none focus:border-[#4F46E5]"
-                placeholder={isOwner ? '홍길동' : 'Alex Player'}
+                placeholder="홍길동"
               />
             </div>
           )}
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="email" className="text-sm font-medium text-slate-300">
-              Email
+              이메일
             </label>
             <input
               id="email"
@@ -142,7 +142,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="password" className="text-sm font-medium text-slate-300">
-              Password
+              비밀번호
             </label>
             <input
               id="password"
@@ -152,7 +152,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="rounded-xl border border-[#243049] bg-[#111A2E] px-4 py-3 text-white placeholder:text-slate-500 outline-none focus:border-[#4F46E5]"
-              placeholder="At least 8 characters"
+              placeholder="8자 이상 입력"
             />
           </div>
 
@@ -206,17 +206,17 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
             }`}
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isSignUp ? (isOwner ? '점주 계정 만들기' : 'Create account') : 'Sign in'}
+            {isSignUp ? (isOwner ? '점주 계정 만들기' : '계정 만들기') : '로그인'}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-400">
-          {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+          {isSignUp ? '이미 계정이 있으신가요?' : '계정이 없으신가요?'}{' '}
           <Link
             href={isSignUp ? '/sign-in' : '/sign-up'}
             className="font-semibold text-[#818CF8] hover:underline"
           >
-            {isSignUp ? 'Sign in' : 'Sign up'}
+            {isSignUp ? '로그인' : '회원가입'}
           </Link>
         </p>
       </div>

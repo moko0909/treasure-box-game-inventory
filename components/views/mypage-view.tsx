@@ -59,8 +59,8 @@ const MENU_ITEMS = [
       </svg>
     ),
     id: 'stock-alerts',
-    label: 'Stock Alerts',
-    value: '5 active',
+    label: '재입고 알림',
+    value: '5개',
     badge: false,
   },
   {
@@ -72,7 +72,7 @@ const MENU_ITEMS = [
       </svg>
     ),
     id: 'help',
-    label: 'Help & Support',
+    label: '고객 지원',
     value: '',
     badge: false,
   },
@@ -84,7 +84,7 @@ const MENU_ITEMS = [
       </svg>
     ),
     id: 'settings',
-    label: 'Settings',
+    label: '설정',
     value: '',
     badge: false,
   },
@@ -140,12 +140,12 @@ export function MyPageView({
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" aria-hidden="true">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
-                <span className="text-xs text-[#CBD5E1] font-bold">Gold Member</span>
+                <span className="text-xs text-[#CBD5E1] font-bold">골드 멤버</span>
               </div>
             </div>
             <button
               type="button"
-              aria-label="Edit profile"
+              aria-label="프로필 편집"
               className="w-9 h-9 rounded-full bg-[#4F46E5]/20 border border-[#4F46E5]/30 flex items-center justify-center"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2" aria-hidden="true">
@@ -160,9 +160,9 @@ export function MyPageView({
         <div className="px-4 -mt-3">
           <div className="bg-[#1E293B] rounded-[18px] border border-[#334155] shadow-lg p-4">
             <div className="flex gap-2">
-              <StatCard label="Reservations" value={String(totalCount)} sub="Total" />
-              <StatCard label="Picked Up" value={String(pickedUpCount)} />
-              <StatCard label="Fav Stores" value={String(favoriteIds.size)} />
+              <StatCard label="전체 예약" value={String(totalCount)} sub="누적" />
+              <StatCard label="수령 완료" value={String(pickedUpCount)} />
+              <StatCard label="관심 매장" value={String(favoriteIds.size)} />
             </div>
           </div>
         </div>
@@ -170,12 +170,12 @@ export function MyPageView({
         {/* Favorite Stores */}
         <div className="px-4 mt-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-extrabold text-[#F8FAFC]">Favorite Stores</h2>
-            <button type="button" className="text-xs text-[#818CF8] font-bold">See all</button>
+            <h2 className="text-sm font-extrabold text-[#F8FAFC]">관심 매장</h2>
+            <button type="button" className="text-xs text-[#818CF8] font-bold">전체 보기</button>
           </div>
           {favoriteStores.length === 0 ? (
             <div className="bg-[#1E293B] rounded-[18px] border border-[#334155] p-6 text-center">
-              <p className="text-xs text-[#64748B]">No favorite stores yet. Tap the heart on a store to save it.</p>
+              <p className="text-xs text-[#64748B]">아직 관심 매장이 없어요. 매장의 하트를 눌러 저장하세요.</p>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
@@ -193,18 +193,18 @@ export function MyPageView({
                           'text-[11px] font-semibold',
                           store.isOpen ? 'text-green-400' : 'text-[#475569]'
                         )}>
-                          {store.isOpen ? 'Open' : 'Closed'}
+                          {store.isOpen ? '영업 중' : '영업 종료'}
                         </span>
                         <span className="text-[#334155] text-[11px]">·</span>
                         <span className="text-[11px] text-[#64748B]">{store.distance} km</span>
                         <span className="text-[#334155] text-[11px]">·</span>
-                        <span className="text-[11px] text-green-400 font-semibold">{inStockCount} in stock</span>
+                        <span className="text-[11px] text-green-400 font-semibold">재고 {inStockCount}종</span>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => onToggleFavorite(store.id)}
-                      aria-label={`Remove ${store.name} from favorites`}
+                      aria-label={`${store.name} 관심 매장에서 삭제`}
                       className="text-red-400 hover:text-red-300 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -220,7 +220,7 @@ export function MyPageView({
 
         {/* Recent Picks */}
         <div className="px-4 mt-5">
-          <h2 className="text-sm font-extrabold text-[#F8FAFC] mb-3">Recent Picks</h2>
+          <h2 className="text-sm font-extrabold text-[#F8FAFC] mb-3">최근 픽업</h2>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {pickedUpGames.slice(0, 4).map((r) => {
               const game = getGameById(r.gameId)
@@ -303,7 +303,7 @@ export function MyPageView({
             onClick={handleSignOut}
             className="w-full h-12 rounded-[14px] border border-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/10 transition-colors"
           >
-            Sign Out
+            로그아웃
           </button>
         </div>
       </div>
