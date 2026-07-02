@@ -149,22 +149,6 @@
   scroll-behavior: smooth;
 }
 
-/* Leaflet 다크 팝업 스타일 */
-.leaflet-dark-popup .leaflet-popup-content-wrapper {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-}
-.leaflet-dark-popup .leaflet-popup-content { margin: 0; }
-.leaflet-dark-popup .leaflet-popup-tip-container { display: none; }
-.leaflet-container { background: #0f172a; font-family: system-ui,-apple-system,sans-serif; }
-@keyframes leaflet-pulse-ring {
-  0%   { box-shadow: 0 0 0 0 rgba(245,158,11,0.6); }
-  70%  { box-shadow: 0 0 0 10px rgba(245,158,11,0); }
-  100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
-}
-.my-loc-pulse { animation: leaflet-pulse-ring 2s ease-out infinite; }
 
 /* Hide scrollbar */
 .scrollbar-hide {
