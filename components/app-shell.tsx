@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useCallback } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/components/bottom-nav'
 import { StoresView } from '@/components/views/stores-view'
@@ -46,57 +46,60 @@ export function AppShell({
 
   const isOwner = role === 'owner'
 
-  const openGameDetail = useCallback((gameId: string, storeId: string) => {
+  const openGameDetail = (gameId: string, storeId: string) => {
     setGameDetail({ gameId, storeId })
-  }, [])
+  }
 
-  const closeGameDetail = useCallback(() => {
+  const closeGameDetail = () => {
     setGameDetail(null)
-  }, [])
+  }
 
-  const handleReserve = useCallback(async (input: CreateReservationInput) => {
+  // 예약 확정 — 수량/픽업일시/요청사항을 함께 저장. 완료까지 await 하여
+  // GameDetailView가 완료 화면(바코드)을 보여줄 수 있도록 결과를 반환.
+  const handleReserve = async (input: CreateReservationInput) => {
     const result = await createReservation(input)
     startTransition(() => router.refresh())
     return result
-  }, [router, startTransition])
+  }
 
-  const handleCancelReservation = useCallback((id: string) => {
+  const handleCancelReservation = (id: string) => {
     startTransition(async () => {
       await cancelReservation(id)
       router.refresh()
     })
-  }, [router, startTransition])
+  }
 
-  const handleToggleFavorite = useCallback((storeId: string) => {
+  const handleToggleFavorite = (storeId: string) => {
     startTransition(async () => {
       await toggleFavoriteAction(storeId)
       router.refresh()
     })
-  }, [router, startTransition])
+  }
 
-  const handleRequestRestock = useCallback(async (gameId: string, storeId: string) => {
+  const handleRequestRestock = async (gameId: string, storeId: string) => {
     const result = await requestRestockAlert(gameId, storeId)
     startTransition(() => router.refresh())
     return result
-  }, [router, startTransition])
+  }
 
-  const handleCancelRestock = useCallback((id: string) => {
+  const handleCancelRestock = (id: string) => {
     startTransition(async () => {
       await cancelRestockAlert(id)
       router.refresh()
     })
-  }, [router, startTransition])
+  }
 
-  const handleNavigate = useCallback((tab: Tab) => {
+  const handleNavigate = (tab: Tab) => {
+    // 점주만 Admin 탭 접근 가능
     if (tab === 'admin' && !isOwner) return
     setGameDetail(null)
     setActiveTab(tab)
-  }, [isOwner])
+  }
 
   return (
     <div className="flex items-start justify-center min-h-dvh bg-[#070D1A]">
-      <div className="phone-shell relative" style={{ minHeight: '100dvh', overflow: 'clip' }}>
-        <main className="relative h-dvh">
+      <div className="phone-shell relative overflow-hidden" style={{ minHeight: '100dvh' }}>
+        <main className="h-dvh flex flex-col overflow-hidden">
           {gameDetail && (
             <div className="absolute inset-0 z-40 bg-background overflow-hidden flex flex-col">
               <GameDetailView
@@ -109,15 +112,10 @@ export function AppShell({
             </div>
           )}
 
-          {/* 매장 탭: 전체 화면 — Leaflet canvas가 다른 탭을 가리지 않도록 비활성 시 완전히 unmount */}
-          {activeTab === 'stores' && (
-            <div className="absolute inset-0">
+          <div className="flex-1 overflow-hidden relative">
+            <div className={activeTab === 'stores' ? 'flex flex-col h-full' : 'hidden'}>
               <StoresView onViewGame={openGameDetail} />
             </div>
-          )}
-
-          {/* 나머지 탭: stores가 아닐 때만 렌더, 상단부터 네비바 위까지 */}
-          <div className={`absolute inset-0 bottom-16 flex flex-col overflow-hidden ${activeTab === 'stores' ? 'hidden' : ''}`}>
             <div className={activeTab === 'reservations' ? 'flex flex-col h-full' : 'hidden'}>
               <ReservationsView
                 reservations={reservations}
@@ -151,11 +149,8 @@ export function AppShell({
             )}
           </div>
 
-          {/* 네비바: 항상 하단에 고정 */}
           {!gameDetail && (
-            <div className="absolute bottom-0 left-0 right-0 z-30">
-              <BottomNav active={activeTab} onNavigate={handleNavigate} showAdmin={isOwner} />
-            </div>
+            <BottomNav active={activeTab} onNavigate={handleNavigate} showAdmin={isOwner} />
           )}
         </main>
       </div>

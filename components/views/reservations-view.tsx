@@ -326,10 +326,9 @@ export function ReservationsView({
           ))}
         </div>
 
-        {/* 상태 필터 (예약 내역) / 안내 (재입고 알림) — 두 섹션의 헤더 높이를
-            동일하게 맞춰 화면비가 바뀌지 않도록 항상 h-8 높이의 행을 렌더링 */}
-        {section === 'reservations' ? (
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide h-8">
+        {/* 상태 필터 (예약 내역에서만) */}
+        {section === 'reservations' && (
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
             {FILTERS.map((f) => {
               const count = f.id === 'all' ? reservations.length : reservations.filter((r) => r.status === f.id).length
               return (
@@ -348,14 +347,6 @@ export function ReservationsView({
                 </button>
               )
             })}
-          </div>
-        ) : (
-          <div className="flex items-center gap-1.5 h-8 text-[11px] text-[#64748B]">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2.5" aria-hidden="true">
-              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 01-3.46 0" />
-            </svg>
-            <span>재고가 입고되면 푸시 알림으로 알려드려요</span>
           </div>
         )}
       </header>

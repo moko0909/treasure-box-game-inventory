@@ -2,11 +2,11 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: '보물상자 — 내 주변 게임 재고',
+  title: 'Treasure Box — Game Inventory Near You',
   description:
-    '내 주변 게임 매장을 찾고, 실시간 재고를 확인하고, 방문 전에 게임을 예약하세요.',
+    'Discover nearby game stores, check real-time inventory, and reserve games before you visit.',
   generator: 'v0.app',
-  keywords: ['게임 매장', '게임 재고', '게임 예약', '주변 매장', 'PS5', '닌텐도 스위치', 'Xbox'],
+  keywords: ['game store', 'game inventory', 'reserve games', 'nearby stores', 'PS5', 'Nintendo Switch', 'Xbox'],
 }
 
 export const viewport: Viewport = {
@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko" className="bg-background" data-scroll-behavior="smooth">
+    <html lang="en" className="bg-background">
       <body className="font-sans antialiased bg-background">
         {children}
       </body>
