@@ -32,6 +32,9 @@ export function StoresView({ onViewGame }: StoresViewProps) {
   // 드래그 추적
   const containerRef = useRef<HTMLDivElement>(null)
   const [liveTop, setLiveTop] = useState<number | null>(null) // null = CSS snap 사용
+  // SSR/hydration mismatch 방지: 마운트 전에는 렌더 억제
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
   const drag = useRef<{ startY: number; startTop: number; live: boolean } | null>(null)
 
   // 컨테이너 가용 높이 (네비바 제외) — SSR-safe
@@ -121,8 +124,9 @@ export function StoresView({ onViewGame }: StoresViewProps) {
     return matchSearch && matchPlatform
   }), [search, selectedPlatforms])
 
-  // 시트의 top 값 (px)
-  const sheetTopPx = liveTop !== null ? liveTop : snapToPx(snap)
+  // 시트의 top 값 — 마운트 전에는 CSS 백분율로 SSR/CSR 일치시켜 hydration mismatch 방지
+  const sheetTopPx = mounted ? (liveTop !== null ? liveTop : snapToPx(snap)) : null
+  const sheetTopStyle = sheetTopPx !== null ? `${sheetTopPx}px` : `${SNAP_RATIOS[snap] * 100}%`
   // CSS transition — 드래그 중엔 off, snap 이동 시엔 on
   const transition = liveTop !== null ? 'none' : 'top 0.3s cubic-bezier(0.32,0.72,0,1)'
 
@@ -153,7 +157,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
         onTouchEnd={onTouchEnd}
         className="absolute left-0 right-0 flex flex-col bg-[#0F172A] rounded-t-[22px] shadow-[0_-8px_40px_rgba(0,0,0,0.7)]"
         style={{
-          top: `${sheetTopPx}px`,
+          top: sheetTopStyle,
           bottom: `${NAV_H}px`,
           transition,
           touchAction: 'none',
@@ -313,7 +317,11 @@ export function StoresView({ onViewGame }: StoresViewProps) {
           type="button"
           onClick={() => { setSnap('peek'); setLiveTop(null) }}
           className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-[#0F172A]/90 backdrop-blur-sm border border-[#334155] rounded-full px-4 py-2 shadow-lg text-xs font-bold text-[#CBD5E1] active:scale-95 transition-transform"
-          style={{ top: `${sheetTopPx - 44}px`, zIndex: 1200, transition }}
+          style={{
+            top: sheetTopPx !== null ? `${sheetTopPx - 44}px` : `calc(${SNAP_RATIOS[snap] * 100}% - 44px)`,
+            zIndex: 1200,
+            transition,
+          }}
           aria-label="지도 넓게 보기"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2.5" aria-hidden="true">

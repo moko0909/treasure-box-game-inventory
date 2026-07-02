@@ -112,13 +112,15 @@ export function AppShell({
             </div>
           )}
 
-          {/* 매장 탭: 전체 화면을 차지하며 내부에서 네비바 높이(64px)를 직접 처리 */}
-          <div className={activeTab === 'stores' ? 'absolute inset-0' : 'hidden'}>
-            <StoresView onViewGame={openGameDetail} />
-          </div>
+          {/* 매장 탭: 전체 화면 — Leaflet canvas가 다른 탭을 가리지 않도록 비활성 시 완전히 unmount */}
+          {activeTab === 'stores' && (
+            <div className="absolute inset-0">
+              <StoresView onViewGame={openGameDetail} />
+            </div>
+          )}
 
-          {/* 나머지 탭: 상단부터 네비바 위까지 */}
-          <div className="absolute inset-0 bottom-16 flex flex-col overflow-hidden">
+          {/* 나머지 탭: stores가 아닐 때만 렌더, 상단부터 네비바 위까지 */}
+          <div className={`absolute inset-0 bottom-16 flex flex-col overflow-hidden ${activeTab === 'stores' ? 'hidden' : ''}`}>
             <div className={activeTab === 'reservations' ? 'flex flex-col h-full' : 'hidden'}>
               <ReservationsView
                 reservations={reservations}

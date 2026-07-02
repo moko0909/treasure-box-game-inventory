@@ -1,6 +1,7 @@
 'use client'
 
 // Leaflet + CartoDB Dark Matter (API 키 불필요)
+import 'leaflet/dist/leaflet.css'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import type { Store } from '@/lib/data'
 
@@ -192,7 +193,7 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
 
   return (
     <div className={`relative overflow-hidden ${className ?? ''}`}>
-      {/* 지도 컨테이너 */}
+      {/* 지도 컨테이��� */}
       <div ref={containerRef} className="w-full h-full" />
 
       {/* 로딩 */}
