@@ -98,7 +98,7 @@ export function AppShell({
 
   return (
     <div className="flex items-start justify-center min-h-dvh bg-[#070D1A]">
-      <div className="phone-shell relative overflow-hidden" style={{ minHeight: '100dvh' }}>
+      <div className="phone-shell relative" style={{ minHeight: '100dvh', overflow: 'clip' }}>
         <main className="h-dvh flex flex-col overflow-hidden">
           {gameDetail && (
             <div className="absolute inset-0 z-40 bg-background overflow-hidden flex flex-col">
@@ -113,7 +113,7 @@ export function AppShell({
           )}
 
           <div className="flex-1 overflow-hidden relative">
-            <div className={activeTab === 'stores' ? 'flex flex-col h-full' : 'hidden'}>
+            <div className={activeTab === 'stores' ? 'relative h-full' : 'hidden'}>
               <StoresView onViewGame={openGameDetail} />
             </div>
             <div className={activeTab === 'reservations' ? 'flex flex-col h-full' : 'hidden'}>

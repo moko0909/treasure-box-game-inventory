@@ -235,9 +235,9 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
   }
 
   return (
-    <div className={`relative rounded-2xl overflow-hidden ${className ?? ''}`}>
+    <div className={`relative overflow-hidden ${className ?? ''}`} style={{ isolation: 'isolate' }}>
       {/* 실제 지도 */}
-      <div ref={containerRef} className="w-full h-full" />
+      <div ref={containerRef} className="w-full h-full" style={{ zIndex: 0 }} />
 
       {/* 로딩 오버레이 */}
       {!mapReady && (
