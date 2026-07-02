@@ -13,7 +13,7 @@ const PLATFORMS: Platform[] = ['PS5', 'Nintendo Switch', 'Xbox']
 const SNAPS = {
   peek: 0.80,   // 지도 80% → 시트 20% (지도 넓게)
   half: 0.45,   // 지도 45% → 시트 55% (기본)
-  full: 0.08,   // 지도 8%  → 시트 92% (리스트 집중)
+  full: 0.0,    // 지도 0%  → 시트 100% (끝까지 올리면 매장 목록만)
 } as const
 
 type SnapKey = keyof typeof SNAPS
