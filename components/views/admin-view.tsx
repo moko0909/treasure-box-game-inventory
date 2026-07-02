@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { STORES, GAMES, getGameById, type StockStatus, getStockLabel } from '@/lib/data'
+import { STORES, getGameById, type StockStatus, getStockLabel } from '@/lib/data'
 import { StockBadge } from '@/components/stock-badge'
 
 type AdminTab = 'inventory' | 'reservations'
@@ -28,29 +28,28 @@ function InventoryRow({
   if (!game) return null
 
   return (
-    <div className="bg-card rounded-[14px] border border-border p-3">
+    <div className="bg-[#1E293B] rounded-[14px] border border-[#334155] p-3">
       <div className="flex items-center gap-3 mb-2">
         <div
-          className="w-10 h-14 rounded-lg overflow-hidden flex-shrink-0 shadow-sm"
+          className="w-10 h-14 rounded-lg overflow-hidden flex-shrink-0"
           style={{ background: game.coverColor }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={game.imagePath} alt={game.title} className="w-full h-full object-cover" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground leading-tight line-clamp-1">{game.title}</p>
-          <p className="text-xs text-muted-foreground">{game.platform} · ${item.price.toFixed(2)}</p>
+          <p className="text-sm font-bold text-[#F8FAFC] leading-tight line-clamp-1">{game.title}</p>
+          <p className="text-xs text-[#64748B]">{game.platform} · ${item.price.toFixed(2)}</p>
         </div>
         <StockBadge status={item.stockStatus} size="sm" />
       </div>
 
       {/* Controls */}
       <div className="flex items-center gap-2">
-        {/* Status selector */}
         <select
           value={item.stockStatus}
           onChange={(e) => onUpdate(item.gameId, item.storeId, e.target.value as StockStatus, item.stockCount)}
-          className="flex-1 h-9 rounded-xl border border-border bg-muted text-xs font-medium text-foreground px-2 outline-none focus:border-primary appearance-none"
+          className="flex-1 h-9 rounded-xl border border-[#334155] bg-[#0F172A] text-xs font-semibold text-[#CBD5E1] px-2 outline-none focus:border-[#4F46E5] appearance-none"
           aria-label={`Stock status for ${game.title}`}
         >
           {STATUS_OPTIONS.map((s) => (
@@ -58,21 +57,20 @@ function InventoryRow({
           ))}
         </select>
 
-        {/* Count input */}
-        <div className="flex items-center gap-1 bg-muted rounded-xl border border-border overflow-hidden h-9">
+        <div className="flex items-center gap-0 bg-[#0F172A] rounded-xl border border-[#334155] overflow-hidden h-9">
           <button
             type="button"
             onClick={() => onUpdate(item.gameId, item.storeId, item.stockStatus, Math.max(0, item.stockCount - 1))}
-            className="w-8 h-full flex items-center justify-center text-foreground hover:bg-border transition-colors text-lg font-medium"
+            className="w-9 h-full flex items-center justify-center text-[#CBD5E1] hover:bg-[#1E293B] transition-colors text-lg font-medium"
             aria-label="Decrease count"
           >
             −
           </button>
-          <span className="w-8 text-center text-sm font-bold text-foreground">{item.stockCount}</span>
+          <span className="w-8 text-center text-sm font-extrabold text-[#F8FAFC]">{item.stockCount}</span>
           <button
             type="button"
             onClick={() => onUpdate(item.gameId, item.storeId, item.stockStatus, item.stockCount + 1)}
-            className="w-8 h-full flex items-center justify-center text-foreground hover:bg-border transition-colors text-lg font-medium"
+            className="w-9 h-full flex items-center justify-center text-[#CBD5E1] hover:bg-[#1E293B] transition-colors text-lg font-medium"
             aria-label="Increase count"
           >
             +
@@ -84,10 +82,10 @@ function InventoryRow({
 }
 
 const MOCK_ADMIN_RESERVATIONS = [
-  { id: 'ra1', code: 'TB-4821', game: 'Spider-Man 2', customer: 'Alex K.', expires: 'Today 6PM', status: 'pending' as const },
-  { id: 'ra2', code: 'TB-9034', game: 'Zelda: TotK', customer: 'Maria S.', expires: 'Tomorrow 10AM', status: 'pending' as const },
-  { id: 'ra3', code: 'TB-2217', game: 'Mario Kart 8', customer: 'Kenji T.', expires: 'Today 8PM', status: 'ready' as const },
-  { id: 'ra4', code: 'TB-5509', game: 'FF XVI', customer: 'Sarah L.', expires: 'Jan 14', status: 'picked-up' as const },
+  { id: 'ra1', code: 'TB-4821', game: 'Spider-Man 2',   customer: 'Alex K.',   expires: 'Today 6PM',    status: 'pending'   as const },
+  { id: 'ra2', code: 'TB-9034', game: 'Zelda: TotK',   customer: 'Maria S.',  expires: 'Tomorrow 10AM', status: 'pending'   as const },
+  { id: 'ra3', code: 'TB-2217', game: 'Mario Kart 8',  customer: 'Kenji T.',  expires: 'Today 8PM',    status: 'ready'     as const },
+  { id: 'ra4', code: 'TB-5509', game: 'FF XVI',         customer: 'Sarah L.',  expires: 'Jan 14',       status: 'picked-up' as const },
 ]
 
 export function AdminView() {
@@ -105,12 +103,10 @@ export function AdminView() {
     )
   )
 
-  const selectedStore = STORES.find((s) => s.id === selectedStoreId)!
   const storeInventory = inventory.filter((i) => i.storeId === selectedStoreId)
-
   const totalInStock = storeInventory.filter((i) => i.stockStatus === 'in-stock').reduce((a, b) => a + b.stockCount, 0)
   const lowStockCount = storeInventory.filter((i) => i.stockStatus === 'low-stock').length
-  const soldOutCount = storeInventory.filter((i) => i.stockStatus === 'sold-out').length
+  const soldOutCount  = storeInventory.filter((i) => i.stockStatus === 'sold-out').length
 
   const updateItem = (gameId: string, storeId: string, status: StockStatus, count: number) => {
     setInventory((prev) =>
@@ -125,13 +121,13 @@ export function AdminView() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="bg-white px-4 pt-12 pb-4 border-b border-border">
+      <header className="bg-[#0F172A] px-4 pt-12 pb-4 border-b border-[#334155]">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Admin</p>
-            <h1 className="text-xl font-bold text-foreground">Dashboard</h1>
+            <p className="text-[11px] text-[#64748B] font-semibold uppercase tracking-widest">Admin</p>
+            <h1 className="text-2xl font-extrabold text-[#F8FAFC] tracking-tight">Dashboard</h1>
           </div>
-          <div className="flex items-center gap-1.5 bg-amber-50 text-amber-700 rounded-full px-3 py-1.5">
+          <div className="flex items-center gap-1.5 bg-[#F59E0B]/15 text-[#F59E0B] rounded-full px-3 py-1.5 border border-[#F59E0B]/20">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
             </svg>
@@ -144,7 +140,7 @@ export function AdminView() {
           <select
             value={selectedStoreId}
             onChange={(e) => setSelectedStoreId(e.target.value)}
-            className="w-full h-11 pl-4 pr-8 bg-muted rounded-xl border border-border text-sm font-medium text-foreground outline-none focus:border-primary appearance-none"
+            className="w-full h-11 pl-4 pr-8 bg-[#1E293B] rounded-xl border border-[#334155] text-sm font-semibold text-[#F8FAFC] outline-none focus:border-[#4F46E5] appearance-none"
             aria-label="Select store"
           >
             {STORES.map((store) => (
@@ -152,13 +148,8 @@ export function AdminView() {
             ))}
           </select>
           <svg
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none"
+            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
             aria-hidden="true"
           >
             <polyline points="6 9 12 15 18 9" />
@@ -167,32 +158,32 @@ export function AdminView() {
 
         {/* Quick stats */}
         <div className="grid grid-cols-3 gap-2">
-          <div className="bg-green-50 rounded-xl p-2.5 text-center">
-            <p className="text-lg font-bold text-green-700">{totalInStock}</p>
-            <p className="text-[10px] text-green-600 font-medium">In Stock</p>
+          <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-2.5 text-center">
+            <p className="text-lg font-extrabold text-green-400">{totalInStock}</p>
+            <p className="text-[10px] text-green-500 font-bold">In Stock</p>
           </div>
-          <div className="bg-yellow-50 rounded-xl p-2.5 text-center">
-            <p className="text-lg font-bold text-yellow-700">{lowStockCount}</p>
-            <p className="text-[10px] text-yellow-600 font-medium">Low Stock</p>
+          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-2.5 text-center">
+            <p className="text-lg font-extrabold text-yellow-400">{lowStockCount}</p>
+            <p className="text-[10px] text-yellow-500 font-bold">Low Stock</p>
           </div>
-          <div className="bg-red-50 rounded-xl p-2.5 text-center">
-            <p className="text-lg font-bold text-red-600">{soldOutCount}</p>
-            <p className="text-[10px] text-red-500 font-medium">Sold Out</p>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-2.5 text-center">
+            <p className="text-lg font-extrabold text-red-400">{soldOutCount}</p>
+            <p className="text-[10px] text-red-500 font-bold">Sold Out</p>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex mt-4 bg-muted rounded-xl p-1 gap-1">
+        {/* Tab switcher */}
+        <div className="flex mt-4 bg-[#1E293B] rounded-xl border border-[#334155] p-1 gap-1">
           {(['inventory', 'reservations'] as AdminTab[]).map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
               className={cn(
-                'flex-1 py-2 rounded-lg text-xs font-semibold capitalize transition-all',
+                'flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all',
                 activeTab === tab
-                  ? 'bg-white text-foreground shadow-sm'
-                  : 'text-muted-foreground'
+                  ? 'bg-[#4F46E5] text-white shadow-sm'
+                  : 'text-[#64748B] hover:text-[#CBD5E1]'
               )}
             >
               {tab}
@@ -202,12 +193,12 @@ export function AdminView() {
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">
+      <div className="flex-1 overflow-y-auto px-4 py-4 pb-24 bg-[#0F172A]">
         {activeTab === 'inventory' ? (
           <>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-muted-foreground">{storeInventory.length} titles tracked</p>
-              <button type="button" className="text-xs text-primary font-semibold">+ Add Title</button>
+              <p className="text-xs text-[#64748B]">{storeInventory.length} titles tracked</p>
+              <button type="button" className="text-xs text-[#818CF8] font-bold">+ Add Title</button>
             </div>
             <div className="flex flex-col gap-2">
               {storeInventory.map((item) => (
@@ -222,8 +213,8 @@ export function AdminView() {
         ) : (
           <>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-muted-foreground">{MOCK_ADMIN_RESERVATIONS.length} reservations</p>
-              <div className="flex items-center gap-1.5 text-xs text-amber-600 font-semibold">
+              <p className="text-xs text-[#64748B]">{MOCK_ADMIN_RESERVATIONS.length} reservations</p>
+              <div className="flex items-center gap-1.5 text-xs text-[#F59E0B] font-bold">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                   <circle cx="12" cy="12" r="10" />
                   <line x1="12" y1="8" x2="12" y2="12" />
@@ -234,26 +225,23 @@ export function AdminView() {
             </div>
             <div className="flex flex-col gap-2">
               {MOCK_ADMIN_RESERVATIONS.map((r) => (
-                <div
-                  key={r.id}
-                  className="bg-card rounded-[14px] border border-border p-3"
-                >
+                <div key={r.id} className="bg-[#1E293B] rounded-[14px] border border-[#334155] p-3">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div>
-                      <p className="text-sm font-semibold text-foreground">{r.game}</p>
-                      <p className="text-xs text-muted-foreground">Customer: {r.customer}</p>
+                      <p className="text-sm font-bold text-[#F8FAFC]">{r.game}</p>
+                      <p className="text-xs text-[#64748B]">Customer: {r.customer}</p>
                     </div>
                     <span className={cn(
-                      'text-[11px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0',
-                      r.status === 'pending' && 'bg-blue-50 text-blue-700',
-                      r.status === 'ready' && 'bg-green-50 text-green-700',
-                      r.status === 'picked-up' && 'bg-slate-100 text-slate-500',
+                      'text-[11px] font-bold px-2 py-0.5 rounded-full flex-shrink-0',
+                      r.status === 'pending'   && 'bg-[#4F46E5]/15 text-[#818CF8]',
+                      r.status === 'ready'     && 'bg-green-500/15 text-green-400',
+                      r.status === 'picked-up' && 'bg-[#1E293B] text-[#475569] border border-[#334155]',
                     )}>
                       {r.status === 'pending' ? 'Pending' : r.status === 'ready' ? 'Ready' : 'Picked Up'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1 text-xs text-[#64748B]">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                         <circle cx="12" cy="12" r="10" />
                         <polyline points="12 6 12 12 16 14" />
@@ -261,11 +249,11 @@ export function AdminView() {
                       Expires: {r.expires}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-mono text-muted-foreground">{r.code}</span>
+                      <span className="text-xs font-mono text-[#475569]">{r.code}</span>
                       {r.status !== 'picked-up' && (
                         <button
                           type="button"
-                          className="h-7 px-3 rounded-full bg-primary text-white text-[11px] font-semibold"
+                          className="h-7 px-3 rounded-full bg-[#4F46E5] text-white text-[11px] font-bold hover:bg-[#4338CA] transition-colors"
                         >
                           {r.status === 'pending' ? 'Mark Ready' : 'Mark Picked Up'}
                         </button>

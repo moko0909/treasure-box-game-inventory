@@ -48,7 +48,7 @@ export default function TreasureBoxApp() {
   }
 
   return (
-    <div className="flex items-start justify-center min-h-dvh bg-slate-300">
+    <div className="flex items-start justify-center min-h-dvh bg-[#070D1A]">
       {/* Phone shell wrapper */}
       <div
         className="phone-shell relative overflow-hidden"

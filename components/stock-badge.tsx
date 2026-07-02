@@ -12,20 +12,20 @@ interface StockBadgeProps {
 }
 
 export function StockBadge({ status, count, size = 'md', className }: StockBadgeProps) {
-  const base = 'inline-flex items-center gap-1 font-semibold rounded-full'
+  const base = 'inline-flex items-center gap-1 font-bold rounded-full tracking-wide'
   const sizes = {
     sm: 'text-[10px] px-2 py-0.5',
     md: 'text-xs px-2.5 py-1',
   }
   const colors = {
-    'in-stock': 'bg-green-50 text-green-700',
-    'low-stock': 'bg-yellow-50 text-yellow-700',
-    'sold-out': 'bg-red-50 text-red-600',
+    'in-stock': 'bg-green-500/15 text-green-400 border border-green-500/25',
+    'low-stock': 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/25',
+    'sold-out': 'bg-red-500/15 text-red-400 border border-red-500/25',
   }
   const dots = {
-    'in-stock': 'bg-green-500',
-    'low-stock': 'bg-yellow-500',
-    'sold-out': 'bg-red-500',
+    'in-stock': 'bg-green-400',
+    'low-stock': 'bg-yellow-400',
+    'sold-out': 'bg-red-400',
   }
 
   return (

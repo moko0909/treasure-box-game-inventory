@@ -11,9 +11,9 @@ interface PlatformChipProps {
 }
 
 const platformConfig: Record<Platform, { label: string; activeColor: string }> = {
-  PS5: { label: 'PS5', activeColor: 'bg-blue-600 text-white border-blue-600' },
-  'Nintendo Switch': { label: 'Switch', activeColor: 'bg-red-500 text-white border-red-500' },
-  Xbox: { label: 'Xbox', activeColor: 'bg-green-600 text-white border-green-600' },
+  PS5:              { label: 'PS5',    activeColor: 'bg-blue-600 text-white border-blue-600' },
+  'Nintendo Switch':{ label: 'Switch', activeColor: 'bg-red-500 text-white border-red-500' },
+  Xbox:             { label: 'Xbox',   activeColor: 'bg-green-600 text-white border-green-600' },
 }
 
 export function PlatformChip({ platform, selected, onClick, className }: PlatformChipProps) {
@@ -27,7 +27,7 @@ export function PlatformChip({ platform, selected, onClick, className }: Platfor
         'h-9 px-4 rounded-full text-sm font-semibold border transition-all duration-150 flex-shrink-0',
         selected
           ? config.activeColor
-          : 'bg-white text-foreground border-border hover:border-primary',
+          : 'bg-[#263347] text-[#CBD5E1] border-[#334155] hover:border-[#4F46E5]',
         className
       )}
     >

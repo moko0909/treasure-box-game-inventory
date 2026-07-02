@@ -3,12 +3,10 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { STORES, GAMES, RESERVATIONS, FAVORITE_STORE_IDS, getGameById } from '@/lib/data'
-import { StockBadge } from '@/components/stock-badge'
 
 const PROFILE = {
   name: 'Alex Kim',
   username: '@alexkim_games',
-  avatar: null,
   memberSince: 'Jan 2024',
   level: 'Gold Member',
 }
@@ -19,10 +17,10 @@ interface MyPageViewProps {
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="flex-1 bg-card rounded-[14px] border border-border p-3 text-center">
-      <p className="text-xl font-bold text-foreground">{value}</p>
-      <p className="text-[11px] text-muted-foreground leading-tight">{label}</p>
-      {sub && <p className="text-[10px] text-primary font-medium mt-0.5">{sub}</p>}
+    <div className="flex-1 bg-[#0F172A] rounded-[14px] border border-[#334155] p-3 text-center">
+      <p className="text-xl font-extrabold text-[#F8FAFC]">{value}</p>
+      <p className="text-[11px] text-[#64748B] leading-tight">{label}</p>
+      {sub && <p className="text-[10px] text-[#818CF8] font-bold mt-0.5">{sub}</p>}
     </div>
   )
 }
@@ -37,6 +35,7 @@ const MENU_ITEMS = [
     ),
     label: 'Wishlist',
     value: '12 games',
+    badge: false,
   },
   {
     icon: (
@@ -57,6 +56,7 @@ const MENU_ITEMS = [
     ),
     label: 'Stock Alerts',
     value: '5 active',
+    badge: false,
   },
   {
     icon: (
@@ -68,6 +68,7 @@ const MENU_ITEMS = [
     ),
     label: 'Help & Support',
     value: '',
+    badge: false,
   },
   {
     icon: (
@@ -78,6 +79,7 @@ const MENU_ITEMS = [
     ),
     label: 'Settings',
     value: '',
+    badge: false,
   },
 ]
 
@@ -86,7 +88,6 @@ export function MyPageView({ onViewGame }: MyPageViewProps) {
 
   const favoriteStores = STORES.filter((s) => favoriteIds.has(s.id))
   const pickedUpGames = RESERVATIONS.filter((r) => r.status === 'picked-up')
-  const activeReservations = RESERVATIONS.filter((r) => r.status === 'active')
 
   const toggleFavorite = (id: string) => {
     setFavoriteIds((prev) => {
@@ -99,34 +100,37 @@ export function MyPageView({ onViewGame }: MyPageViewProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto pb-24">
-        {/* Profile hero */}
-        <div className="bg-primary px-4 pt-14 pb-6">
+      <div className="flex-1 overflow-y-auto pb-24 bg-[#0F172A]">
+        {/* Profile hero — dark indigo banner */}
+        <div
+          className="px-4 pt-14 pb-6"
+          style={{ background: 'linear-gradient(135deg, #312E81 0%, #1E1B4B 60%, #0F172A 100%)' }}
+        >
           <div className="flex items-center gap-4">
             {/* Avatar */}
-            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 border-2 border-white/40">
-              <span className="text-white text-2xl font-bold" aria-hidden="true">
+            <div className="w-16 h-16 rounded-full bg-[#4F46E5]/30 flex items-center justify-center flex-shrink-0 border-2 border-[#818CF8]/40">
+              <span className="text-[#F8FAFC] text-2xl font-extrabold" aria-hidden="true">
                 {PROFILE.name.charAt(0)}
               </span>
             </div>
             <div className="flex-1">
-              <h1 className="text-lg font-bold text-white">{PROFILE.name}</h1>
-              <p className="text-white/70 text-sm">{PROFILE.username}</p>
+              <h1 className="text-lg font-extrabold text-[#F8FAFC] tracking-tight">{PROFILE.name}</h1>
+              <p className="text-[#94A3B8] text-sm">{PROFILE.username}</p>
               <div className="flex items-center gap-1.5 mt-1">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="#FACC15" aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" aria-hidden="true">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
-                <span className="text-xs text-white/80 font-medium">{PROFILE.level}</span>
-                <span className="text-white/40 text-xs">·</span>
-                <span className="text-xs text-white/60">Since {PROFILE.memberSince}</span>
+                <span className="text-xs text-[#CBD5E1] font-bold">{PROFILE.level}</span>
+                <span className="text-[#334155] text-xs">·</span>
+                <span className="text-xs text-[#64748B]">Since {PROFILE.memberSince}</span>
               </div>
             </div>
             <button
               type="button"
               aria-label="Edit profile"
-              className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center"
+              className="w-9 h-9 rounded-full bg-[#4F46E5]/20 border border-[#4F46E5]/30 flex items-center justify-center"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2" aria-hidden="true">
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                 <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
@@ -136,7 +140,7 @@ export function MyPageView({ onViewGame }: MyPageViewProps) {
 
         {/* Stats */}
         <div className="px-4 -mt-3">
-          <div className="bg-card rounded-[18px] border border-border shadow-sm p-4">
+          <div className="bg-[#1E293B] rounded-[18px] border border-[#334155] shadow-lg p-4">
             <div className="flex gap-2">
               <StatCard label="Reservations" value="8" sub="Total" />
               <StatCard label="Picked Up" value="5" />
@@ -148,12 +152,12 @@ export function MyPageView({ onViewGame }: MyPageViewProps) {
         {/* Favorite Stores */}
         <div className="px-4 mt-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-foreground">Favorite Stores</h2>
-            <button type="button" className="text-xs text-primary font-medium">See all</button>
+            <h2 className="text-sm font-extrabold text-[#F8FAFC]">Favorite Stores</h2>
+            <button type="button" className="text-xs text-[#818CF8] font-bold">See all</button>
           </div>
           {favoriteStores.length === 0 ? (
-            <div className="bg-muted rounded-[18px] p-6 text-center">
-              <p className="text-xs text-muted-foreground">No favorite stores yet. Tap the heart on a store to save it.</p>
+            <div className="bg-[#1E293B] rounded-[18px] border border-[#334155] p-6 text-center">
+              <p className="text-xs text-[#64748B]">No favorite stores yet. Tap the heart on a store to save it.</p>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
@@ -162,30 +166,28 @@ export function MyPageView({ onViewGame }: MyPageViewProps) {
                 return (
                   <div
                     key={store.id}
-                    className="bg-card rounded-[14px] border border-border p-3 flex items-center justify-between gap-3"
+                    className="bg-[#1E293B] rounded-[14px] border border-[#334155] p-3 flex items-center justify-between gap-3"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground truncate">{store.name}</p>
+                      <p className="text-sm font-bold text-[#F8FAFC] truncate">{store.name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span
-                          className={cn(
-                            'text-[11px] font-medium',
-                            store.isOpen ? 'text-green-600' : 'text-muted-foreground'
-                          )}
-                        >
+                        <span className={cn(
+                          'text-[11px] font-semibold',
+                          store.isOpen ? 'text-green-400' : 'text-[#475569]'
+                        )}>
                           {store.isOpen ? 'Open' : 'Closed'}
                         </span>
-                        <span className="text-muted-foreground text-[11px]">·</span>
-                        <span className="text-[11px] text-muted-foreground">{store.distance} km</span>
-                        <span className="text-muted-foreground text-[11px]">·</span>
-                        <span className="text-[11px] text-green-600 font-medium">{inStockCount} in stock</span>
+                        <span className="text-[#334155] text-[11px]">·</span>
+                        <span className="text-[11px] text-[#64748B]">{store.distance} km</span>
+                        <span className="text-[#334155] text-[11px]">·</span>
+                        <span className="text-[11px] text-green-400 font-semibold">{inStockCount} in stock</span>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => toggleFavorite(store.id)}
                       aria-label={`Remove ${store.name} from favorites`}
-                      className="text-red-400 hover:text-red-500 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                      className="text-red-400 hover:text-red-300 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                         <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
@@ -198,9 +200,9 @@ export function MyPageView({ onViewGame }: MyPageViewProps) {
           )}
         </div>
 
-        {/* Recent activity */}
+        {/* Recent Picks */}
         <div className="px-4 mt-5">
-          <h2 className="text-sm font-bold text-foreground mb-3">Recent Picks</h2>
+          <h2 className="text-sm font-extrabold text-[#F8FAFC] mb-3">Recent Picks</h2>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {pickedUpGames.slice(0, 4).map((r) => {
               const game = getGameById(r.gameId)
@@ -213,17 +215,16 @@ export function MyPageView({ onViewGame }: MyPageViewProps) {
                   className="flex-shrink-0 w-[90px] text-left active:scale-95 transition-transform"
                 >
                   <div
-                    className="w-[90px] h-[126px] rounded-xl overflow-hidden shadow-sm mb-1.5"
+                    className="w-[90px] h-[126px] rounded-xl overflow-hidden mb-1.5 border border-[#334155]"
                     style={{ background: game.coverColor }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={game.imagePath} alt={game.title} className="w-full h-full object-cover" />
                   </div>
-                  <p className="text-[10px] font-semibold text-foreground leading-tight line-clamp-2">{game.title}</p>
+                  <p className="text-[10px] font-bold text-[#CBD5E1] leading-tight line-clamp-2">{game.title}</p>
                 </button>
               )
             })}
-            {/* Placeholder if not enough */}
             {GAMES.slice(0, 4 - pickedUpGames.length).map((game) => (
               <button
                 key={`ph-${game.id}`}
@@ -232,13 +233,13 @@ export function MyPageView({ onViewGame }: MyPageViewProps) {
                 className="flex-shrink-0 w-[90px] text-left active:scale-95 transition-transform"
               >
                 <div
-                  className="w-[90px] h-[126px] rounded-xl overflow-hidden shadow-sm mb-1.5"
+                  className="w-[90px] h-[126px] rounded-xl overflow-hidden mb-1.5 border border-[#334155]"
                   style={{ background: game.coverColor }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={game.imagePath} alt={game.title} className="w-full h-full object-cover" />
                 </div>
-                <p className="text-[10px] font-semibold text-foreground leading-tight line-clamp-2">{game.title}</p>
+                <p className="text-[10px] font-bold text-[#CBD5E1] leading-tight line-clamp-2">{game.title}</p>
               </button>
             ))}
           </div>
@@ -246,27 +247,29 @@ export function MyPageView({ onViewGame }: MyPageViewProps) {
 
         {/* Menu items */}
         <div className="px-4 mt-5">
-          <div className="bg-card rounded-[18px] border border-border overflow-hidden">
+          <div className="bg-[#1E293B] rounded-[18px] border border-[#334155] overflow-hidden">
             {MENU_ITEMS.map((item, i) => (
               <button
                 key={item.label}
                 type="button"
                 className={cn(
-                  'w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-muted transition-colors min-h-[52px]',
-                  i !== 0 && 'border-t border-border'
+                  'w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-[#263347] transition-colors min-h-[52px]',
+                  i !== 0 && 'border-t border-[#334155]'
                 )}
               >
-                <span className="text-muted-foreground flex-shrink-0">{item.icon}</span>
-                <span className="flex-1 text-sm font-medium text-foreground">{item.label}</span>
+                <span className="text-[#64748B] flex-shrink-0">{item.icon}</span>
+                <span className="flex-1 text-sm font-semibold text-[#F8FAFC]">{item.label}</span>
                 {item.value && (
                   <span className={cn(
-                    'text-xs font-semibold px-2 py-0.5 rounded-full',
-                    item.badge ? 'bg-primary text-white' : 'text-muted-foreground'
+                    'text-xs font-bold px-2 py-0.5 rounded-full',
+                    item.badge
+                      ? 'bg-[#4F46E5] text-white'
+                      : 'text-[#64748B]'
                   )}>
                     {item.value}
                   </span>
                 )}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground flex-shrink-0" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2" className="flex-shrink-0" aria-hidden="true">
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
               </button>
@@ -278,7 +281,7 @@ export function MyPageView({ onViewGame }: MyPageViewProps) {
         <div className="px-4 mt-4 mb-2">
           <button
             type="button"
-            className="w-full h-12 rounded-[14px] border border-red-100 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors"
+            className="w-full h-12 rounded-[14px] border border-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/10 transition-colors"
           >
             Sign Out
           </button>

@@ -60,7 +60,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
   return (
     <nav
       aria-label="Main navigation"
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] bg-white border-t border-border z-50"
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] bg-[#1E293B] border-t border-[#334155] z-50"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="flex items-center justify-around h-[60px]">
@@ -74,13 +74,16 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
               aria-current={isActive ? 'page' : undefined}
               className={cn(
                 'flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-w-0 transition-colors',
-                isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                isActive ? 'text-[#4F46E5]' : 'text-[#64748B] hover:text-[#94A3B8]'
               )}
             >
-              <span className={cn('transition-transform', isActive && 'scale-110')}>
+              <span className={cn('transition-transform duration-150', isActive && 'scale-110')}>
                 {item.icon}
               </span>
-              <span className={cn('text-[10px] font-medium leading-none', isActive && 'font-semibold')}>
+              <span className={cn(
+                'text-[10px] leading-none transition-colors',
+                isActive ? 'font-bold text-[#4F46E5]' : 'font-medium'
+              )}>
                 {item.label}
               </span>
             </button>

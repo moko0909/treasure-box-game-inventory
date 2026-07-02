@@ -1,18 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Geist_Mono } from 'next/font/google'
 import './globals.css'
-
-const inter = Inter({
-  variable: '--font-inter',
-  subsets: ['latin'],
-  display: 'swap',
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-  display: 'swap',
-})
 
 export const metadata: Metadata = {
   title: 'Treasure Box — Game Inventory Near You',
@@ -23,8 +10,8 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'light',
-  themeColor: '#2563EB',
+  colorScheme: 'dark',
+  themeColor: '#0F172A',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -37,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${geistMono.variable}`}>
+    <html lang="en" className="bg-background">
       <body className="font-sans antialiased bg-background">
         {children}
       </body>

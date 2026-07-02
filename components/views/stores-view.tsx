@@ -47,25 +47,25 @@ export function StoresView({ onViewGame }: StoresViewProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="bg-white px-4 pt-12 pb-4 border-b border-border">
+      <header className="bg-[#0F172A] px-4 pt-12 pb-4 border-b border-[#334155]">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Near You</p>
-            <h1 className="text-xl font-bold text-foreground leading-tight">Treasure Box</h1>
+            <p className="text-[11px] text-[#64748B] font-semibold uppercase tracking-widest">Near You</p>
+            <h1 className="text-2xl font-extrabold text-[#F8FAFC] leading-tight tracking-tight">Treasure Box</h1>
           </div>
-          <div className="flex items-center gap-1.5 bg-primary/10 text-primary rounded-full px-3 py-1.5">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+          <div className="flex items-center gap-1.5 bg-[#4F46E5]/15 text-[#818CF8] rounded-full px-3 py-1.5 border border-[#4F46E5]/20">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            <span className="text-xs font-semibold">Shibuya</span>
+            <span className="text-xs font-bold">Shibuya</span>
           </div>
         </div>
 
         {/* Search */}
         <div className="relative mb-3">
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#475569]"
             width="16"
             height="16"
             viewBox="0 0 24 24"
@@ -82,7 +82,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
             placeholder="Search stores or games..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-11 pl-10 pr-4 bg-muted rounded-xl text-sm outline-none border border-transparent focus:border-primary focus:bg-white transition-colors"
+            className="w-full h-11 pl-10 pr-4 bg-[#1E293B] rounded-xl text-sm text-[#F8FAFC] placeholder-[#475569] outline-none border border-[#334155] focus:border-[#4F46E5] transition-colors"
             aria-label="Search stores"
           />
         </div>
@@ -92,10 +92,10 @@ export function StoresView({ onViewGame }: StoresViewProps) {
           <button
             type="button"
             onClick={() => setSelectedPlatforms(new Set())}
-            className={`h-9 px-4 rounded-full text-sm font-semibold border flex-shrink-0 transition-all ${
+            className={`h-9 px-4 rounded-full text-sm font-bold border flex-shrink-0 transition-all ${
               selectedPlatforms.size === 0
-                ? 'bg-primary text-white border-primary'
-                : 'bg-white text-foreground border-border hover:border-primary'
+                ? 'bg-[#4F46E5] text-white border-[#4F46E5]'
+                : 'bg-[#263347] text-[#CBD5E1] border-[#334155] hover:border-[#4F46E5]'
             }`}
           >
             All
@@ -112,7 +112,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
       </header>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto pb-20">
+      <div className="flex-1 overflow-y-auto pb-20 bg-[#0F172A]">
         {/* Map */}
         <div className="px-4 pt-4">
           <StoreMap
@@ -126,20 +126,20 @@ export function StoresView({ onViewGame }: StoresViewProps) {
         {/* Store list */}
         <div className="px-4 pt-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-foreground">
+            <h2 className="text-sm font-bold text-[#F8FAFC]">
               {filteredStores.length} Store{filteredStores.length !== 1 ? 's' : ''} Found
             </h2>
-            <button type="button" className="text-xs text-primary font-medium">
+            <button type="button" className="text-xs text-[#818CF8] font-semibold">
               Sort by distance
             </button>
           </div>
 
           {filteredStores.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground text-sm">No stores found</p>
+              <p className="text-[#64748B] text-sm">No stores found</p>
               <button
                 type="button"
-                className="mt-2 text-sm text-primary font-medium"
+                className="mt-2 text-sm text-[#818CF8] font-semibold"
                 onClick={() => { setSearch(''); setSelectedPlatforms(new Set()) }}
               >
                 Clear filters
@@ -153,9 +153,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
                   store={store}
                   selected={store.id === selectedStoreId}
                   onClick={() => setSelectedStoreId(store.id)}
-                  onViewInventory={() => {
-                    setSelectedStoreId(store.id)
-                  }}
+                  onViewInventory={() => setSelectedStoreId(store.id)}
                 />
               ))}
             </div>
@@ -165,7 +163,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
         {/* Featured games strip */}
         {selectedPlatforms.size === 0 && !search && (
           <div className="px-4 pt-6 pb-2">
-            <h2 className="text-sm font-semibold text-foreground mb-3">Popular Titles Near You</h2>
+            <h2 className="text-sm font-bold text-[#F8FAFC] mb-3">Popular Titles Near You</h2>
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
               {GAMES.slice(0, 6).map((game) => {
                 const storeInventory = STORES.flatMap((s) =>
@@ -180,7 +178,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
                     key={game.id}
                     type="button"
                     onClick={() => bestStore && onViewGame(game.id, bestStore.store.id)}
-                    className="flex-shrink-0 w-[120px] bg-card rounded-[14px] border border-border shadow-sm overflow-hidden active:scale-95 transition-transform text-left"
+                    className="flex-shrink-0 w-[120px] bg-[#1E293B] rounded-[14px] border border-[#334155] overflow-hidden active:scale-95 transition-transform text-left"
                   >
                     <div
                       className="h-[100px] relative"
@@ -194,10 +192,10 @@ export function StoresView({ onViewGame }: StoresViewProps) {
                       />
                     </div>
                     <div className="p-2">
-                      <p className="text-[11px] font-semibold text-foreground leading-tight line-clamp-2 text-balance">
+                      <p className="text-[11px] font-bold text-[#F8FAFC] leading-tight line-clamp-2 text-balance">
                         {game.title}
                       </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                      <p className="text-[10px] text-[#64748B] mt-0.5">
                         {bestStore
                           ? `${bestStore.store.distance}km · ${bestStore.store.name}`
                           : 'No stock nearby'}

@@ -1,12 +1,17 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
+@import '@fontsource/pretendard/400.css';
+@import '@fontsource/pretendard/500.css';
+@import '@fontsource/pretendard/600.css';
+@import '@fontsource/pretendard/700.css';
+@import '@fontsource/pretendard/800.css';
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-inter), 'Inter Fallback', system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), 'Geist Mono Fallback', monospace;
+  --font-sans: 'Pretendard', 'Pretendard Fallback', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -28,13 +33,15 @@
   --color-ring: var(--ring);
 
   /* Brand tokens */
-  --color-brand-blue: var(--brand-blue);
-  --color-brand-orange: var(--brand-orange);
+  --color-brand-indigo: var(--brand-indigo);
+  --color-brand-purple: var(--brand-purple);
+  --color-brand-gold: var(--brand-gold);
   --color-stock-in: var(--stock-in);
   --color-stock-low: var(--stock-low);
   --color-stock-out: var(--stock-out);
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
+  --color-divider: var(--divider);
 
   --radius-sm: calc(var(--radius) * 0.5);
   --radius-md: calc(var(--radius) * 0.75);
@@ -54,61 +61,63 @@
 }
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
-  /* Core palette */
-  --background: #F8FAFC;
-  --foreground: #0F172A;
-  --card: #FFFFFF;
-  --card-foreground: #0F172A;
-  --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
+  /* Core palette — dark navy */
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+  --card: #1E293B;
+  --card-foreground: #F8FAFC;
+  --popover: #1E293B;
+  --popover-foreground: #F8FAFC;
 
-  /* Primary — Blue */
-  --primary: #2563EB;
+  /* Primary — Indigo */
+  --primary: #4F46E5;
   --primary-foreground: #FFFFFF;
 
-  /* Secondary — soft gray */
-  --secondary: #F1F5F9;
-  --secondary-foreground: #334155;
+  /* Secondary — muted surface */
+  --secondary: #334155;
+  --secondary-foreground: #CBD5E1;
 
   /* Muted */
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B;
+  --muted: #1E293B;
+  --muted-foreground: #94A3B8;
 
-  /* Accent — orange */
-  --accent: #FFF7ED;
-  --accent-foreground: #F97316;
+  /* Accent — gold */
+  --accent: #F59E0B;
+  --accent-foreground: #0F172A;
 
   /* Destructive */
   --destructive: #EF4444;
 
   /* Borders & inputs */
-  --border: #E2E8F0;
-  --input: #E2E8F0;
-  --ring: #2563EB;
+  --border: #334155;
+  --input: #334155;
+  --ring: #4F46E5;
 
   /* Brand-specific */
-  --brand-blue: #2563EB;
-  --brand-orange: #F97316;
+  --brand-indigo: #4F46E5;
+  --brand-purple: #8B5CF6;
+  --brand-gold: #F59E0B;
   --stock-in: #22C55E;
-  --stock-low: #FACC15;
+  --stock-low: #F59E0B;
   --stock-out: #EF4444;
-  --surface: #FFFFFF;
-  --surface-raised: #F8FAFC;
+  --surface: #1E293B;
+  --surface-raised: #263347;
+  --divider: #334155;
 
-  /* Radius — 18px as specified */
+  /* Radius — 18px */
   --radius: 1.125rem;
 
   /* Sidebar */
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #0F172A;
-  --sidebar-primary: #2563EB;
+  --sidebar: #1E293B;
+  --sidebar-foreground: #F8FAFC;
+  --sidebar-primary: #4F46E5;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F1F5F9;
-  --sidebar-accent-foreground: #334155;
-  --sidebar-border: #E2E8F0;
-  --sidebar-ring: #2563EB;
+  --sidebar-accent: #334155;
+  --sidebar-accent-foreground: #CBD5E1;
+  --sidebar-border: #334155;
+  --sidebar-ring: #4F46E5;
 }
 
 @layer base {
@@ -120,7 +129,7 @@
     -webkit-tap-highlight-color: transparent;
   }
   html {
-    @apply font-sans;
+    @apply font-sans bg-background;
   }
 }
 
@@ -138,4 +147,13 @@
 * {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
+}
+
+/* Hide scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
