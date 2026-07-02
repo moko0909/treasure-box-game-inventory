@@ -7,15 +7,12 @@ import { StoreCard } from '@/components/store-card'
 import { NaverMap } from '@/components/naver-map'
 
 const PLATFORMS: Platform[] = ['PS5', 'Nintendo Switch', 'Xbox']
-
-// 네비바 높이 (px) — 바텀시트 bottom 기준
 const NAV_H = 64
 
-// 스냅 포인트: 지도가 차지하는 비율 (0 = 시트가 최상단, 1 = 지도만 보임)
 const SNAP_RATIOS = {
-  full: 0.08,   // 시트가 거의 꽉 참 (리스트 집중)
-  half: 0.44,   // 반반 (기본)
-  peek: 0.78,   // 핸들바만 살짝 올라옴 (지도 넓게)
+  full: 0.08,
+  half: 0.44,
+  peek: 0.78,
 } as const
 type SnapKey = keyof typeof SNAP_RATIOS
 
@@ -28,21 +25,24 @@ export function StoresView({ onViewGame }: StoresViewProps) {
   const [selectedPlatforms, setSelectedPlatforms] = useState<Set<Platform>>(new Set())
   const [selectedStoreId, setSelectedStoreId] = useState<string>(STORES[0].id)
   const [snap, setSnap] = useState<SnapKey>('half')
-
-  // 드래그 추적
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [liveTop, setLiveTop] = useState<number | null>(null) // null = CSS snap 사용
-  // SSR/hydration mismatch 방지: 마운트 전에는 렌더 억제
+  const [liveTop, setLiveTop] = useState<number | null>(null)
   const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true) }, [])
-  const drag = useRef<{ startY: number; startTop: number; live: boolean } | null>(null)
 
-  // 컨테이너 가용 높이 (네비바 제외) — SSR-safe
+  const containerRef = useRef<HTMLDivElement>(null)
+  const drag = useRef<{ startY: number; startTop: number; live: boolean } | null>(null)
+  // snap/liveTop을 ref로도 보관해 드래그 콜백 클로저에서 최신값 사용
+  const snapRef = useRef(snap)
+  const liveTopRef = useRef(liveTop)
+  useEffect(() => { snapRef.current = snap }, [snap])
+  useEffect(() => { liveTopRef.current = liveTop }, [liveTop])
+
+  useEffect(() => { setMounted(true) }, [])
+
   const availH = useCallback((): number => {
     const el = containerRef.current
     if (el) return el.clientHeight - NAV_H
     if (typeof window !== 'undefined') return window.innerHeight - NAV_H
-    return 700 // SSR 폴백
+    return 700
   }, [])
 
   const snapToPx = useCallback((k: SnapKey): number =>
@@ -56,14 +56,16 @@ export function StoresView({ onViewGame }: StoresViewProps) {
       .sort((a, b) => a.d - b.d)[0].k
   }, [availH])
 
-  // ── 포인터 드래그 ──
   const onPointerDown = useCallback((e: React.PointerEvent) => {
-    const target = e.target as HTMLElement
-    if (target.closest('[data-no-drag]')) return
+    if ((e.target as HTMLElement).closest('[data-no-drag]')) return
     e.currentTarget.setPointerCapture(e.pointerId)
-    drag.current = { startY: e.clientY, startTop: liveTop ?? snapToPx(snap), live: true }
+    drag.current = {
+      startY: e.clientY,
+      startTop: liveTopRef.current ?? snapToPx(snapRef.current),
+      live: true,
+    }
     e.preventDefault()
-  }, [liveTop, snap, snapToPx])
+  }, [snapToPx])
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     if (!drag.current?.live) return
@@ -75,22 +77,22 @@ export function StoresView({ onViewGame }: StoresViewProps) {
   const onPointerUp = useCallback(() => {
     if (!drag.current?.live) return
     drag.current.live = false
-    const resolved = resolveSnap(liveTop ?? snapToPx(snap))
-    setSnap(resolved)
+    setSnap(resolveSnap(liveTopRef.current ?? snapToPx(snapRef.current)))
     setLiveTop(null)
-  }, [liveTop, snap, snapToPx, resolveSnap])
+  }, [resolveSnap, snapToPx])
 
-  // ── 터치 드래그 (모바일) ──
   const onTouchStart = useCallback((e: React.TouchEvent) => {
-    const target = e.target as HTMLElement
-    if (target.closest('[data-no-drag]')) return
-    drag.current = { startY: e.touches[0].clientY, startTop: liveTop ?? snapToPx(snap), live: true }
-  }, [liveTop, snap, snapToPx])
+    if ((e.target as HTMLElement).closest('[data-no-drag]')) return
+    drag.current = {
+      startY: e.touches[0].clientY,
+      startTop: liveTopRef.current ?? snapToPx(snapRef.current),
+      live: true,
+    }
+  }, [snapToPx])
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
     if (!drag.current?.live) return
-    const target = e.target as HTMLElement
-    if (target.closest('[data-no-drag]')) return
+    if ((e.target as HTMLElement).closest('[data-no-drag]')) return
     const h = availH()
     const raw = drag.current.startTop + (e.touches[0].clientY - drag.current.startY)
     setLiveTop(Math.max(h * 0.03, Math.min(h * 0.90, raw)))
@@ -99,18 +101,17 @@ export function StoresView({ onViewGame }: StoresViewProps) {
   const onTouchEnd = useCallback(() => {
     if (!drag.current?.live) return
     drag.current.live = false
-    const resolved = resolveSnap(liveTop ?? snapToPx(snap))
-    setSnap(resolved)
+    setSnap(resolveSnap(liveTopRef.current ?? snapToPx(snapRef.current)))
     setLiveTop(null)
-  }, [liveTop, snap, snapToPx, resolveSnap])
+  }, [resolveSnap, snapToPx])
 
-  const togglePlatform = (p: Platform) => {
+  const togglePlatform = useCallback((p: Platform) => {
     setSelectedPlatforms((prev) => {
       const next = new Set(prev)
       next.has(p) ? next.delete(p) : next.add(p)
       return next
     })
-  }
+  }, [])
 
   const filteredStores = useMemo(() => STORES.filter((store) => {
     const matchSearch = !search ||
@@ -124,24 +125,49 @@ export function StoresView({ onViewGame }: StoresViewProps) {
     return matchSearch && matchPlatform
   }), [search, selectedPlatforms])
 
-  // 시트의 top 값 — 마운트 전에는 CSS 백분율로 SSR/CSR 일치시켜 hydration mismatch 방지
+  // 인기 타이틀: 검색/필터 없을 때만 계산
+  const popularGames = useMemo(() => {
+    if (selectedPlatforms.size > 0 || search) return null
+    return GAMES.slice(0, 6).map((game) => {
+      const best = STORES
+        .flatMap((s) => s.games
+          .filter((sg) => sg.gameId === game.id && sg.stockStatus !== 'sold-out')
+          .map((sg) => ({ store: s, inv: sg }))
+        )
+        .sort((a, b) => a.store.distance - b.store.distance)[0]
+      return { game, best }
+    })
+  }, [search, selectedPlatforms])
+
+  const handleMapSelect = useCallback((id: string) => {
+    setSelectedStoreId(id)
+    if (snapRef.current === 'peek') { setSnap('half'); setLiveTop(null) }
+  }, [])
+
+  const handleSearchFocus = useCallback(() => {
+    if (snapRef.current !== 'full') { setSnap('full'); setLiveTop(null) }
+  }, [])
+
+  const handleShowMap = useCallback(() => { setSnap('peek'); setLiveTop(null) }, [])
+
+  const clearFilter = useCallback(() => {
+    setSearch('')
+    setSelectedPlatforms(new Set())
+  }, [])
+
   const sheetTopPx = mounted ? (liveTop !== null ? liveTop : snapToPx(snap)) : null
   const sheetTopStyle = sheetTopPx !== null ? `${sheetTopPx}px` : `${SNAP_RATIOS[snap] * 100}%`
-  // CSS transition — 드래그 중엔 off, snap 이동 시엔 on
   const transition = liveTop !== null ? 'none' : 'top 0.3s cubic-bezier(0.32,0.72,0,1)'
 
   return (
     <div ref={containerRef} className="relative w-full h-full bg-[#070D1A]">
 
-      {/* 지도 — absolute로 전체 영역 채움 */}
+      {/* 지도 */}
       <div className="absolute inset-0" style={{ bottom: `${NAV_H}px`, zIndex: 0 }}>
         <NaverMap
           stores={filteredStores}
           selectedStoreId={selectedStoreId}
-          onSelectStore={(id) => {
-            setSelectedStoreId(id)
-            if (snap === 'peek') { setSnap('half'); setLiveTop(null) }
-          }}
+          onSelectStore={handleMapSelect}
           className="w-full h-full"
         />
       </div>
@@ -166,16 +192,12 @@ export function StoresView({ onViewGame }: StoresViewProps) {
         }}
       >
         {/* 핸들바 */}
-        <div
-          className="flex-shrink-0 flex justify-center pt-2.5 pb-2 cursor-grab active:cursor-grabbing"
-          aria-label="드래그하여 시트 크기 조절"
-        >
+        <div className="flex-shrink-0 flex justify-center pt-2.5 pb-2 cursor-grab active:cursor-grabbing" aria-label="드래그하여 시트 크기 조절">
           <div className="w-10 h-[5px] rounded-full bg-[#334155]" />
         </div>
 
-        {/* 검색 + 필터 헤더 */}
+        {/* 헤더 */}
         <div className="flex-shrink-0 px-4 pb-3 border-b border-[#1E293B]/80">
-          {/* 타이틀 행 */}
           <div className="flex items-center justify-between mb-2.5">
             <div>
               <h1 className="text-[17px] font-extrabold text-[#F8FAFC] tracking-tight leading-tight">보물상자</h1>
@@ -190,7 +212,6 @@ export function StoresView({ onViewGame }: StoresViewProps) {
             </div>
           </div>
 
-          {/* 검색창 */}
           <div className="relative mb-2.5">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#475569] pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -201,19 +222,13 @@ export function StoresView({ onViewGame }: StoresViewProps) {
               placeholder="매장 또는 게임 검색..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              onFocus={() => { if (snap !== 'full') { setSnap('full'); setLiveTop(null) } }}
+              onFocus={handleSearchFocus}
               className="w-full h-10 pl-9 pr-4 bg-[#1E293B] rounded-xl text-sm text-[#F8FAFC] placeholder-[#475569] outline-none border border-[#334155] focus:border-[#4F46E5] transition-colors"
               aria-label="매장 검색"
             />
           </div>
 
-          {/* 플랫폼 필터 */}
-          <div
-            data-no-drag="true"
-            className="flex gap-2 overflow-x-auto scrollbar-hide"
-            role="group"
-            aria-label="플랫폼 필터"
-          >
+          <div data-no-drag="true" className="flex gap-2 overflow-x-auto scrollbar-hide" role="group" aria-label="플랫폼 필터">
             <button
               type="button"
               onClick={() => setSelectedPlatforms(new Set())}
@@ -226,23 +241,13 @@ export function StoresView({ onViewGame }: StoresViewProps) {
               전체
             </button>
             {PLATFORMS.map((p) => (
-              <PlatformChip
-                key={p}
-                platform={p}
-                selected={selectedPlatforms.has(p)}
-                onClick={() => togglePlatform(p)}
-              />
+              <PlatformChip key={p} platform={p} selected={selectedPlatforms.has(p)} onClick={() => togglePlatform(p)} />
             ))}
           </div>
         </div>
 
-        {/* 매장 목록 (스크롤) */}
-        <div
-          data-no-drag="true"
-          className="flex-1 overflow-y-auto overscroll-contain"
-          style={{ touchAction: 'pan-y' }}
-        >
-          {/* 결과 카운트 */}
+        {/* 매장 목록 */}
+        <div data-no-drag="true" className="flex-1 overflow-y-auto overscroll-contain" style={{ touchAction: 'pan-y' }}>
           <div className="flex items-center justify-between px-4 pt-3 pb-1">
             <p className="text-xs font-bold text-[#F8FAFC]">매장 {filteredStores.length}곳</p>
             <button type="button" className="text-xs text-[#818CF8] font-semibold">거리순</button>
@@ -251,11 +256,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
           {filteredStores.length === 0 ? (
             <div className="text-center py-10">
               <p className="text-sm text-[#64748B]">검색 결과가 없어요</p>
-              <button
-                type="button"
-                className="mt-2 text-sm text-[#818CF8] font-semibold"
-                onClick={() => { setSearch(''); setSelectedPlatforms(new Set()) }}
-              >
+              <button type="button" className="mt-2 text-sm text-[#818CF8] font-semibold" onClick={clearFilter}>
                 필터 초기화
               </button>
             </div>
@@ -273,49 +274,40 @@ export function StoresView({ onViewGame }: StoresViewProps) {
             </div>
           )}
 
-          {/* 인기 타이틀 스트립 */}
-          {selectedPlatforms.size === 0 && !search && (
+          {popularGames && (
             <div className="px-4 pt-2 pb-6">
               <h2 className="text-sm font-bold text-[#F8FAFC] mb-3">내 주변 인기 타이틀</h2>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                {GAMES.slice(0, 6).map((game) => {
-                  const best = STORES
-                    .flatMap((s) => s.games
-                      .filter((sg) => sg.gameId === game.id && sg.stockStatus !== 'sold-out')
-                      .map((sg) => ({ store: s, inv: sg }))
-                    )
-                    .sort((a, b) => a.store.distance - b.store.distance)[0]
-                  return (
-                    <button
-                      key={game.id}
-                      type="button"
-                      onClick={() => best && onViewGame(game.id, best.store.id)}
-                      className="flex-shrink-0 w-[110px] bg-[#1E293B] rounded-[14px] border border-[#334155] overflow-hidden active:scale-95 transition-transform text-left"
-                    >
-                      <div className="h-[88px]" style={{ background: game.coverColor }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={game.imagePath} alt={`${game.title} 커버`} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="p-2">
-                        <p className="text-[11px] font-bold text-[#F8FAFC] leading-tight line-clamp-2">{game.title}</p>
-                        <p className="text-[10px] text-[#64748B] mt-0.5">
-                          {best ? `${best.store.distance}km` : '재고 없음'}
-                        </p>
-                      </div>
-                    </button>
-                  )
-                })}
+                {popularGames.map(({ game, best }) => (
+                  <button
+                    key={game.id}
+                    type="button"
+                    onClick={() => best && onViewGame(game.id, best.store.id)}
+                    className="flex-shrink-0 w-[110px] bg-[#1E293B] rounded-[14px] border border-[#334155] overflow-hidden active:scale-95 transition-transform text-left"
+                  >
+                    <div className="h-[88px]" style={{ background: game.coverColor }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={game.imagePath} alt={`${game.title} 커버`} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="p-2">
+                      <p className="text-[11px] font-bold text-[#F8FAFC] leading-tight line-clamp-2">{game.title}</p>
+                      <p className="text-[10px] text-[#64748B] mt-0.5">
+                        {best ? `${best.store.distance}km` : '재고 없음'}
+                      </p>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* 지도 넓히기 FAB — peek 상태가 아닐 때 시트 위에 표시 */}
+      {/* 지도 넓히기 FAB */}
       {snap !== 'peek' && (
         <button
           type="button"
-          onClick={() => { setSnap('peek'); setLiveTop(null) }}
+          onClick={handleShowMap}
           className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-[#0F172A]/90 backdrop-blur-sm border border-[#334155] rounded-full px-4 py-2 shadow-lg text-xs font-bold text-[#CBD5E1] active:scale-95 transition-transform"
           style={{
             top: sheetTopPx !== null ? `${sheetTopPx - 44}px` : `calc(${SNAP_RATIOS[snap] * 100}% - 44px)`,

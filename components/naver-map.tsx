@@ -12,7 +12,6 @@ interface MapProps {
 
 const API_KEY = process.env.NEXT_PUBLIC_TMAP_API_KEY ?? ''
 
-// TMAP SDK 전역 타입 선언
 declare global {
   interface Window {
     Tmapv2: {
@@ -30,43 +29,60 @@ interface TmapMap { setCenter(latlng: TmapLatLng): void; setZoom(z: number): voi
 interface TmapMarker { setMap(m: TmapMap | null): void; addListener(ev: string, fn: () => void): void }
 interface TmapInfoWindow { setContent(html: string): void; setPosition(latlng: TmapLatLng): void; open(map: TmapMap): void; close(): void }
 
-// 서울 중심 좌표
 const SEOUL_LAT = 37.5326
 const SEOUL_LNG = 126.9723
 
-// TMAP SDK 스크립트 로드 (중복 방지)
-let sdkLoaded = false
-let sdkLoading = false
+// SDK 로드 상태 — 모듈 수준 싱글톤 (HMR에서도 중복 로드 방지)
+let sdkState: 'idle' | 'loading' | 'ready' = 'idle'
 const sdkCallbacks: Array<() => void> = []
 
-function waitForTmapv2(onReady: () => void, retries = 30) {
-  // script.onload 직후엔 Tmapv2.LatLng 등이 아직 없을 수 있으므로 polling
+/** Tmapv2.LatLng가 실제로 노출될 때까지 최대 3초 polling 후 콜백 실행 */
+function waitForTmapv2(onReady: () => void, deadline = Date.now() + 3000) {
   if (window.Tmapv2?.LatLng) { onReady(); return }
-  if (retries <= 0) return
-  setTimeout(() => waitForTmapv2(onReady, retries - 1), 100)
+  if (Date.now() >= deadline) return
+  setTimeout(() => waitForTmapv2(onReady, deadline), 100)
 }
 
 function loadTmapSdk(onReady: () => void) {
-  if (sdkLoaded) { waitForTmapv2(onReady); return }
+  if (sdkState === 'ready') { waitForTmapv2(onReady); return }
   sdkCallbacks.push(onReady)
-  if (sdkLoading) return
-  sdkLoading = true
+  if (sdkState === 'loading') return
+  sdkState = 'loading'
   const script = document.createElement('script')
   script.src = `https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=${API_KEY}`
   script.async = true
   script.onload = () => {
-    sdkLoaded = true
-    sdkLoading = false
-    // LatLng 등 내부 API가 완전히 초기화될 때까지 대기 후 콜백 실행
+    sdkState = 'ready'
     const pending = sdkCallbacks.splice(0)
     pending.forEach((cb) => waitForTmapv2(cb))
   }
   script.onerror = () => {
-    sdkLoaded = false
-    sdkLoading = false
+    sdkState = 'idle'
     sdkCallbacks.length = 0
   }
   document.head.appendChild(script)
+}
+
+// 마커·인포윈도우 HTML 생성 — 순수 함수이므로 컴포넌트 밖에 두어 재생성 비용 제거
+function markerHtml(store: Store, isSelected: boolean): string {
+  const bg = isSelected ? '#4F46E5' : store.isOpen ? '#22C55E' : '#475569'
+  const border = isSelected ? '#818CF8' : store.isOpen ? '#16A34A' : '#334155'
+  const shadow = isSelected ? ',0 0 0 3px rgba(79,70,229,0.4)' : ''
+  return `<div style="background:${bg};border:2px solid ${border};border-radius:10px 10px 10px 2px;padding:5px 9px;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,0.6)${shadow};font-family:system-ui,-apple-system,sans-serif;cursor:pointer;">${store.name}</div>`
+}
+
+function infoHtml(store: Store): string {
+  const inStockCount = store.games.filter((g) => g.stockStatus === 'in-stock').length
+  const statusColor = store.isOpen ? '#22C55E' : '#94A3B8'
+  return `<div style="background:#1E293B;border:1px solid #334155;border-radius:12px;padding:12px 14px;min-width:190px;font-family:system-ui,-apple-system,sans-serif;pointer-events:none;">
+    <p style="margin:0 0 3px;font-size:13px;font-weight:700;color:#F8FAFC;">${store.name}</p>
+    <p style="margin:0 0 8px;font-size:11px;color:#94A3B8;line-height:1.4;">${store.address}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <span style="font-size:11px;font-weight:700;color:${statusColor};">${store.isOpen ? '영업 중' : '영업 종료'}</span>
+      <span style="font-size:11px;color:#64748B;">${store.distance}km</span>
+      <span style="font-size:11px;color:#22C55E;font-weight:600;">재고 ${inStockCount}종</span>
+    </div>
+  </div>`
 }
 
 export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: MapProps) {
@@ -76,36 +92,18 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
   const infoWinRef = useRef<TmapInfoWindow | null>(null)
   const myMarkerRef = useRef<TmapMarker | null>(null)
   const watchIdRef = useRef<number | null>(null)
+  // stores/selectedStoreId를 ref로도 보관해 이벤트 클로저에서 최신값 참조
+  const storesRef = useRef(stores)
+  const onSelectRef = useRef(onSelectStore)
+  useEffect(() => { storesRef.current = stores }, [stores])
+  useEffect(() => { onSelectRef.current = onSelectStore }, [onSelectStore])
 
   const [mapReady, setMapReady] = useState(false)
   const [locState, setLocState] = useState<'idle' | 'loading' | 'ok' | 'denied'>('idle')
   const [myPos, setMyPos] = useState<[number, number] | null>(null)
   const [noKey, setNoKey] = useState(false)
 
-  // 인포윈도우 HTML
-  const infoHtml = useCallback((store: Store): string => {
-    const inStockCount = store.games.filter((g) => g.stockStatus === 'in-stock').length
-    const statusColor = store.isOpen ? '#22C55E' : '#94A3B8'
-    return `<div style="background:#1E293B;border:1px solid #334155;border-radius:12px;padding:12px 14px;min-width:190px;font-family:system-ui,-apple-system,sans-serif;pointer-events:none;">
-      <p style="margin:0 0 3px;font-size:13px;font-weight:700;color:#F8FAFC;">${store.name}</p>
-      <p style="margin:0 0 8px;font-size:11px;color:#94A3B8;line-height:1.4;">${store.address}</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <span style="font-size:11px;font-weight:700;color:${statusColor};">${store.isOpen ? '영업 중' : '영업 종료'}</span>
-        <span style="font-size:11px;color:#64748B;">${store.distance}km</span>
-        <span style="font-size:11px;color:#22C55E;font-weight:600;">재고 ${inStockCount}종</span>
-      </div>
-    </div>`
-  }, [])
-
-  // 마커 아이콘 HTML
-  const markerHtml = useCallback((store: Store, isSelected: boolean): string => {
-    const bg = isSelected ? '#4F46E5' : store.isOpen ? '#22C55E' : '#475569'
-    const border = isSelected ? '#818CF8' : store.isOpen ? '#16A34A' : '#334155'
-    const shadow = isSelected ? ',0 0 0 3px rgba(79,70,229,0.4)' : ''
-    return `<div style="background:${bg};border:2px solid ${border};border-radius:10px 10px 10px 2px;padding:5px 9px;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,0.6)${shadow};font-family:system-ui,-apple-system,sans-serif;cursor:pointer;">${store.name}</div>`
-  }, [])
-
-  // 지도 초기화
+  // 지도 초기화 — 한 번만 실행
   useEffect(() => {
     if (!API_KEY) { setNoKey(true); return }
     if (typeof window === 'undefined' || !containerRef.current) return
@@ -120,10 +118,8 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
         zoom: 13,
         width: '100%',
         height: '100%',
-        // TMAP 다크 스킨
         mapType: 'NIGHT',
       })
-
       mapRef.current = map
       infoWinRef.current = new T.InfoWindow({
         position: new T.LatLng(SEOUL_LAT, SEOUL_LNG),
@@ -132,7 +128,6 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
         background: 'transparent',
         offset: new T.Point(0, -8),
       })
-
       setMapReady(true)
     })
 
@@ -144,7 +139,7 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // 내 위치 추적
+  // 내 위치 워치 시작 — mapReady 이후 한 번만
   const startWatch = useCallback(() => {
     if (!navigator.geolocation) { setLocState('denied'); return }
     if (watchIdRef.current !== null) return
@@ -157,10 +152,7 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
         setMyPos(pos)
         setLocState('ok')
         const latlng = new T.LatLng(pos[0], pos[1])
-        if (myMarkerRef.current) {
-          // 위치 갱신용 마커 재생성
-          myMarkerRef.current.setMap(null)
-        }
+        myMarkerRef.current?.setMap(null)
         myMarkerRef.current = new T.Marker({
           position: latlng,
           map: mapRef.current,
@@ -174,25 +166,33 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
       () => setLocState('denied'),
       { enableHighAccuracy: true, maximumAge: 5000 },
     )
-  }, [])
+  }, []) // 의존성 없음 — refs로 최신값 접근
 
   useEffect(() => {
     if (mapReady && locState === 'idle') startWatch()
   }, [mapReady, locState, startWatch])
 
-  // 매장 마커 업데이트
+  // 매장 마커 업데이트 — stores/selectedStoreId 변경 시만 실행
   useEffect(() => {
     if (!mapReady || !mapRef.current) return
     const T = window.Tmapv2
     if (!T) return
     const map = mapRef.current
 
-    // 기존 마커 제거
-    markersRef.current.forEach((m) => m.setMap(null))
-    markersRef.current.clear()
+    // 변경된 마커만 교체 (전체 재생성 방지)
+    const currentIds = new Set(stores.map((s) => s.id))
 
+    // 삭제된 매장 마커 제거
+    markersRef.current.forEach((m, id) => {
+      if (!currentIds.has(id)) { m.setMap(null); markersRef.current.delete(id) }
+    })
+
+    // 추가/변경된 마커 업데이트
     for (const store of stores) {
       const isSelected = store.id === selectedStoreId
+      const existing = markersRef.current.get(store.id)
+      // 기존 마커 제거 후 재생성 (TMAP은 아이콘 변경 API 없음)
+      existing?.setMap(null)
       const latlng = new T.LatLng(store.lat, store.lng)
       const marker = new T.Marker({
         position: latlng,
@@ -203,16 +203,15 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
         zIndex: isSelected ? 100 : 1,
       })
       marker.addListener('click', () => {
-        onSelectStore(store.id)
+        onSelectRef.current(store.id)
         if (infoWinRef.current) {
           infoWinRef.current.setContent(infoHtml(store))
           infoWinRef.current.setPosition(latlng)
-          infoWinRef.current.open(map)
+          infoWinRef.current.open(mapRef.current!)
         }
       })
       markersRef.current.set(store.id, marker)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapReady, stores, selectedStoreId])
 
   // 선택 매장 변경 시 지도 이동
@@ -221,12 +220,25 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
     const T = window.Tmapv2
     if (!T) return
     const store = stores.find((s) => s.id === selectedStoreId)
-    if (store) {
-      mapRef.current.setCenter(new T.LatLng(store.lat, store.lng))
-    }
+    if (store) mapRef.current.setCenter(new T.LatLng(store.lat, store.lng))
   }, [selectedStoreId, mapReady, stores])
 
-  // API 키 없음
+  const handleLocButton = useCallback(() => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current)
+      watchIdRef.current = null
+    }
+    setLocState('idle')
+    startWatch()
+    if (myPos && mapRef.current) {
+      const T = window.Tmapv2
+      if (T) {
+        mapRef.current.setCenter(new T.LatLng(myPos[0], myPos[1]))
+        mapRef.current.setZoom(15)
+      }
+    }
+  }, [myPos, startWatch])
+
   if (noKey) {
     return (
       <div className={`relative flex flex-col items-center justify-center gap-3 bg-[#0F172A] border border-[#334155] rounded-2xl ${className ?? ''}`}>
@@ -247,10 +259,8 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
 
   return (
     <div className={`relative overflow-hidden ${className ?? ''}`}>
-      {/* TMAP 컨테이너 */}
       <div ref={containerRef} className="w-full h-full" />
 
-      {/* 로딩 */}
       {!mapReady && (
         <div className="absolute inset-0 bg-[#0F172A] flex items-center justify-center gap-2.5 z-10">
           <div className="w-5 h-5 rounded-full border-2 border-[#4F46E5] border-t-transparent animate-spin" />
@@ -258,7 +268,6 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
         </div>
       )}
 
-      {/* 게임샵 수 배지 */}
       {mapReady && (
         <div className="absolute top-3 left-3 z-[1100] bg-[#0F172A]/85 backdrop-blur-sm border border-[#334155] rounded-lg px-2.5 py-1 flex items-center gap-1.5 pointer-events-none">
           <div className="w-1.5 h-1.5 rounded-full bg-[#4F46E5]" />
@@ -266,25 +275,10 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
         </div>
       )}
 
-      {/* 내 위치 버튼 */}
       {mapReady && (
         <button
           type="button"
-          onClick={() => {
-            if (watchIdRef.current !== null) {
-              navigator.geolocation.clearWatch(watchIdRef.current)
-              watchIdRef.current = null
-            }
-            setLocState('idle')
-            startWatch()
-            if (myPos && mapRef.current) {
-              const T = window.Tmapv2
-              if (T) {
-                mapRef.current.setCenter(new T.LatLng(myPos[0], myPos[1]))
-                mapRef.current.setZoom(15)
-              }
-            }
-          }}
+          onClick={handleLocButton}
           aria-label="내 위치로 이동"
           className="absolute top-3 right-3 z-[1100] w-8 h-8 rounded-lg bg-[#0F172A]/85 backdrop-blur-sm border border-[#334155] flex items-center justify-center shadow-md active:scale-95 transition-transform"
         >
@@ -301,7 +295,6 @@ export function NaverMap({ stores, selectedStoreId, onSelectStore, className }: 
         </button>
       )}
 
-      {/* 내 위치 확인 배지 */}
       {locState === 'ok' && mapReady && (
         <div className="absolute top-3 right-14 z-[1100] bg-[#0F172A]/85 backdrop-blur-sm border border-[#334155] rounded-lg px-2.5 py-1 pointer-events-none">
           <span className="text-[10px] font-bold text-[#F59E0B]">내 위치 확인됨</span>

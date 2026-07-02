@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/components/bottom-nav'
 import { StoresView } from '@/components/views/stores-view'
@@ -46,55 +46,52 @@ export function AppShell({
 
   const isOwner = role === 'owner'
 
-  const openGameDetail = (gameId: string, storeId: string) => {
+  const openGameDetail = useCallback((gameId: string, storeId: string) => {
     setGameDetail({ gameId, storeId })
-  }
+  }, [])
 
-  const closeGameDetail = () => {
+  const closeGameDetail = useCallback(() => {
     setGameDetail(null)
-  }
+  }, [])
 
-  // 예약 확정 — 수량/픽업일시/요청사항을 함께 저장. 완료까지 await 하여
-  // GameDetailView가 완료 화면(바코드)을 보여줄 수 있도록 결과를 반환.
-  const handleReserve = async (input: CreateReservationInput) => {
+  const handleReserve = useCallback(async (input: CreateReservationInput) => {
     const result = await createReservation(input)
     startTransition(() => router.refresh())
     return result
-  }
+  }, [router, startTransition])
 
-  const handleCancelReservation = (id: string) => {
+  const handleCancelReservation = useCallback((id: string) => {
     startTransition(async () => {
       await cancelReservation(id)
       router.refresh()
     })
-  }
+  }, [router, startTransition])
 
-  const handleToggleFavorite = (storeId: string) => {
+  const handleToggleFavorite = useCallback((storeId: string) => {
     startTransition(async () => {
       await toggleFavoriteAction(storeId)
       router.refresh()
     })
-  }
+  }, [router, startTransition])
 
-  const handleRequestRestock = async (gameId: string, storeId: string) => {
+  const handleRequestRestock = useCallback(async (gameId: string, storeId: string) => {
     const result = await requestRestockAlert(gameId, storeId)
     startTransition(() => router.refresh())
     return result
-  }
+  }, [router, startTransition])
 
-  const handleCancelRestock = (id: string) => {
+  const handleCancelRestock = useCallback((id: string) => {
     startTransition(async () => {
       await cancelRestockAlert(id)
       router.refresh()
     })
-  }
+  }, [router, startTransition])
 
-  const handleNavigate = (tab: Tab) => {
-    // 점주만 Admin 탭 접근 가능
+  const handleNavigate = useCallback((tab: Tab) => {
     if (tab === 'admin' && !isOwner) return
     setGameDetail(null)
     setActiveTab(tab)
-  }
+  }, [isOwner])
 
   return (
     <div className="flex items-start justify-center min-h-dvh bg-[#070D1A]">
