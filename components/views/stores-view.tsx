@@ -130,6 +130,8 @@ export function StoresView({ onViewGame }: StoresViewProps) {
 
   const sheetTop = dragTop !== null ? `${dragTop}px` : `${SNAP[snap] * 100}%`
   const isExpanded = snap === 'expanded' && dragTop === null
+  // 검색어나 플랫폼 필터가 적용된 상태인지 (빈 상태 문구 분기용)
+  const hasFilter = search.trim() !== '' || platforms.size > 0
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-[#070D1A]">
@@ -256,15 +258,27 @@ export function StoresView({ onViewGame }: StoresViewProps) {
           </div>
 
           {stores.length === 0 ? (
-            <div className="text-center py-14">
-              <p className="text-[#64748B] text-sm">검색 결과가 없어요</p>
-              <button
-                type="button"
-                onClick={() => { setSearch(''); setPlatforms(new Set()) }}
-                className="mt-2 text-sm text-[#818CF8] font-semibold"
-              >
-                필터 초기화
-              </button>
+            <div className="text-center py-14 px-6">
+              <div className="w-12 h-12 mx-auto rounded-full bg-[#1E293B] border border-[#334155] flex items-center justify-center mb-3">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" aria-hidden="true">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+              </div>
+              {hasFilter ? (
+                <>
+                  <p className="text-[#94A3B8] text-sm font-medium">검색 결과가 없습니다.</p>
+                  <button
+                    type="button"
+                    onClick={() => { setSearch(''); setPlatforms(new Set()) }}
+                    className="mt-3 text-sm text-[#818CF8] font-semibold"
+                  >
+                    필터 초기화
+                  </button>
+                </>
+              ) : (
+                <p className="text-[#94A3B8] text-sm font-medium">주변에 등록된 매장이 없습니다.</p>
+              )}
             </div>
           ) : (
             <div className="flex flex-col gap-3">
