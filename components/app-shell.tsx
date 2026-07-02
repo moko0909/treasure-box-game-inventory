@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/components/bottom-nav'
 import { StoresView } from '@/components/views/stores-view'
+import { GamesView } from '@/components/views/games-view'
 import { GameDetailView } from '@/components/views/game-detail-view'
 import { ReservationsView } from '@/components/views/reservations-view'
 import { MyPageView } from '@/components/views/mypage-view'
@@ -13,7 +14,7 @@ import { toggleFavorite as toggleFavoriteAction } from '@/app/actions/favorites'
 import { requestRestockAlert, cancelRestockAlert } from '@/app/actions/restock'
 import type { Reservation, RestockAlert } from '@/lib/data'
 
-type Tab = 'stores' | 'reservations' | 'mypage' | 'admin'
+type Tab = 'stores' | 'games' | 'reservations' | 'mypage' | 'admin'
 
 interface GameDetailState {
   gameId: string
@@ -115,6 +116,9 @@ export function AppShell({
           <div className="flex-1 overflow-hidden relative">
             <div className={activeTab === 'stores' ? 'relative h-full' : 'hidden'}>
               <StoresView onViewGame={openGameDetail} />
+            </div>
+            <div className={activeTab === 'games' ? 'flex flex-col h-full' : 'hidden'}>
+              <GamesView onViewGame={openGameDetail} />
             </div>
             <div className={activeTab === 'reservations' ? 'flex flex-col h-full' : 'hidden'}>
               <ReservationsView

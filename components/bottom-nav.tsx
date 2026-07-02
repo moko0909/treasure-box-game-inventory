@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils'
 
-type Tab = 'stores' | 'reservations' | 'mypage' | 'admin'
+type Tab = 'stores' | 'games' | 'reservations' | 'mypage' | 'admin'
 
 interface BottomNavProps {
   active: Tab
@@ -18,6 +18,19 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
         <polyline points="9 22 9 12 15 12 15 22" />
+      </svg>
+    ),
+  },
+  {
+    id: 'games',
+    label: '게임',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <line x1="6" y1="11" x2="10" y2="11" />
+        <line x1="8" y1="9" x2="8" y2="13" />
+        <line x1="15" y1="12" x2="15.01" y2="12" />
+        <line x1="18" y1="10" x2="18.01" y2="10" />
+        <rect x="2" y="6" width="20" height="12" rx="6" />
       </svg>
     ),
   },
