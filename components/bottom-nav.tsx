@@ -1,0 +1,92 @@
+'use client'
+
+import { cn } from '@/lib/utils'
+
+type Tab = 'stores' | 'reservations' | 'mypage' | 'admin'
+
+interface BottomNavProps {
+  active: Tab
+  onNavigate: (tab: Tab) => void
+}
+
+const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  {
+    id: 'stores',
+    label: 'Stores',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg>
+    ),
+  },
+  {
+    id: 'reservations',
+    label: 'Reservations',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    ),
+  },
+  {
+    id: 'mypage',
+    label: 'My Page',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    ),
+  },
+  {
+    id: 'admin',
+    label: 'Admin',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="3" y="3" width="7" height="7" />
+        <rect x="14" y="3" width="7" height="7" />
+        <rect x="14" y="14" width="7" height="7" />
+        <rect x="3" y="14" width="7" height="7" />
+      </svg>
+    ),
+  },
+]
+
+export function BottomNav({ active, onNavigate }: BottomNavProps) {
+  return (
+    <nav
+      aria-label="Main navigation"
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] bg-white border-t border-border z-50"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
+      <div className="flex items-center justify-around h-[60px]">
+        {NAV_ITEMS.map((item) => {
+          const isActive = item.id === active
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onNavigate(item.id)}
+              aria-current={isActive ? 'page' : undefined}
+              className={cn(
+                'flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-w-0 transition-colors',
+                isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <span className={cn('transition-transform', isActive && 'scale-110')}>
+                {item.icon}
+              </span>
+              <span className={cn('text-[10px] font-medium leading-none', isActive && 'font-semibold')}>
+                {item.label}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </nav>
+  )
+}
