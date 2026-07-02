@@ -104,6 +104,7 @@ export function AppShell({
               <MyPageView
                 userName={userName}
                 userEmail={userEmail}
+                role={role}
                 reservations={reservations}
                 favoriteStoreIds={favoriteStoreIds}
                 onToggleFavorite={handleToggleFavorite}

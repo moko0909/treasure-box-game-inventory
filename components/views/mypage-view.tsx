@@ -1,13 +1,16 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { STORES, GAMES, getGameById, type Reservation } from '@/lib/data'
 import { authClient } from '@/lib/auth-client'
+import { SettingsPanel } from '@/components/views/settings-panel'
 
 interface MyPageViewProps {
   userName: string
   userEmail: string
+  role: 'user' | 'owner'
   reservations: Reservation[]
   favoriteStoreIds: string[]
   onToggleFavorite: (storeId: string) => void
@@ -32,6 +35,7 @@ const MENU_ITEMS = [
         <line x1="6" y1="1" x2="6" y2="4" /><line x1="10" y1="1" x2="10" y2="4" /><line x1="14" y1="1" x2="14" y2="4" />
       </svg>
     ),
+    id: 'wishlist',
     label: 'Wishlist',
     value: '12 games',
     badge: false,
@@ -42,6 +46,7 @@ const MENU_ITEMS = [
         <path d="M22 17H2a3 3 0 000 6h20a3 3 0 000-6zM5.45 5.11L2 12v3h20v-3l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z" />
       </svg>
     ),
+    id: 'notifications',
     label: 'Notifications',
     value: '3 new',
     badge: true,
@@ -53,6 +58,7 @@ const MENU_ITEMS = [
         <path d="M19.07 4.93a10 10 0 010 14.14M5.63 5.63a10 10 0 010 12.74M15.54 8.46a5 5 0 010 7.07M8.46 8.46a5 5 0 010 7.07" />
       </svg>
     ),
+    id: 'stock-alerts',
     label: 'Stock Alerts',
     value: '5 active',
     badge: false,
@@ -65,6 +71,7 @@ const MENU_ITEMS = [
         <line x1="12" y1="17" x2="12.01" y2="17" />
       </svg>
     ),
+    id: 'help',
     label: 'Help & Support',
     value: '',
     badge: false,
@@ -76,6 +83,7 @@ const MENU_ITEMS = [
         <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
       </svg>
     ),
+    id: 'settings',
     label: 'Settings',
     value: '',
     badge: false,
@@ -85,12 +93,14 @@ const MENU_ITEMS = [
 export function MyPageView({
   userName,
   userEmail,
+  role,
   reservations,
   favoriteStoreIds,
   onToggleFavorite,
   onViewGame,
 }: MyPageViewProps) {
   const router = useRouter()
+  const [showSettings, setShowSettings] = useState(false)
   const favoriteIds = new Set(favoriteStoreIds)
 
   const favoriteStores = STORES.filter((s) => favoriteIds.has(s.id))
@@ -102,6 +112,10 @@ export function MyPageView({
     await authClient.signOut()
     router.push('/sign-in')
     router.refresh()
+  }
+
+  if (showSettings) {
+    return <SettingsPanel role={role} onBack={() => setShowSettings(false)} />
   }
 
   return (
@@ -256,6 +270,7 @@ export function MyPageView({
               <button
                 key={item.label}
                 type="button"
+                onClick={item.id === 'settings' ? () => setShowSettings(true) : undefined}
                 className={cn(
                   'w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-[#263347] transition-colors min-h-[52px]',
                   i !== 0 && 'border-t border-[#334155]'
