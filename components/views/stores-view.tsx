@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { STORES, GAMES, type Platform } from '@/lib/data'
 import { PlatformChip } from '@/components/platform-chip'
 import { StoreCard } from '@/components/store-card'
-import { NaverMap } from '@/components/naver-map'
+import { GoogleMap } from '@/components/google-map'
 
 const PLATFORMS: Platform[] = ['PS5', 'Nintendo Switch', 'Xbox']
 
@@ -115,7 +115,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
       <div className="flex-1 overflow-y-auto pb-20 bg-[#0F172A]">
         {/* 네이버 지도 */}
         <div className="px-4 pt-4">
-          <NaverMap
+          <GoogleMap
             stores={filteredStores}
             selectedStoreId={selectedStoreId}
             onSelectStore={setSelectedStoreId}
