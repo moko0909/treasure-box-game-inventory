@@ -115,12 +115,17 @@ export function AppShell({
           )}
 
           <div className="flex-1 overflow-hidden relative">
-            <div className={activeTab === 'stores' ? 'relative h-full' : 'hidden'}>
-              <StoresView onViewGame={openGameDetail} />
-            </div>
-            <div className={activeTab === 'games' ? 'flex flex-col h-full' : 'hidden'}>
-              <GamesView onViewGame={openGameDetail} />
-            </div>
+            {/* gameDetail이 열려있으면 StoresView를 unmount — 바텀시트 z-index가 게임 상세를 뚫지 않도록 */}
+            {activeTab === 'stores' && !gameDetail && (
+              <div className="relative h-full">
+                <StoresView onViewGame={openGameDetail} />
+              </div>
+            )}
+            {activeTab === 'games' && !gameDetail && (
+              <div className="flex flex-col h-full">
+                <GamesView onViewGame={openGameDetail} />
+              </div>
+            )}
             <div className={activeTab === 'notifications' ? 'flex flex-col h-full' : 'hidden'}>
               <NotificationsView
                 favoriteStoreIds={favoriteStoreIds}
