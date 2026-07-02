@@ -7,12 +7,13 @@ type Tab = 'stores' | 'reservations' | 'mypage' | 'admin'
 interface BottomNavProps {
   active: Tab
   onNavigate: (tab: Tab) => void
+  showAdmin?: boolean
 }
 
 const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   {
     id: 'stores',
-    label: 'Stores',
+    label: '매장',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
@@ -22,7 +23,7 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   },
   {
     id: 'reservations',
-    label: 'Reservations',
+    label: '예약',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -34,7 +35,7 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   },
   {
     id: 'mypage',
-    label: 'My Page',
+    label: '마이페이지',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
@@ -44,7 +45,7 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   },
   {
     id: 'admin',
-    label: 'Admin',
+    label: '관리',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="3" y="3" width="7" height="7" />
@@ -56,15 +57,16 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   },
 ]
 
-export function BottomNav({ active, onNavigate }: BottomNavProps) {
+export function BottomNav({ active, onNavigate, showAdmin = false }: BottomNavProps) {
+  const items = showAdmin ? NAV_ITEMS : NAV_ITEMS.filter((item) => item.id !== 'admin')
   return (
     <nav
-      aria-label="Main navigation"
+      aria-label="주요 내비게이션"
       className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] bg-[#1E293B] border-t border-[#334155] z-50"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="flex items-center justify-around h-[60px]">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const isActive = item.id === active
           return (
             <button

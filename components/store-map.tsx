@@ -27,7 +27,7 @@ export function StoreMap({ stores, selectedStoreId, onSelectStore, className }: 
         'relative w-full rounded-2xl overflow-hidden border border-[#334155]',
         className
       )}
-      aria-label="Store locations map"
+      aria-label="매장 위치 지도"
       role="img"
     >
       <svg
@@ -93,7 +93,7 @@ export function StoreMap({ stores, selectedStoreId, onSelectStore, className }: 
               onMouseLeave={() => setHovered(null)}
               style={{ cursor: 'pointer' }}
               role="button"
-              aria-label={`Select ${store.name}`}
+              aria-label={`${store.name} 선택`}
             >
               {/* Glow ring for selected */}
               {isSelected && (
@@ -126,15 +126,15 @@ export function StoreMap({ stores, selectedStoreId, onSelectStore, className }: 
       <div className="absolute bottom-2 left-3 flex items-center gap-3 text-[10px] font-semibold text-[#94A3B8]">
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-[#22C55E] shadow-sm" />
-          Open
+          영업 중
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-[#475569] shadow-sm" />
-          Closed
+          영업 종료
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B] shadow-sm" />
-          You
+          내 위치
         </span>
       </div>
     </div>

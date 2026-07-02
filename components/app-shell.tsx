@@ -8,9 +8,10 @@ import { GameDetailView } from '@/components/views/game-detail-view'
 import { ReservationsView } from '@/components/views/reservations-view'
 import { MyPageView } from '@/components/views/mypage-view'
 import { AdminView } from '@/components/views/admin-view'
-import { createReservation } from '@/app/actions/reservations'
+import { createReservation, cancelReservation, type CreateReservationInput } from '@/app/actions/reservations'
 import { toggleFavorite as toggleFavoriteAction } from '@/app/actions/favorites'
-import type { Reservation } from '@/lib/data'
+import { requestRestockAlert, cancelRestockAlert } from '@/app/actions/restock'
+import type { Reservation, RestockAlert } from '@/lib/data'
 
 type Tab = 'stores' | 'reservations' | 'mypage' | 'admin'
 
@@ -22,20 +23,28 @@ interface GameDetailState {
 export interface AppShellProps {
   userName: string
   userEmail: string
+  role: 'user' | 'owner'
+  storeLocation: string | null
   reservations: Reservation[]
   favoriteStoreIds: string[]
+  restockAlerts: RestockAlert[]
 }
 
 export function AppShell({
   userName,
   userEmail,
+  role,
+  storeLocation,
   reservations,
   favoriteStoreIds,
+  restockAlerts,
 }: AppShellProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [activeTab, setActiveTab] = useState<Tab>('stores')
   const [gameDetail, setGameDetail] = useState<GameDetailState | null>(null)
+
+  const isOwner = role === 'owner'
 
   const openGameDetail = (gameId: string, storeId: string) => {
     setGameDetail({ gameId, storeId })
@@ -45,9 +54,17 @@ export function AppShell({
     setGameDetail(null)
   }
 
-  const handleReserve = (gameId: string, storeId: string) => {
+  // 예약 확정 — 수량/픽업일시/요청사항을 함께 저장. 완료까지 await 하여
+  // GameDetailView가 완료 화면(바코드)을 보여줄 수 있도록 결과를 반환.
+  const handleReserve = async (input: CreateReservationInput) => {
+    const result = await createReservation(input)
+    startTransition(() => router.refresh())
+    return result
+  }
+
+  const handleCancelReservation = (id: string) => {
     startTransition(async () => {
-      await createReservation(gameId, storeId)
+      await cancelReservation(id)
       router.refresh()
     })
   }
@@ -59,15 +76,30 @@ export function AppShell({
     })
   }
 
+  const handleRequestRestock = async (gameId: string, storeId: string) => {
+    const result = await requestRestockAlert(gameId, storeId)
+    startTransition(() => router.refresh())
+    return result
+  }
+
+  const handleCancelRestock = (id: string) => {
+    startTransition(async () => {
+      await cancelRestockAlert(id)
+      router.refresh()
+    })
+  }
+
   const handleNavigate = (tab: Tab) => {
+    // 점주만 Admin 탭 접근 가능
+    if (tab === 'admin' && !isOwner) return
     setGameDetail(null)
     setActiveTab(tab)
   }
 
   return (
     <div className="flex items-start justify-center min-h-dvh bg-[#070D1A]">
-      <div className="phone-shell relative overflow-hidden" style={{ minHeight: '100dvh' }}>
-        <main className="h-dvh flex flex-col overflow-hidden">
+      <div className="phone-shell relative" style={{ minHeight: '100dvh', overflow: 'clip' }}>
+        <main className="relative h-dvh">
           {gameDetail && (
             <div className="absolute inset-0 z-40 bg-background overflow-hidden flex flex-col">
               <GameDetailView
@@ -75,17 +107,24 @@ export function AppShell({
                 storeId={gameDetail.storeId}
                 onBack={closeGameDetail}
                 onReserve={handleReserve}
+                onRequestRestock={handleRequestRestock}
               />
             </div>
           )}
 
-          <div className="flex-1 overflow-hidden relative">
-            <div className={activeTab === 'stores' ? 'flex flex-col h-full' : 'hidden'}>
-              <StoresView onViewGame={openGameDetail} />
-            </div>
+          {/* 매장 탭: 전체 화면을 차지하며 내부에서 네비바 높이(64px)를 직접 처리 */}
+          <div className={activeTab === 'stores' ? 'absolute inset-0' : 'hidden'}>
+            <StoresView onViewGame={openGameDetail} />
+          </div>
+
+          {/* 나머지 탭: 상단부터 네비바 위까지 */}
+          <div className="absolute inset-0 bottom-16 flex flex-col overflow-hidden">
             <div className={activeTab === 'reservations' ? 'flex flex-col h-full' : 'hidden'}>
               <ReservationsView
                 reservations={reservations}
+                restockAlerts={restockAlerts}
+                onCancelReservation={handleCancelReservation}
+                onCancelRestock={handleCancelRestock}
                 onViewGame={(gId, sId) => {
                   handleNavigate('stores')
                   setTimeout(() => openGameDetail(gId, sId), 50)
@@ -96,6 +135,7 @@ export function AppShell({
               <MyPageView
                 userName={userName}
                 userEmail={userEmail}
+                role={role}
                 reservations={reservations}
                 favoriteStoreIds={favoriteStoreIds}
                 onToggleFavorite={handleToggleFavorite}
@@ -105,12 +145,19 @@ export function AppShell({
                 }}
               />
             </div>
-            <div className={activeTab === 'admin' ? 'flex flex-col h-full' : 'hidden'}>
-              <AdminView />
-            </div>
+            {isOwner && (
+              <div className={activeTab === 'admin' ? 'flex flex-col h-full' : 'hidden'}>
+                <AdminView storeLocation={storeLocation} />
+              </div>
+            )}
           </div>
 
-          {!gameDetail && <BottomNav active={activeTab} onNavigate={handleNavigate} />}
+          {/* 네비바: 항상 하단에 고정 */}
+          {!gameDetail && (
+            <div className="absolute bottom-0 left-0 right-0 z-30">
+              <BottomNav active={activeTab} onNavigate={handleNavigate} showAdmin={isOwner} />
+            </div>
+          )}
         </main>
       </div>
     </div>

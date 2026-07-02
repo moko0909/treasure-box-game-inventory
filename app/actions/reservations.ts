@@ -19,7 +19,10 @@ export type ReservationRow = {
   storeId: string
   status: string
   code: string
+  quantity: number
+  notes: string | null
   reservedAt: string
+  pickupAt: string | null
   expiresAt: string
 }
 
@@ -37,25 +40,41 @@ export async function getReservations(): Promise<ReservationRow[]> {
     storeId: r.storeId,
     status: r.status,
     code: r.code,
+    quantity: r.quantity,
+    notes: r.notes,
     reservedAt: r.reservedAt.toISOString(),
+    pickupAt: r.pickupAt ? r.pickupAt.toISOString() : null,
     expiresAt: r.expiresAt.toISOString(),
   }))
 }
 
-export async function createReservation(gameId: string, storeId: string) {
+export type CreateReservationInput = {
+  gameId: string
+  storeId: string
+  quantity?: number
+  pickupAt?: string | null
+  notes?: string | null
+}
+
+export async function createReservation(input: CreateReservationInput) {
   const userId = await getUserId()
   const now = new Date()
-  const expires = new Date(now.getTime() + 48 * 60 * 60 * 1000)
+  // 픽업 기한: 지정한 픽업 일시가 있으면 그 시각, 없으면 48시간 후
+  const pickup = input.pickupAt ? new Date(input.pickupAt) : null
+  const expires = pickup ?? new Date(now.getTime() + 48 * 60 * 60 * 1000)
   const code = `TB-${Math.floor(1000 + Math.random() * 9000)}`
 
   await db.insert(reservations).values({
     id: crypto.randomUUID(),
     userId,
-    gameId,
-    storeId,
+    gameId: input.gameId,
+    storeId: input.storeId,
     status: 'active',
     code,
+    quantity: input.quantity && input.quantity > 0 ? input.quantity : 1,
+    notes: input.notes ?? null,
     reservedAt: now,
+    pickupAt: pickup,
     expiresAt: expires,
   })
 
