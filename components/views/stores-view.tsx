@@ -8,15 +8,14 @@ import { NaverMap } from '@/components/naver-map'
 
 const PLATFORMS: Platform[] = ['PS5', 'Nintendo Switch', 'Xbox']
 
-// 바텀시트 스냅 포지션 (화면 상단에서 시트 top까지의 비율)
-// 'full' = 거의 전체 (헤더만 지도에 남음), 'half' = 절반, 'peek' = 핸들바만
-const SNAPS = {
-  peek: 0.80,   // 지도 80% → 시트 20% (지도 넓게)
-  half: 0.45,   // 지도 45% → 시트 55% (기본)
-  full: 0.0,    // 지도 0%  → 시트 100% (끝까지 올리면 매장 목록만)
+// 바텀시트 스냅: 화면 상단에서 시트 top까지의 비율 (작을수록 시트가 위로)
+const SNAP = {
+  collapsed: 0.82, // 지도 위주 — 시트는 살짝만
+  half: 0.46,      // 기본 — 지도/목록 반반
+  expanded: 0.0,   // 끝까지 — 시트가 지도를 완전히 덮어 매장만 표시
 } as const
-
-type SnapKey = keyof typeof SNAPS
+type SnapKey = keyof typeof SNAP
+const SNAP_ORDER: SnapKey[] = ['collapsed', 'half', 'expanded']
 
 interface StoresViewProps {
   onViewGame: (gameId: string, storeId: string) => void
@@ -24,165 +23,144 @@ interface StoresViewProps {
 
 export function StoresView({ onViewGame }: StoresViewProps) {
   const [search, setSearch] = useState('')
-  const [selectedPlatforms, setSelectedPlatforms] = useState<Set<Platform>>(new Set())
-  const [selectedStoreId, setSelectedStoreId] = useState<string>(STORES[0].id)
+  const [platforms, setPlatforms] = useState<Set<Platform>>(new Set())
+  const [selectedId, setSelectedId] = useState<string>(STORES[0].id)
   const [snap, setSnap] = useState<SnapKey>('half')
 
-  // 드래그 상태
-  const sheetRef = useRef<HTMLDivElement>(null)
-  const dragState = useRef<{
-    startY: number
-    startTop: number        // px
-    containerH: number
-    dragging: boolean
-  } | null>(null)
-  const [dragTop, setDragTop] = useState<number | null>(null) // null = snap 사용
-
   const containerRef = useRef<HTMLDivElement>(null)
+  const drag = useRef<{ startY: number; startTop: number; height: number; active: boolean } | null>(null)
+  const [dragTop, setDragTop] = useState<number | null>(null) // px, null이면 CSS 스냅 사용
 
-  const togglePlatform = (p: Platform) => {
-    setSelectedPlatforms((prev) => {
+  // ── 필터링된 매장 목록 ──
+  const stores = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return STORES.filter((s) => {
+      const matchQ =
+        !q || s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q)
+      const matchP =
+        platforms.size === 0 ||
+        s.games.some((sg) => {
+          const g = GAMES.find((x) => x.id === sg.gameId)
+          return g && platforms.has(g.platform)
+        })
+      return matchQ && matchP
+    })
+  }, [search, platforms])
+
+  const togglePlatform = useCallback((p: Platform) => {
+    setPlatforms((prev) => {
       const next = new Set(prev)
-      if (next.has(p)) next.delete(p)
-      else next.add(p)
+      next.has(p) ? next.delete(p) : next.add(p)
       return next
     })
-  }
-
-  const filteredStores = useMemo(() => {
-    return STORES.filter((store) => {
-      const matchesSearch =
-        !search ||
-        store.name.toLowerCase().includes(search.toLowerCase()) ||
-        store.address.toLowerCase().includes(search.toLowerCase())
-      const matchesPlatform =
-        selectedPlatforms.size === 0 ||
-        store.games.some((sg) => {
-          const game = GAMES.find((g) => g.id === sg.gameId)
-          return game && selectedPlatforms.has(game.platform)
-        })
-      return matchesSearch && matchesPlatform
-    })
-  }, [search, selectedPlatforms])
-
-  // 현재 스냅 비율 → px
-  const snapToPx = useCallback((key: SnapKey): number => {
-    const h = containerRef.current?.clientHeight ?? window.innerHeight
-    return Math.round(h * SNAPS[key])
   }, [])
 
-  // 드래그 종료 시 가장 가까운 스냅 선택
-  const resolveSnap = useCallback((topPx: number): SnapKey => {
-    const h = containerRef.current?.clientHeight ?? window.innerHeight
-    const ratio = topPx / h
-    const distances = (Object.entries(SNAPS) as [SnapKey, number][]).map(
-      ([k, v]) => ({ k, d: Math.abs(v - ratio) })
-    )
-    distances.sort((a, b) => a.d - b.d)
-    return distances[0].k
+  // ── 스냅 유틸 ──
+  const heightOf = () => containerRef.current?.clientHeight ?? window.innerHeight
+  const snapToPx = useCallback((k: SnapKey) => Math.round(heightOf() * SNAP[k]), [])
+  const nearestSnap = useCallback((topPx: number): SnapKey => {
+    const ratio = topPx / heightOf()
+    return SNAP_ORDER.reduce((best, k) =>
+      Math.abs(SNAP[k] - ratio) < Math.abs(SNAP[best] - ratio) ? k : best
+    , SNAP_ORDER[0])
   }, [])
 
-  // ── 포인터 드래그 핸들러 ──
+  const goSnap = useCallback((k: SnapKey) => {
+    setSnap(k)
+    setDragTop(null)
+  }, [])
+
+  // ── 드래그 (포인터 + 터치 공통) ──
+  const beginDrag = useCallback((clientY: number, target: EventTarget | null) => {
+    // 스크롤 영역 안에서 시작하면 드래그 안 함
+    if ((target as HTMLElement)?.closest('[data-scroll]')) return false
+    const h = heightOf()
+    drag.current = { startY: clientY, startTop: dragTop ?? snapToPx(snap), height: h, active: true }
+    return true
+  }, [dragTop, snap, snapToPx])
+
+  const moveDrag = useCallback((clientY: number) => {
+    if (!drag.current?.active) return
+    const { startY, startTop, height } = drag.current
+    const raw = startTop + (clientY - startY)
+    const min = 0
+    const max = height * 0.86
+    setDragTop(Math.max(min, Math.min(max, raw)))
+  }, [])
+
+  const endDrag = useCallback(() => {
+    if (!drag.current?.active) return
+    drag.current.active = false
+    const top = dragTop ?? snapToPx(snap)
+    goSnap(nearestSnap(top))
+  }, [dragTop, snap, snapToPx, nearestSnap, goSnap])
+
+  // 포인터 이벤트
   const onPointerDown = useCallback((e: React.PointerEvent) => {
-    // 시트 내부 스크롤 영역에서는 드래그 시작하지 않음
-    const target = e.target as HTMLElement
-    if (target.closest('[data-sheet-scroll]')) return
-
-    const h = containerRef.current?.clientHeight ?? window.innerHeight
-    const currentTop = dragTop ?? snapToPx(snap)
-
-    dragState.current = {
-      startY: e.clientY,
-      startTop: currentTop,
-      containerH: h,
-      dragging: true,
+    if (beginDrag(e.clientY, e.target)) {
+      ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
     }
-    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-    e.preventDefault()
-  }, [snap, dragTop, snapToPx])
+  }, [beginDrag])
+  const onPointerMove = useCallback((e: React.PointerEvent) => moveDrag(e.clientY), [moveDrag])
+  const onPointerUp = useCallback(() => endDrag(), [endDrag])
 
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!dragState.current?.dragging) return
-    const { startY, startTop, containerH } = dragState.current
-    const dy = e.clientY - startY
-    const raw = startTop + dy
-    const MIN = containerH * 0.04
-    const MAX = containerH * 0.88
-    setDragTop(Math.max(MIN, Math.min(MAX, raw)))
+  // 터치 이벤트
+  const onTouchStart = useCallback((e: React.TouchEvent) => beginDrag(e.touches[0].clientY, e.target), [beginDrag])
+  const onTouchMove = useCallback((e: React.TouchEvent) => moveDrag(e.touches[0].clientY), [moveDrag])
+  const onTouchEnd = useCallback(() => endDrag(), [endDrag])
+
+  // 매장 선택 시 시트가 너무 낮으면 half로 올림
+  const selectStore = useCallback((id: string) => {
+    setSelectedId(id)
+    setSnap((cur) => (cur === 'collapsed' ? 'half' : cur))
+    setDragTop(null)
   }, [])
 
-  const onPointerUp = useCallback((e: React.PointerEvent) => {
-    if (!dragState.current?.dragging) return
-    dragState.current.dragging = false
-    const currentTop = dragTop ?? snapToPx(snap)
-    const resolved = resolveSnap(currentTop)
-    setSnap(resolved)
-    setDragTop(null)
-  }, [dragTop, snap, snapToPx, resolveSnap])
-
-  // 터치 핸들러 (모바일 패스스루)
-  const onTouchStart = useCallback((e: React.TouchEvent) => {
-    const target = e.target as HTMLElement
-    if (target.closest('[data-sheet-scroll]')) return
-    const h = containerRef.current?.clientHeight ?? window.innerHeight
-    const currentTop = dragTop ?? snapToPx(snap)
-    dragState.current = {
-      startY: e.touches[0].clientY,
-      startTop: currentTop,
-      containerH: h,
-      dragging: true,
-    }
-  }, [snap, dragTop, snapToPx])
-
-  const onTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!dragState.current?.dragging) return
-    const target = e.target as HTMLElement
-    if (target.closest('[data-sheet-scroll]')) return
-    const { startY, startTop, containerH } = dragState.current
-    const dy = e.touches[0].clientY - startY
-    const raw = startTop + dy
-    const MIN = containerH * 0.04
-    const MAX = containerH * 0.88
-    setDragTop(Math.max(MIN, Math.min(MAX, raw)))
+  // 인기 타이틀
+  const popular = useMemo(() => {
+    return GAMES.slice(0, 6).map((game) => {
+      const best = STORES
+        .flatMap((s) => s.games
+          .filter((sg) => sg.gameId === game.id && sg.stockStatus !== 'sold-out')
+          .map((sg) => ({ store: s, sg })))
+        .sort((a, b) => a.store.distance - b.store.distance)[0]
+      return { game, best }
+    })
   }, [])
 
-  const onTouchEnd = useCallback(() => {
-    if (!dragState.current?.dragging) return
-    dragState.current.dragging = false
-    const currentTop = dragTop ?? snapToPx(snap)
-    const resolved = resolveSnap(currentTop)
-    setSnap(resolved)
-    setDragTop(null)
-  }, [dragTop, snap, snapToPx, resolveSnap])
-
-  // 시트 top 계산
-  const sheetTop = dragTop !== null ? dragTop : null // null → CSS transition으로 snap
-
-  const snapTopPct = `${SNAPS[snap] * 100}%`
+  const sheetTop = dragTop !== null ? `${dragTop}px` : `${SNAP[snap] * 100}%`
+  const isExpanded = snap === 'expanded' && dragTop === null
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-[#070D1A]">
-
       {/* ── 지도 (전체 배경) ── */}
-      <div
-        className="absolute inset-0"
-        style={{ zIndex: 0 }}
-      >
+      <div className="absolute inset-0" style={{ zIndex: 0 }}>
         <NaverMap
-          stores={filteredStores}
-          selectedStoreId={selectedStoreId}
-          onSelectStore={(id) => {
-            setSelectedStoreId(id)
-            // 매장 선택 시 half로 올라옴
-            if (snap === 'peek') { setSnap('half'); setDragTop(null) }
-          }}
+          stores={stores}
+          selectedStoreId={selectedId}
+          onSelectStore={selectStore}
           className="w-full h-full rounded-none"
         />
       </div>
 
+      {/* ── 목록 보기 FAB (시트가 펼쳐지지 않았을 때) ── */}
+      {!isExpanded && (
+        <button
+          type="button"
+          onClick={() => goSnap('expanded')}
+          className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#4F46E5] text-white rounded-full pl-3.5 pr-4 py-2.5 flex items-center gap-2 shadow-xl shadow-black/40 text-[13px] font-bold active:scale-95 transition-transform"
+          style={{ bottom: `calc(${(1 - SNAP[snap]) * 100}% + 14px)`, zIndex: 10000 }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+            <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
+            <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+          </svg>
+          목록 {stores.length}
+        </button>
+      )}
+
       {/* ── 바텀시트 ── */}
       <div
-        ref={sheetRef}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -190,182 +168,145 @@ export function StoresView({ onViewGame }: StoresViewProps) {
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        className="absolute left-0 right-0 bottom-0 flex flex-col bg-[#0F172A] rounded-t-[24px] shadow-[0_-4px_30px_rgba(0,0,0,0.6)]"
+        className="absolute left-0 right-0 bottom-0 flex flex-col bg-[#0F172A] rounded-t-[24px] shadow-[0_-6px_36px_rgba(0,0,0,0.6)] border-t border-[#1E293B]"
         style={{
-          top: sheetTop !== null ? `${sheetTop}px` : snapTopPct,
-          transition: sheetTop !== null ? 'none' : 'top 0.32s cubic-bezier(0.32,0.72,0,1)',
+          top: sheetTop,
+          transition: dragTop !== null ? 'none' : 'top 0.34s cubic-bezier(0.32,0.72,0,1)',
           touchAction: 'none',
-          willChange: 'top',
+          willChange: dragTop !== null ? 'top' : 'auto',
           zIndex: 9999,
         }}
       >
-        {/* 핸들바 */}
-        <div className="flex justify-center pt-3 pb-2 flex-shrink-0 cursor-grab active:cursor-grabbing">
-          <div className="w-9 h-1 rounded-full bg-[#475569]" />
-        </div>
+        {/* 핸들 + 헤더 (드래그 영역) */}
+        <div className="flex-shrink-0 cursor-grab active:cursor-grabbing select-none">
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="w-10 h-1.5 rounded-full bg-[#334155]" />
+          </div>
 
-        {/* 검색 + 필터 헤더 */}
-        <div className="px-4 pb-3 flex-shrink-0 border-b border-[#1E293B]">
-          {/* 타이틀 행 */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-extrabold text-[#F8FAFC] tracking-tight">보물상자</h1>
-              <span className="text-[11px] text-[#64748B] font-medium">내 주변 게임샵</span>
+          <div className="px-5 pt-2 pb-3">
+            {/* 타이틀 */}
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h1 className="text-[17px] font-extrabold text-[#F8FAFC] tracking-tight leading-none">보물상자</h1>
+                <p className="text-[11px] text-[#64748B] mt-1">내 주변 게임샵 {stores.length}곳</p>
+              </div>
+              {isExpanded ? (
+                <button
+                  type="button"
+                  onClick={() => goSnap('half')}
+                  className="flex items-center gap-1.5 bg-[#1E293B] border border-[#334155] rounded-full px-3 py-1.5 text-[12px] font-bold text-[#CBD5E1] active:scale-95 transition-transform"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2.5" aria-hidden="true">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
+                  </svg>
+                  지도
+                </button>
+              ) : (
+                <div className="flex items-center gap-1.5 bg-[#4F46E5]/15 text-[#818CF8] rounded-full px-3 py-1.5 border border-[#4F46E5]/25">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
+                  </svg>
+                  <span className="text-[12px] font-bold">서울</span>
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-1.5 bg-[#4F46E5]/15 text-[#818CF8] rounded-full px-2.5 py-1 border border-[#4F46E5]/20">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
-                <circle cx="12" cy="10" r="3"/>
+
+            {/* 검색 */}
+            <div className="relative mb-2.5">
+              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#475569]" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
-              <span className="text-[11px] font-bold">서울</span>
-            </div>
-          </div>
-
-          {/* 검색 */}
-          <div className="relative mb-2.5">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#475569]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input
-              type="search"
-              placeholder="매장 또는 게임 검색..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onFocus={() => { if (snap !== 'full') { setSnap('full'); setDragTop(null) } }}
-              className="w-full h-10 pl-9 pr-4 bg-[#1E293B] rounded-xl text-sm text-[#F8FAFC] placeholder-[#475569] outline-none border border-[#334155] focus:border-[#4F46E5] transition-colors"
-              aria-label="매장 검색"
-            />
-          </div>
-
-          {/* 플랫폼 필터 */}
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide" role="group" aria-label="플랫폼 필터">
-            <button
-              type="button"
-              onClick={() => setSelectedPlatforms(new Set())}
-              className={`h-8 px-3.5 rounded-full text-xs font-bold border flex-shrink-0 transition-all ${
-                selectedPlatforms.size === 0
-                  ? 'bg-[#4F46E5] text-white border-[#4F46E5]'
-                  : 'bg-[#1E293B] text-[#CBD5E1] border-[#334155]'
-              }`}
-            >
-              전체
-            </button>
-            {PLATFORMS.map((p) => (
-              <PlatformChip
-                key={p}
-                platform={p}
-                selected={selectedPlatforms.has(p)}
-                onClick={() => togglePlatform(p)}
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onFocus={() => goSnap('expanded')}
+                placeholder="매장 또는 게임 검색"
+                aria-label="매장 검색"
+                className="w-full h-11 pl-10 pr-4 bg-[#1E293B] rounded-2xl text-sm text-[#F8FAFC] placeholder-[#475569] outline-none border border-[#334155] focus:border-[#4F46E5] transition-colors"
               />
-            ))}
+            </div>
+
+            {/* 플랫폼 필터 */}
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide" role="group" aria-label="플랫폼 필터">
+              <button
+                type="button"
+                onClick={() => setPlatforms(new Set())}
+                aria-pressed={platforms.size === 0}
+                className={`h-9 px-4 rounded-full text-sm font-semibold border flex-shrink-0 transition-all ${
+                  platforms.size === 0
+                    ? 'bg-[#4F46E5] text-white border-[#4F46E5]'
+                    : 'bg-[#263347] text-[#CBD5E1] border-[#334155]'
+                }`}
+              >
+                전체
+              </button>
+              {PLATFORMS.map((p) => (
+                <PlatformChip key={p} platform={p} selected={platforms.has(p)} onClick={() => togglePlatform(p)} />
+              ))}
+            </div>
           </div>
         </div>
 
         {/* 매장 목록 (스크롤) */}
-        <div
-          data-sheet-scroll="true"
-          className="flex-1 overflow-y-auto overscroll-contain pb-24"
-          style={{ touchAction: 'pan-y' }}
-        >
-          {/* 결과 헤더 */}
-          <div className="flex items-center justify-between px-4 pt-3 pb-2">
-            <p className="text-xs font-bold text-[#F8FAFC]">매장 {filteredStores.length}곳</p>
-            <button type="button" className="text-xs text-[#818CF8] font-semibold">거리순</button>
+        <div data-scroll className="flex-1 overflow-y-auto overscroll-contain px-5 pb-28" style={{ touchAction: 'pan-y' }}>
+          <div className="flex items-center justify-between py-3 sticky top-0 bg-[#0F172A] z-10">
+            <p className="text-[13px] font-bold text-[#F8FAFC]">매장 {stores.length}곳</p>
+            <span className="text-[12px] text-[#64748B] font-medium">거리순</span>
           </div>
 
-          {filteredStores.length === 0 ? (
-            <div className="text-center py-10">
+          {stores.length === 0 ? (
+            <div className="text-center py-14">
               <p className="text-[#64748B] text-sm">검색 결과가 없어요</p>
               <button
                 type="button"
+                onClick={() => { setSearch(''); setPlatforms(new Set()) }}
                 className="mt-2 text-sm text-[#818CF8] font-semibold"
-                onClick={() => { setSearch(''); setSelectedPlatforms(new Set()) }}
               >
                 필터 초기화
               </button>
             </div>
           ) : (
-            <div className="flex flex-col gap-3 px-4 pb-2">
-              {filteredStores.map((store) => (
+            <div className="flex flex-col gap-3">
+              {stores.map((store) => (
                 <StoreCard
                   key={store.id}
                   store={store}
-                  selected={store.id === selectedStoreId}
-                  onClick={() => setSelectedStoreId(store.id)}
-                  onViewInventory={() => setSelectedStoreId(store.id)}
+                  selected={store.id === selectedId}
+                  onClick={() => setSelectedId(store.id)}
+                  onViewInventory={() => setSelectedId(store.id)}
                 />
               ))}
             </div>
           )}
 
-          {/* 인기 타이틀 스트립 */}
-          {selectedPlatforms.size === 0 && !search && (
-            <div className="px-4 pt-4 pb-2">
-              <h2 className="text-sm font-bold text-[#F8FAFC] mb-3">내 주변 인기 타이틀</h2>
+          {/* 인기 타이틀 */}
+          {platforms.size === 0 && !search && stores.length > 0 && (
+            <div className="pt-6">
+              <h2 className="text-[14px] font-bold text-[#F8FAFC] mb-3">내 주변 인기 타이틀</h2>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                {GAMES.slice(0, 6).map((game) => {
-                  const storeInventory = STORES.flatMap((s) =>
-                    s.games
-                      .filter((sg) => sg.gameId === game.id && sg.stockStatus !== 'sold-out')
-                      .map((sg) => ({ store: s, inv: sg }))
-                  )
-                  const bestStore = storeInventory.sort((a, b) => a.store.distance - b.store.distance)[0]
-                  return (
-                    <button
-                      key={game.id}
-                      type="button"
-                      onClick={() => bestStore && onViewGame(game.id, bestStore.store.id)}
-                      className="flex-shrink-0 w-[110px] bg-[#1E293B] rounded-[14px] border border-[#334155] overflow-hidden active:scale-95 transition-transform text-left"
-                    >
-                      <div className="h-[88px]" style={{ background: game.coverColor }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={game.imagePath} alt={`${game.title} 커버`} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="p-2">
-                        <p className="text-[11px] font-bold text-[#F8FAFC] leading-tight line-clamp-2">{game.title}</p>
-                        <p className="text-[10px] text-[#64748B] mt-0.5">
-                          {bestStore ? `${bestStore.store.distance}km` : '재고 없음'}
-                        </p>
-                      </div>
-                    </button>
-                  )
-                })}
+                {popular.map(({ game, best }) => (
+                  <button
+                    key={game.id}
+                    type="button"
+                    onClick={() => best && onViewGame(game.id, best.store.id)}
+                    className="flex-shrink-0 w-[112px] bg-[#1E293B] rounded-[14px] border border-[#334155] overflow-hidden active:scale-95 transition-transform text-left"
+                  >
+                    <div className="h-[92px]" style={{ background: game.coverColor }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={game.imagePath || '/placeholder.svg'} alt={`${game.title} 커버`} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="p-2">
+                      <p className="text-[11px] font-bold text-[#F8FAFC] leading-tight line-clamp-2">{game.title}</p>
+                      <p className="text-[10px] text-[#64748B] mt-1">{best ? `${best.store.distance}km` : '재고 없음'}</p>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
         </div>
       </div>
-
-      {/* ── 스냅 힌트 버튼 (지도 위 우측 하단 FAB) ── */}
-      {snap !== 'full' && (
-        <button
-          type="button"
-          onClick={() => { setSnap('full'); setDragTop(null) }}
-          className="absolute right-4 z-20 bg-[#0F172A]/90 backdrop-blur-sm border border-[#334155] rounded-full px-3 py-2 flex items-center gap-1.5 shadow-lg text-xs font-bold text-[#CBD5E1] active:scale-95 transition-transform"
-          style={{ bottom: `calc(${(1 - SNAPS[snap]) * 100}% + 12px)` }}
-          aria-label="매장 목록 펼치기"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2.5" aria-hidden="true">
-            <polyline points="18 15 12 9 6 15"/>
-          </svg>
-          목록 보기
-        </button>
-      )}
-
-      {/* ── 지도 확대 버튼 (시트 full 상태일 때) ── */}
-      {snap === 'full' && (
-        <button
-          type="button"
-          onClick={() => { setSnap('peek'); setDragTop(null) }}
-          className="absolute right-4 top-14 z-20 bg-[#0F172A]/90 backdrop-blur-sm border border-[#334155] rounded-full px-3 py-2 flex items-center gap-1.5 shadow-lg text-xs font-bold text-[#CBD5E1] active:scale-95 transition-transform"
-          aria-label="지도 넓게 보기"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2.5" aria-hidden="true">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-          지도 보기
-        </button>
-      )}
     </div>
   )
 }

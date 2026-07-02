@@ -98,7 +98,7 @@ export function AppShell({
 
   return (
     <div className="flex items-start justify-center min-h-dvh bg-[#070D1A]">
-      <div className="phone-shell relative" style={{ minHeight: '100dvh', overflow: 'clip' }}>
+      <div className="phone-shell relative flex-shrink-0 w-full" style={{ minHeight: '100dvh', overflow: 'clip', width: '100%', maxWidth: 390 }}>
         <main className="h-dvh flex flex-col overflow-hidden">
           {gameDetail && (
             <div className="absolute inset-0 z-40 bg-background overflow-hidden flex flex-col">
