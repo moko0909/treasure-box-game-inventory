@@ -151,7 +151,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
           type="button"
           onClick={() => goSnap('expanded')}
           className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#4F46E5] text-white rounded-full pl-3.5 pr-4 py-2.5 flex items-center gap-2 shadow-xl shadow-black/40 text-[13px] font-bold active:scale-95 transition-transform"
-          style={{ bottom: `calc(${(1 - SNAP[snap]) * 100}% + 14px)`, zIndex: 10000 }}
+          style={{ bottom: `calc(${(1 - SNAP[snap]) * 100}% + 14px + 0px)`, zIndex: 10000 }}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
             <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
@@ -161,7 +161,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
         </button>
       )}
 
-      {/* ── 바텀시트 ── */}
+      {/* ── 바텀시트 (bottom은 네비바 64px 위) ── */}
       <div
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -170,9 +170,10 @@ export function StoresView({ onViewGame }: StoresViewProps) {
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        className="absolute left-0 right-0 bottom-0 flex flex-col bg-[#0F172A] rounded-t-[24px] shadow-[0_-6px_36px_rgba(0,0,0,0.6)] border-t border-[#1E293B]"
+        className="absolute left-0 right-0 flex flex-col bg-[#0F172A] rounded-t-[24px] shadow-[0_-6px_36px_rgba(0,0,0,0.6)] border-t border-[#1E293B]"
         style={{
           top: sheetTop,
+          bottom: 0,
           transition: dragTop !== null ? 'none' : 'top 0.34s cubic-bezier(0.32,0.72,0,1)',
           touchAction: 'none',
           willChange: dragTop !== null ? 'top' : 'auto',
@@ -251,7 +252,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
         </div>
 
         {/* 매장 목록 (스크롤) */}
-        <div data-scroll className="flex-1 overflow-y-auto overscroll-contain px-5 pb-28" style={{ touchAction: 'pan-y' }}>
+        <div data-scroll className="flex-1 overflow-y-auto overscroll-contain px-5 pb-6" style={{ touchAction: 'pan-y' }}>
           <div className="flex items-center justify-between py-3 sticky top-0 bg-[#0F172A] z-10">
             <p className="text-[13px] font-bold text-[#F8FAFC]">매장 {stores.length}곳</p>
             <span className="text-[12px] text-[#64748B] font-medium">거리순</span>

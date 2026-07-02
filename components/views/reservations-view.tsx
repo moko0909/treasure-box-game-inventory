@@ -13,11 +13,18 @@ import {
 type FilterStatus = 'all' | 'active' | 'picked-up' | 'cancelled'
 type Section = 'reservations' | 'restock'
 
-const STATUS_STYLE: Record<Reservation['status'], { color: string; bg: string }> = {
-  active: { color: 'text-[#818CF8]', bg: 'bg-[#4F46E5]/15' },
-  'picked-up': { color: 'text-green-400', bg: 'bg-green-500/15' },
-  expired: { color: 'text-[#475569]', bg: 'bg-[#1E293B]' },
-  cancelled: { color: 'text-red-400', bg: 'bg-red-500/15' },
+const STATUS_STYLE: Record<Reservation['status'], { color: string; bg: string; dot: string }> = {
+  active:      { color: 'text-[#818CF8]', bg: 'bg-[#4F46E5]/20',  dot: 'bg-[#818CF8]' },
+  'picked-up': { color: 'text-green-400', bg: 'bg-green-500/15',   dot: 'bg-green-400' },
+  expired:     { color: 'text-[#475569]', bg: 'bg-[#1E293B]',      dot: 'bg-[#475569]' },
+  cancelled:   { color: 'text-red-400',   bg: 'bg-red-500/15',     dot: 'bg-red-400' },
+}
+
+const STATUS_LABEL_MAP: Record<Reservation['status'], string> = {
+  active:      '예약 확정',
+  'picked-up': '수령 완료',
+  expired:     '기한 만료',
+  cancelled:   '예약 취소',
 }
 
 function formatDate(iso: string) {
@@ -109,8 +116,9 @@ function ReservationCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
             <h3 className="font-bold text-[#F8FAFC] text-[14px] leading-tight text-balance flex-1">{game.title}</h3>
-            <span className={cn('text-[11px] font-bold px-2 py-0.5 rounded-full flex-shrink-0', style.bg, style.color)}>
-              {getReservationStatusLabel(reservation.status)}
+            <span className={cn('inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full flex-shrink-0', style.bg, style.color)}>
+              <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', style.dot)} aria-hidden="true" />
+              {STATUS_LABEL_MAP[reservation.status]}
             </span>
           </div>
           <p className="text-xs text-[#64748B] mb-2">{game.platform} · 수량 {reservation.quantity}개</p>
@@ -285,8 +293,8 @@ export function ReservationsView({
   const activeCount = reservations.filter((r) => r.status === 'active').length
 
   const FILTERS: { id: FilterStatus; label: string }[] = [
-    { id: 'all', label: '전체' },
-    { id: 'active', label: '픽업 대기' },
+    { id: 'all',       label: '전체' },
+    { id: 'active',    label: '예약 확정' },
     { id: 'picked-up', label: '수령 완료' },
     { id: 'cancelled', label: '취소' },
   ]
