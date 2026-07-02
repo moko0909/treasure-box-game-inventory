@@ -8,9 +8,10 @@ import { GameDetailView } from '@/components/views/game-detail-view'
 import { ReservationsView } from '@/components/views/reservations-view'
 import { MyPageView } from '@/components/views/mypage-view'
 import { AdminView } from '@/components/views/admin-view'
-import { createReservation } from '@/app/actions/reservations'
+import { createReservation, cancelReservation, type CreateReservationInput } from '@/app/actions/reservations'
 import { toggleFavorite as toggleFavoriteAction } from '@/app/actions/favorites'
-import type { Reservation } from '@/lib/data'
+import { requestRestockAlert, cancelRestockAlert } from '@/app/actions/restock'
+import type { Reservation, RestockAlert } from '@/lib/data'
 
 type Tab = 'stores' | 'reservations' | 'mypage' | 'admin'
 
@@ -26,6 +27,7 @@ export interface AppShellProps {
   storeLocation: string | null
   reservations: Reservation[]
   favoriteStoreIds: string[]
+  restockAlerts: RestockAlert[]
 }
 
 export function AppShell({
@@ -35,6 +37,7 @@ export function AppShell({
   storeLocation,
   reservations,
   favoriteStoreIds,
+  restockAlerts,
 }: AppShellProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -51,9 +54,17 @@ export function AppShell({
     setGameDetail(null)
   }
 
-  const handleReserve = (gameId: string, storeId: string) => {
+  // 예약 확정 — 수량/픽업일시/요청사항을 함께 저장. 완료까지 await 하여
+  // GameDetailView가 완료 화면(바코드)을 보여줄 수 있도록 결과를 반환.
+  const handleReserve = async (input: CreateReservationInput) => {
+    const result = await createReservation(input)
+    startTransition(() => router.refresh())
+    return result
+  }
+
+  const handleCancelReservation = (id: string) => {
     startTransition(async () => {
-      await createReservation(gameId, storeId)
+      await cancelReservation(id)
       router.refresh()
     })
   }
@@ -65,8 +76,21 @@ export function AppShell({
     })
   }
 
+  const handleRequestRestock = async (gameId: string, storeId: string) => {
+    const result = await requestRestockAlert(gameId, storeId)
+    startTransition(() => router.refresh())
+    return result
+  }
+
+  const handleCancelRestock = (id: string) => {
+    startTransition(async () => {
+      await cancelRestockAlert(id)
+      router.refresh()
+    })
+  }
+
   const handleNavigate = (tab: Tab) => {
-    // Only store owners can access the Admin tab.
+    // 점주만 Admin 탭 접근 가능
     if (tab === 'admin' && !isOwner) return
     setGameDetail(null)
     setActiveTab(tab)
@@ -83,6 +107,7 @@ export function AppShell({
                 storeId={gameDetail.storeId}
                 onBack={closeGameDetail}
                 onReserve={handleReserve}
+                onRequestRestock={handleRequestRestock}
               />
             </div>
           )}
@@ -94,6 +119,9 @@ export function AppShell({
             <div className={activeTab === 'reservations' ? 'flex flex-col h-full' : 'hidden'}>
               <ReservationsView
                 reservations={reservations}
+                restockAlerts={restockAlerts}
+                onCancelReservation={handleCancelReservation}
+                onCancelRestock={handleCancelRestock}
                 onViewGame={(gId, sId) => {
                   handleNavigate('stores')
                   setTimeout(() => openGameDetail(gId, sId), 50)

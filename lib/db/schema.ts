@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, boolean, integer } from 'drizzle-orm/pg-core'
 
 // --- Better Auth required tables -------------------------------------------
 // Column names are camelCase to match Better Auth's defaults. Do not rename.
@@ -68,9 +68,14 @@ export const reservations = pgTable('reservations', {
   userId: text('userId').notNull(),
   gameId: text('gameId').notNull(),
   storeId: text('storeId').notNull(),
+  // 'active' (승인 대기/픽업 대기), 'picked-up' (수령 완료),
+  // 'cancelled' (취소), 'expired' (기한 만료/노쇼)
   status: text('status').notNull().default('active'),
   code: text('code').notNull(),
+  quantity: integer('quantity').notNull().default(1),
+  notes: text('notes'),
   reservedAt: timestamp('reservedAt').notNull().defaultNow(),
+  pickupAt: timestamp('pickupAt'),
   expiresAt: timestamp('expiresAt').notNull(),
 })
 
@@ -79,4 +84,15 @@ export const favorites = pgTable('favorites', {
   userId: text('userId').notNull(),
   storeId: text('storeId').notNull(),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+
+// 재입고 알림 신청 — 품절 상품에 대해 사용자가 알림을 신청하면 이 테이블에 저장.
+export const restockAlerts = pgTable('restock_alerts', {
+  id: text('id').primaryKey(),
+  userId: text('userId').notNull(),
+  gameId: text('gameId').notNull(),
+  storeId: text('storeId').notNull(),
+  status: text('status').notNull().default('watching'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  notifiedAt: timestamp('notifiedAt'),
 })

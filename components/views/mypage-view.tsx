@@ -36,8 +36,8 @@ const MENU_ITEMS = [
       </svg>
     ),
     id: 'wishlist',
-    label: 'Wishlist',
-    value: '12 games',
+    label: '위시리스트',
+    value: '12개',
     badge: false,
   },
   {
@@ -47,8 +47,8 @@ const MENU_ITEMS = [
       </svg>
     ),
     id: 'notifications',
-    label: 'Notifications',
-    value: '3 new',
+    label: '알림',
+    value: '3개',
     badge: true,
   },
   {

@@ -60,10 +60,10 @@ export function StoreCard({
                 : 'bg-[#263347] text-[#64748B]'
             )}
           >
-            {store.isOpen ? 'Open' : `Opens ${store.opensAt}`}
+            {store.isOpen ? '영업 중' : `${store.opensAt} 오픈`}
           </span>
           <span className="text-[11px] text-[#475569]">
-            Closes {store.closesAt}
+            {store.closesAt} 마감
           </span>
         </div>
       </div>
@@ -75,7 +75,7 @@ export function StoreCard({
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
             <circle cx="12" cy="10" r="3" />
           </svg>
-          <span>{store.distance} km away</span>
+          <span>{store.distance} km 거리</span>
         </div>
         <div className="flex items-center gap-1 text-xs text-[#64748B]">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" aria-hidden="true">
@@ -99,7 +99,7 @@ export function StoreCard({
             <StockBadge status="low-stock" count={lowStockCount} size="sm" />
           )}
           {inStockCount === 0 && lowStockCount === 0 && (
-            <span className="text-xs text-[#475569]">{totalCount} titles tracked</span>
+            <span className="text-xs text-[#475569]">타이틀 {totalCount}종 관리 중</span>
           )}
         </div>
         <button
@@ -110,7 +110,7 @@ export function StoreCard({
           }}
           className="text-xs font-bold text-[#818CF8] hover:text-[#A5B4FC] transition-colors min-h-[44px] flex items-center px-1"
         >
-          View Inventory →
+          재고 보기 →
         </button>
       </div>
     </div>

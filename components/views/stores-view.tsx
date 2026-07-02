@@ -50,15 +50,15 @@ export function StoresView({ onViewGame }: StoresViewProps) {
       <header className="bg-[#0F172A] px-4 pt-12 pb-4 border-b border-[#334155]">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-[11px] text-[#64748B] font-semibold uppercase tracking-widest">Near You</p>
-            <h1 className="text-2xl font-extrabold text-[#F8FAFC] leading-tight tracking-tight">Treasure Box</h1>
+            <p className="text-[11px] text-[#64748B] font-semibold uppercase tracking-widest">내 주변</p>
+            <h1 className="text-2xl font-extrabold text-[#F8FAFC] leading-tight tracking-tight">보물상자</h1>
           </div>
           <div className="flex items-center gap-1.5 bg-[#4F46E5]/15 text-[#818CF8] rounded-full px-3 py-1.5 border border-[#4F46E5]/20">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            <span className="text-xs font-bold">Shibuya</span>
+            <span className="text-xs font-bold">시부야</span>
           </div>
         </div>
 
@@ -79,16 +79,16 @@ export function StoresView({ onViewGame }: StoresViewProps) {
           </svg>
           <input
             type="search"
-            placeholder="Search stores or games..."
+            placeholder="매장 또는 게임 검색..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full h-11 pl-10 pr-4 bg-[#1E293B] rounded-xl text-sm text-[#F8FAFC] placeholder-[#475569] outline-none border border-[#334155] focus:border-[#4F46E5] transition-colors"
-            aria-label="Search stores"
+            aria-label="매장 검색"
           />
         </div>
 
         {/* Platform filters */}
-        <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide" role="group" aria-label="Filter by platform">
+        <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide" role="group" aria-label="플랫폼 필터">
           <button
             type="button"
             onClick={() => setSelectedPlatforms(new Set())}
@@ -98,7 +98,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
                 : 'bg-[#263347] text-[#CBD5E1] border-[#334155] hover:border-[#4F46E5]'
             }`}
           >
-            All
+            전체
           </button>
           {PLATFORMS.map((p) => (
             <PlatformChip
@@ -127,22 +127,22 @@ export function StoresView({ onViewGame }: StoresViewProps) {
         <div className="px-4 pt-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-bold text-[#F8FAFC]">
-              {filteredStores.length} Store{filteredStores.length !== 1 ? 's' : ''} Found
+              매장 {filteredStores.length}곳
             </h2>
             <button type="button" className="text-xs text-[#818CF8] font-semibold">
-              Sort by distance
+              거리순 정렬
             </button>
           </div>
 
           {filteredStores.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-[#64748B] text-sm">No stores found</p>
+              <p className="text-[#64748B] text-sm">검색 결과가 없어요</p>
               <button
                 type="button"
                 className="mt-2 text-sm text-[#818CF8] font-semibold"
                 onClick={() => { setSearch(''); setSelectedPlatforms(new Set()) }}
               >
-                Clear filters
+                필터 초기화
               </button>
             </div>
           ) : (
@@ -163,7 +163,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
         {/* Featured games strip */}
         {selectedPlatforms.size === 0 && !search && (
           <div className="px-4 pt-6 pb-2">
-            <h2 className="text-sm font-bold text-[#F8FAFC] mb-3">Popular Titles Near You</h2>
+            <h2 className="text-sm font-bold text-[#F8FAFC] mb-3">내 주변 인기 타이틀</h2>
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
               {GAMES.slice(0, 6).map((game) => {
                 const storeInventory = STORES.flatMap((s) =>
@@ -198,7 +198,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
                       <p className="text-[10px] text-[#64748B] mt-0.5">
                         {bestStore
                           ? `${bestStore.store.distance}km · ${bestStore.store.name}`
-                          : 'No stock nearby'}
+                          : '주변 재고 없음'}
                       </p>
                     </div>
                   </button>

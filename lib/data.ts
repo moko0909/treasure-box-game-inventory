@@ -50,6 +50,18 @@ export interface Reservation {
   expiresAt: string
   status: 'active' | 'picked-up' | 'expired' | 'cancelled'
   confirmationCode: string
+  quantity: number
+  notes?: string | null
+  pickupAt?: string | null
+}
+
+export interface RestockAlert {
+  id: string
+  gameId: string
+  storeId: string
+  status: string
+  createdAt: string
+  notifiedAt?: string | null
 }
 
 // --- Mock Games ---
@@ -290,6 +302,7 @@ export const RESERVATIONS: Reservation[] = [
     expiresAt: '2025-01-12T14:30:00Z',
     status: 'active',
     confirmationCode: 'TB-4821',
+    quantity: 1,
   },
   {
     id: 'r2',
@@ -299,6 +312,7 @@ export const RESERVATIONS: Reservation[] = [
     expiresAt: '2025-01-07T10:00:00Z',
     status: 'picked-up',
     confirmationCode: 'TB-3317',
+    quantity: 1,
   },
   {
     id: 'r3',
@@ -308,6 +322,7 @@ export const RESERVATIONS: Reservation[] = [
     expiresAt: '2024-12-30T09:15:00Z',
     status: 'expired',
     confirmationCode: 'TB-2209',
+    quantity: 1,
   },
 ]
 
@@ -323,11 +338,27 @@ export function getStoreById(id: string): Store | undefined {
 export function getStockLabel(status: StockStatus): string {
   switch (status) {
     case 'in-stock':
-      return 'In Stock'
+      return '재고 있음'
     case 'low-stock':
-      return 'Low Stock'
+      return '재고 부족'
     case 'sold-out':
-      return 'Sold Out'
+      return '품절'
+  }
+}
+
+// 예약 상태 한국어 라벨
+export function getReservationStatusLabel(
+  status: Reservation['status'],
+): string {
+  switch (status) {
+    case 'active':
+      return '픽업 대기'
+    case 'picked-up':
+      return '수령 완료'
+    case 'expired':
+      return '기한 만료'
+    case 'cancelled':
+      return '예약 취소'
   }
 }
 
