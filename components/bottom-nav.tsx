@@ -1,6 +1,6 @@
 'use client'
 
-import { Store, Bell, CalendarDays, User, LayoutGrid } from 'lucide-react'
+import { Store, Gamepad2, Bell, CalendarDays, User, LayoutGrid } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export type Tab = 'stores' | 'games' | 'notifications' | 'reservations' | 'mypage' | 'admin'
@@ -20,9 +20,10 @@ interface BottomNavProps {
 }
 
 const NAV_ITEMS: TabItem[] = [
-  { id: 'stores',        label: '매장',     Icon: Store },
-  { id: 'notifications', label: '알림',     Icon: Bell },
-  { id: 'reservations',  label: '예약목록', Icon: CalendarDays },
+  { id: 'stores',        label: '매장',      Icon: Store },
+  { id: 'games',         label: '게임',      Icon: Gamepad2 },
+  { id: 'notifications', label: '알림',      Icon: Bell },
+  { id: 'reservations',  label: '예약',      Icon: CalendarDays },
   { id: 'mypage',        label: '마이페이지', Icon: User },
 ]
 
@@ -72,11 +73,11 @@ export function BottomNav({
                 )}
                 <item.Icon
                   className={cn(
-                    'h-[22px] w-[22px] transition-transform duration-150',
+                    'h-[20px] w-[20px] transition-transform duration-150',
                     isActive ? 'stroke-[2.5px] scale-110' : 'stroke-[2px]'
                   )}
                 />
-                <span className={cn('text-[10px] leading-none', isActive && 'font-bold')}>
+                <span className={cn('text-[9px] leading-none whitespace-nowrap', isActive && 'font-bold')}>
                   {item.label}
                 </span>
               </button>
