@@ -1,17 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { STORES, GAMES, RESERVATIONS, FAVORITE_STORE_IDS, getGameById } from '@/lib/data'
-
-const PROFILE = {
-  name: 'Alex Kim',
-  username: '@alexkim_games',
-  memberSince: 'Jan 2024',
-  level: 'Gold Member',
-}
+import { STORES, GAMES, getGameById, type Reservation } from '@/lib/data'
+import { authClient } from '@/lib/auth-client'
 
 interface MyPageViewProps {
+  userName: string
+  userEmail: string
+  reservations: Reservation[]
+  favoriteStoreIds: string[]
+  onToggleFavorite: (storeId: string) => void
   onViewGame: (gameId: string, storeId: string) => void
 }
 
@@ -83,19 +82,26 @@ const MENU_ITEMS = [
   },
 ]
 
-export function MyPageView({ onViewGame }: MyPageViewProps) {
-  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set(FAVORITE_STORE_IDS))
+export function MyPageView({
+  userName,
+  userEmail,
+  reservations,
+  favoriteStoreIds,
+  onToggleFavorite,
+  onViewGame,
+}: MyPageViewProps) {
+  const router = useRouter()
+  const favoriteIds = new Set(favoriteStoreIds)
 
   const favoriteStores = STORES.filter((s) => favoriteIds.has(s.id))
-  const pickedUpGames = RESERVATIONS.filter((r) => r.status === 'picked-up')
+  const pickedUpGames = reservations.filter((r) => r.status === 'picked-up')
+  const totalCount = reservations.length
+  const pickedUpCount = pickedUpGames.length
 
-  const toggleFavorite = (id: string) => {
-    setFavoriteIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+  const handleSignOut = async () => {
+    await authClient.signOut()
+    router.push('/sign-in')
+    router.refresh()
   }
 
   return (
@@ -110,19 +116,17 @@ export function MyPageView({ onViewGame }: MyPageViewProps) {
             {/* Avatar */}
             <div className="w-16 h-16 rounded-full bg-[#4F46E5]/30 flex items-center justify-center flex-shrink-0 border-2 border-[#818CF8]/40">
               <span className="text-[#F8FAFC] text-2xl font-extrabold" aria-hidden="true">
-                {PROFILE.name.charAt(0)}
+                {userName.charAt(0).toUpperCase()}
               </span>
             </div>
-            <div className="flex-1">
-              <h1 className="text-lg font-extrabold text-[#F8FAFC] tracking-tight">{PROFILE.name}</h1>
-              <p className="text-[#94A3B8] text-sm">{PROFILE.username}</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg font-extrabold text-[#F8FAFC] tracking-tight truncate">{userName}</h1>
+              <p className="text-[#94A3B8] text-sm truncate">{userEmail}</p>
               <div className="flex items-center gap-1.5 mt-1">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" aria-hidden="true">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
-                <span className="text-xs text-[#CBD5E1] font-bold">{PROFILE.level}</span>
-                <span className="text-[#334155] text-xs">·</span>
-                <span className="text-xs text-[#64748B]">Since {PROFILE.memberSince}</span>
+                <span className="text-xs text-[#CBD5E1] font-bold">Gold Member</span>
               </div>
             </div>
             <button
@@ -142,8 +146,8 @@ export function MyPageView({ onViewGame }: MyPageViewProps) {
         <div className="px-4 -mt-3">
           <div className="bg-[#1E293B] rounded-[18px] border border-[#334155] shadow-lg p-4">
             <div className="flex gap-2">
-              <StatCard label="Reservations" value="8" sub="Total" />
-              <StatCard label="Picked Up" value="5" />
+              <StatCard label="Reservations" value={String(totalCount)} sub="Total" />
+              <StatCard label="Picked Up" value={String(pickedUpCount)} />
               <StatCard label="Fav Stores" value={String(favoriteIds.size)} />
             </div>
           </div>
@@ -185,7 +189,7 @@ export function MyPageView({ onViewGame }: MyPageViewProps) {
                     </div>
                     <button
                       type="button"
-                      onClick={() => toggleFavorite(store.id)}
+                      onClick={() => onToggleFavorite(store.id)}
                       aria-label={`Remove ${store.name} from favorites`}
                       className="text-red-400 hover:text-red-300 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                     >
@@ -281,6 +285,7 @@ export function MyPageView({ onViewGame }: MyPageViewProps) {
         <div className="px-4 mt-4 mb-2">
           <button
             type="button"
+            onClick={handleSignOut}
             className="w-full h-12 rounded-[14px] border border-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/10 transition-colors"
           >
             Sign Out

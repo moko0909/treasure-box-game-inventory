@@ -1,12 +1,4 @@
-import {
-  pgTable,
-  text,
-  timestamp,
-  boolean,
-  integer,
-  real,
-  serial,
-} from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, boolean } from 'drizzle-orm/pg-core'
 
 // --- Better Auth required tables -------------------------------------------
 // Column names are camelCase to match Better Auth's defaults. Do not rename.
@@ -62,63 +54,23 @@ export const verification = pgTable('verification', {
 })
 
 // --- App tables ------------------------------------------------------------
-// Global catalog data (stores / games / inventory) is shared across all users,
-// so these tables have no userId. User-owned data (reservations, favorites)
-// carries a plain userId column for per-user scoping — no FK by design.
-
-export const stores = pgTable('stores', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  address: text('address').notNull(),
-  distance: real('distance').notNull(),
-  isOpen: boolean('isOpen').notNull().default(true),
-  opensAt: text('opensAt'),
-  closesAt: text('closesAt').notNull(),
-  rating: real('rating').notNull().default(0),
-  reviewCount: integer('reviewCount').notNull().default(0),
-  lat: real('lat').notNull(),
-  lng: real('lng').notNull(),
-  phone: text('phone').notNull(),
-  tag: text('tag'),
-})
-
-export const games = pgTable('games', {
-  id: text('id').primaryKey(),
-  title: text('title').notNull(),
-  platform: text('platform').notNull(),
-  genre: text('genre').notNull(),
-  price: real('price').notNull(),
-  coverColor: text('coverColor').notNull(),
-  coverAccent: text('coverAccent').notNull(),
-  rating: real('rating').notNull().default(0),
-  releaseYear: integer('releaseYear').notNull(),
-  developer: text('developer').notNull(),
-  description: text('description').notNull(),
-  imagePath: text('imagePath'),
-})
-
-export const inventory = pgTable('inventory', {
-  id: serial('id').primaryKey(),
-  storeId: text('storeId').notNull(),
-  gameId: text('gameId').notNull(),
-  stockStatus: text('stockStatus').notNull(),
-  stockCount: integer('stockCount').notNull().default(0),
-  price: real('price').notNull(),
-})
+// The games / stores catalog stays as static reference data in lib/data.ts
+// (tightly coupled to the UI cover art and colors). Only user-owned data lives
+// in the database, each row scoped by a plain userId column — no FK by design.
 
 export const reservations = pgTable('reservations', {
-  id: serial('id').primaryKey(),
+  id: text('id').primaryKey(),
   userId: text('userId').notNull(),
   gameId: text('gameId').notNull(),
   storeId: text('storeId').notNull(),
   status: text('status').notNull().default('active'),
-  confirmationCode: text('confirmationCode').notNull(),
-  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  code: text('code').notNull(),
+  reservedAt: timestamp('reservedAt').notNull().defaultNow(),
   expiresAt: timestamp('expiresAt').notNull(),
 })
 
 export const favorites = pgTable('favorites', {
-  id: serial('id').primaryKey(),
+  id: text('id').primaryKey(),
   userId: text('userId').notNull(),
   storeId: text('storeId').notNull(),
   createdAt: timestamp('createdAt').notNull().defaultNow(),

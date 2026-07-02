@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { RESERVATIONS, getGameById, getStoreById, type Reservation } from '@/lib/data'
-import { StockBadge } from '@/components/stock-badge'
+import { getGameById, getStoreById, type Reservation } from '@/lib/data'
 
 type FilterStatus = 'all' | 'active' | 'picked-up' | 'expired'
 
@@ -176,12 +175,12 @@ function ReservationCard({
 
 interface ReservationsViewProps {
   onViewGame: (gameId: string, storeId: string) => void
-  extraReservations?: Reservation[]
+  reservations: Reservation[]
 }
 
-export function ReservationsView({ onViewGame, extraReservations = [] }: ReservationsViewProps) {
+export function ReservationsView({ onViewGame, reservations }: ReservationsViewProps) {
   const [filter, setFilter] = useState<FilterStatus>('all')
-  const allReservations = [...extraReservations, ...RESERVATIONS]
+  const allReservations = reservations
 
   const filtered = allReservations.filter(
     (r) => filter === 'all' || r.status === filter
