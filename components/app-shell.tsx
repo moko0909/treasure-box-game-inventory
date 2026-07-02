@@ -113,9 +113,11 @@ export function AppShell({
           )}
 
           <div className="flex-1 overflow-hidden relative">
-            <div className={activeTab === 'stores' ? 'relative h-full' : 'hidden'}>
-              <StoresView onViewGame={openGameDetail} />
-            </div>
+            {activeTab === 'stores' && (
+              <div className="absolute inset-0">
+                <StoresView onViewGame={openGameDetail} />
+              </div>
+            )}
             <div className={activeTab === 'reservations' ? 'flex flex-col h-full' : 'hidden'}>
               <ReservationsView
                 reservations={reservations}
