@@ -41,7 +41,7 @@ export function BottomNav({
   return (
     <nav
       aria-label="주요 내비게이션"
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] bg-[#0D1526]/95 backdrop-blur-md border-t border-[#1E293B] z-50"
+      className="w-full bg-[#0D1526]/95 backdrop-blur-md border-t border-[#1E293B] z-50 flex-shrink-0"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <ul className="flex items-center justify-around h-[60px]">
