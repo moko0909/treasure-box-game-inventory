@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { BottomNav } from '@/components/bottom-nav'
+import { BottomNav, type Tab } from '@/components/bottom-nav'
 import { StoresView } from '@/components/views/stores-view'
 import { GamesView } from '@/components/views/games-view'
 import { GameDetailView } from '@/components/views/game-detail-view'
+import { NotificationsView } from '@/components/views/notifications-view'
 import { ReservationsView } from '@/components/views/reservations-view'
 import { MyPageView } from '@/components/views/mypage-view'
 import { AdminView } from '@/components/views/admin-view'
@@ -13,8 +14,6 @@ import { createReservation, cancelReservation, type CreateReservationInput } fro
 import { toggleFavorite as toggleFavoriteAction } from '@/app/actions/favorites'
 import { requestRestockAlert, cancelRestockAlert } from '@/app/actions/restock'
 import type { Reservation, RestockAlert } from '@/lib/data'
-
-type Tab = 'stores' | 'games' | 'reservations' | 'mypage' | 'admin'
 
 interface GameDetailState {
   gameId: string
@@ -47,6 +46,11 @@ export function AppShell({
 
   const isOwner = role === 'owner'
 
+  // 뱃지 카운트
+  // 알림: 관심 매장 입고 알림(더미 4개) + 찜한 게임 재고 알림(더미 3개)
+  const NOTIFICATION_COUNT = 4 + 3
+  const activeReservationCount = reservations.filter((r) => r.status === 'active').length
+
   const openGameDetail = (gameId: string, storeId: string) => {
     setGameDetail({ gameId, storeId })
   }
@@ -55,8 +59,6 @@ export function AppShell({
     setGameDetail(null)
   }
 
-  // 예약 확정 — 수량/픽업일시/요청사항을 함께 저장. 완료까지 await 하여
-  // GameDetailView가 완료 화면(바코드)을 보여줄 수 있도록 결과를 반환.
   const handleReserve = async (input: CreateReservationInput) => {
     const result = await createReservation(input)
     startTransition(() => router.refresh())
@@ -91,7 +93,6 @@ export function AppShell({
   }
 
   const handleNavigate = (tab: Tab) => {
-    // 점주만 Admin 탭 접근 가능
     if (tab === 'admin' && !isOwner) return
     setGameDetail(null)
     setActiveTab(tab)
@@ -119,6 +120,16 @@ export function AppShell({
             </div>
             <div className={activeTab === 'games' ? 'flex flex-col h-full' : 'hidden'}>
               <GamesView onViewGame={openGameDetail} />
+            </div>
+            <div className={activeTab === 'notifications' ? 'flex flex-col h-full' : 'hidden'}>
+              <NotificationsView
+                favoriteStoreIds={favoriteStoreIds}
+                restockAlerts={restockAlerts}
+                onViewGame={(gId, sId) => {
+                  handleNavigate('stores')
+                  setTimeout(() => openGameDetail(gId, sId), 50)
+                }}
+              />
             </div>
             <div className={activeTab === 'reservations' ? 'flex flex-col h-full' : 'hidden'}>
               <ReservationsView
@@ -154,7 +165,13 @@ export function AppShell({
           </div>
 
           {!gameDetail && (
-            <BottomNav active={activeTab} onNavigate={handleNavigate} showAdmin={isOwner} />
+            <BottomNav
+              active={activeTab}
+              onNavigate={handleNavigate}
+              showAdmin={isOwner}
+              notificationCount={NOTIFICATION_COUNT}
+              activeReservationCount={activeReservationCount}
+            />
           )}
         </main>
       </div>
