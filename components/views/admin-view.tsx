@@ -88,7 +88,7 @@ const MOCK_ADMIN_RESERVATIONS = [
   { id: 'ra4', code: 'TB-5509', game: 'FF XVI',         customer: 'Sarah L.',  expires: 'Jan 14',       status: 'picked-up' as const },
 ]
 
-export function AdminView() {
+export function AdminView({ storeLocation }: { storeLocation?: string | null }) {
   const [activeTab, setActiveTab] = useState<AdminTab>('inventory')
   const [selectedStoreId, setSelectedStoreId] = useState(STORES[0].id)
   const [inventory, setInventory] = useState(() =>
@@ -123,9 +123,18 @@ export function AdminView() {
       {/* Header */}
       <header className="bg-[#0F172A] px-4 pt-12 pb-4 border-b border-[#334155]">
         <div className="flex items-center justify-between mb-4">
-          <div>
+          <div className="min-w-0">
             <p className="text-[11px] text-[#64748B] font-semibold uppercase tracking-widest">Admin</p>
             <h1 className="text-2xl font-extrabold text-[#F8FAFC] tracking-tight">Dashboard</h1>
+            {storeLocation && (
+              <p className="mt-1 flex items-center gap-1 text-xs text-[#94A3B8] truncate">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                {storeLocation}
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-1.5 bg-[#F59E0B]/15 text-[#F59E0B] rounded-full px-3 py-1.5 border border-[#F59E0B]/20">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

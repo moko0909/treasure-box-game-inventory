@@ -7,6 +7,7 @@ type Tab = 'stores' | 'reservations' | 'mypage' | 'admin'
 interface BottomNavProps {
   active: Tab
   onNavigate: (tab: Tab) => void
+  showAdmin?: boolean
 }
 
 const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -56,7 +57,8 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   },
 ]
 
-export function BottomNav({ active, onNavigate }: BottomNavProps) {
+export function BottomNav({ active, onNavigate, showAdmin = false }: BottomNavProps) {
+  const items = showAdmin ? NAV_ITEMS : NAV_ITEMS.filter((item) => item.id !== 'admin')
   return (
     <nav
       aria-label="Main navigation"
@@ -64,7 +66,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="flex items-center justify-around h-[60px]">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const isActive = item.id === active
           return (
             <button

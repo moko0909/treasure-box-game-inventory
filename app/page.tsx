@@ -25,10 +25,15 @@ export default async function TreasureBoxApp() {
     confirmationCode: r.code,
   }))
 
+  const role = (session.user as { role?: string }).role === 'owner' ? 'owner' : 'user'
+  const storeLocation = (session.user as { storeLocation?: string }).storeLocation ?? null
+
   return (
     <AppShell
       userName={session.user.name}
       userEmail={session.user.email}
+      role={role}
+      storeLocation={storeLocation}
       reservations={reservations}
       favoriteStoreIds={favoriteStoreIds}
     />

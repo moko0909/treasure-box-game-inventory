@@ -14,6 +14,26 @@ export const auth = betterAuth({
     enabled: true,
     autoSignIn: true,
   },
+  user: {
+    additionalFields: {
+      role: {
+        type: 'string',
+        required: false,
+        defaultValue: 'user',
+        input: true,
+      },
+      businessNumber: {
+        type: 'string',
+        required: false,
+        input: true,
+      },
+      storeLocation: {
+        type: 'string',
+        required: false,
+        input: true,
+      },
+    },
+  },
   trustedOrigins: [
     'http://localhost:3000',
     // v0 preview iframes are served from rotating *.vusercontent.net

@@ -9,6 +9,11 @@ export const user = pgTable('user', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('emailVerified').notNull().default(false),
   image: text('image'),
+  // 'user' (general shopper) or 'owner' (store owner). Owners register a
+  // business number and store location at sign-up and can access the Admin tab.
+  role: text('role').notNull().default('user'),
+  businessNumber: text('businessNumber'),
+  storeLocation: text('storeLocation'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })

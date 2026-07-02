@@ -22,6 +22,8 @@ interface GameDetailState {
 export interface AppShellProps {
   userName: string
   userEmail: string
+  role: 'user' | 'owner'
+  storeLocation: string | null
   reservations: Reservation[]
   favoriteStoreIds: string[]
 }
@@ -29,6 +31,8 @@ export interface AppShellProps {
 export function AppShell({
   userName,
   userEmail,
+  role,
+  storeLocation,
   reservations,
   favoriteStoreIds,
 }: AppShellProps) {
@@ -36,6 +40,8 @@ export function AppShell({
   const [, startTransition] = useTransition()
   const [activeTab, setActiveTab] = useState<Tab>('stores')
   const [gameDetail, setGameDetail] = useState<GameDetailState | null>(null)
+
+  const isOwner = role === 'owner'
 
   const openGameDetail = (gameId: string, storeId: string) => {
     setGameDetail({ gameId, storeId })
@@ -60,6 +66,8 @@ export function AppShell({
   }
 
   const handleNavigate = (tab: Tab) => {
+    // Only store owners can access the Admin tab.
+    if (tab === 'admin' && !isOwner) return
     setGameDetail(null)
     setActiveTab(tab)
   }
@@ -105,12 +113,16 @@ export function AppShell({
                 }}
               />
             </div>
-            <div className={activeTab === 'admin' ? 'flex flex-col h-full' : 'hidden'}>
-              <AdminView />
-            </div>
+            {isOwner && (
+              <div className={activeTab === 'admin' ? 'flex flex-col h-full' : 'hidden'}>
+                <AdminView storeLocation={storeLocation} />
+              </div>
+            )}
           </div>
 
-          {!gameDetail && <BottomNav active={activeTab} onNavigate={handleNavigate} />}
+          {!gameDetail && (
+            <BottomNav active={activeTab} onNavigate={handleNavigate} showAdmin={isOwner} />
+          )}
         </main>
       </div>
     </div>
