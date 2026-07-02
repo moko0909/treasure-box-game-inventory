@@ -135,6 +135,7 @@
 
 /* Mobile-first phone shell */
 .phone-shell {
+  width: 100%;
   max-width: 390px;
   min-height: 100dvh;
   margin: 0 auto;

@@ -385,3 +385,45 @@ export function getPlatformShort(platform: Platform): string {
 }
 
 export const FAVORITE_STORE_IDS = ['s1', 's3']
+
+// --- 게임 검색/필터 헬퍼 ---
+
+// 전체 장르 목록 (중복 제거)
+export function getAllGenres(): string[] {
+  return Array.from(new Set(GAMES.map((g) => g.genre))).sort()
+}
+
+export interface GameStockSummary {
+  /** 재고(재고 있음/부족)가 있는 매장 수 */
+  availableStoreCount: number
+  /** 해당 게임을 취급하는 전체 매장 수 */
+  totalStoreCount: number
+  /** 재고 있는 매장 중 가장 가까운 매장 (없으면 가장 가까운 취급 매장) */
+  nearestStore?: Store
+  /** 재고 있는 매장 중 최저가 (없으면 게임 기본가) */
+  lowestPrice: number
+}
+
+// 특정 게임의 매장별 재고 현황을 요약한다. 재고 있는 매장을 우선한다.
+export function getGameStockSummary(gameId: string): GameStockSummary {
+  const entries = STORES.map((store) => {
+    const inv = store.games.find((sg) => sg.gameId === gameId)
+    return inv ? { store, inv } : null
+  }).filter(Boolean) as { store: Store; inv: StoreInventory }[]
+
+  const available = entries.filter((e) => e.inv.stockStatus !== 'sold-out')
+  const sortedByDistance = [...entries].sort((a, b) => a.store.distance - b.store.distance)
+  const availableByDistance = [...available].sort((a, b) => a.store.distance - b.store.distance)
+
+  const game = getGameById(gameId)
+  const lowestPrice = available.length
+    ? Math.min(...available.map((e) => e.inv.price))
+    : game?.price ?? 0
+
+  return {
+    availableStoreCount: available.length,
+    totalStoreCount: entries.length,
+    nearestStore: (availableByDistance[0] ?? sortedByDistance[0])?.store,
+    lowestPrice,
+  }
+}

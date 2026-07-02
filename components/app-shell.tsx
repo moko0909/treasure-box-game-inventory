@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/components/bottom-nav'
 import { StoresView } from '@/components/views/stores-view'
+import { GamesView } from '@/components/views/games-view'
 import { GameDetailView } from '@/components/views/game-detail-view'
 import { ReservationsView } from '@/components/views/reservations-view'
 import { MyPageView } from '@/components/views/mypage-view'
@@ -13,7 +14,7 @@ import { toggleFavorite as toggleFavoriteAction } from '@/app/actions/favorites'
 import { requestRestockAlert, cancelRestockAlert } from '@/app/actions/restock'
 import type { Reservation, RestockAlert } from '@/lib/data'
 
-type Tab = 'stores' | 'reservations' | 'mypage' | 'admin'
+type Tab = 'stores' | 'games' | 'reservations' | 'mypage' | 'admin'
 
 interface GameDetailState {
   gameId: string
@@ -98,8 +99,8 @@ export function AppShell({
 
   return (
     <div className="flex items-start justify-center min-h-dvh bg-[#070D1A]">
-      <div className="phone-shell relative" style={{ minHeight: '100dvh', overflow: 'clip' }}>
-        <main className="relative h-dvh">
+      <div className="phone-shell relative flex-shrink-0 w-full" style={{ minHeight: '100dvh', overflow: 'clip', width: '100%', maxWidth: 390 }}>
+        <main className="h-dvh flex flex-col overflow-hidden">
           {gameDetail && (
             <div className="absolute inset-0 z-40 bg-background overflow-hidden flex flex-col">
               <GameDetailView
@@ -112,13 +113,13 @@ export function AppShell({
             </div>
           )}
 
-          {/* 매장 탭: 전체 화면을 차지하며 내부에서 네비바 높이(64px)를 직접 처리 */}
-          <div className={activeTab === 'stores' ? 'absolute inset-0' : 'hidden'}>
-            <StoresView onViewGame={openGameDetail} />
-          </div>
-
-          {/* 나머지 탭: 상단부터 네비바 위까지 */}
-          <div className="absolute inset-0 bottom-16 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-hidden relative">
+            <div className={activeTab === 'stores' ? 'relative h-full' : 'hidden'}>
+              <StoresView onViewGame={openGameDetail} />
+            </div>
+            <div className={activeTab === 'games' ? 'flex flex-col h-full' : 'hidden'}>
+              <GamesView onViewGame={openGameDetail} />
+            </div>
             <div className={activeTab === 'reservations' ? 'flex flex-col h-full' : 'hidden'}>
               <ReservationsView
                 reservations={reservations}
@@ -152,11 +153,8 @@ export function AppShell({
             )}
           </div>
 
-          {/* 네비바: 항상 하단에 고정 */}
           {!gameDetail && (
-            <div className="absolute bottom-0 left-0 right-0 z-30">
-              <BottomNav active={activeTab} onNavigate={handleNavigate} showAdmin={isOwner} />
-            </div>
+            <BottomNav active={activeTab} onNavigate={handleNavigate} showAdmin={isOwner} />
           )}
         </main>
       </div>

@@ -378,7 +378,7 @@ export function GameDetailView({
                 <p className="text-xs font-bold text-[#F8FAFC] mb-2">노쇼 규정 안내</p>
                 <ul className="text-[12px] text-[#94A3B8] leading-relaxed list-disc pl-4 space-y-1">
                   <li>픽업 기한 내 미방문 시 예약이 자동 취소됩니다.</li>
-                  <li>노쇼가 3회 누적되면 30일간 예약이 제한됩니다.</li>
+                  <li>노쇼가 3회 누적되면 30일간 예약이 제한됩��다.</li>
                   <li>방문이 어려운 경우 미리 예약을 취소해 주세요.</li>
                 </ul>
                 <label className="flex items-center gap-2.5 mt-3 cursor-pointer">
@@ -535,6 +535,17 @@ export function GameDetailView({
               <h2 className="text-sm font-bold text-[#F8FAFC] mb-3">
                 이 타이틀을 보유한 매장 {storesWithGame.length}곳
               </h2>
+              {storesWithGame.length === 0 ? (
+                <div className="text-center py-12 px-6">
+                  <div className="w-12 h-12 mx-auto rounded-full bg-[#1E293B] border border-[#334155] flex items-center justify-center mb-3">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" aria-hidden="true">
+                      <rect x="3" y="8" width="18" height="12" rx="2" />
+                      <path d="M3 8l3-4h12l3 4M12 12v4" />
+                    </svg>
+                  </div>
+                  <p className="text-[#94A3B8] text-sm font-medium">현재 등록된 재고 정보가 없습니다.</p>
+                </div>
+              ) : (
               <div className="flex flex-col gap-2">
                 {storesWithGame.map(({ store, inv }) => (
                   <div
@@ -552,6 +563,7 @@ export function GameDetailView({
                   </div>
                 ))}
               </div>
+              )}
             </div>
           )}
         </div>
