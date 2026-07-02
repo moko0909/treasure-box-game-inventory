@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko" className="bg-background">
+    <html lang="ko" className="bg-background" data-scroll-behavior="smooth">
       <body className="font-sans antialiased bg-background">
         {children}
       </body>

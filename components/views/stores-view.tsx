@@ -158,7 +158,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
           transition,
           touchAction: 'none',
           willChange: 'top',
-          zIndex: 20,
+          zIndex: 1100,
         }}
       >
         {/* 핸들바 */}
@@ -313,7 +313,7 @@ export function StoresView({ onViewGame }: StoresViewProps) {
           type="button"
           onClick={() => { setSnap('peek'); setLiveTop(null) }}
           className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-[#0F172A]/90 backdrop-blur-sm border border-[#334155] rounded-full px-4 py-2 shadow-lg text-xs font-bold text-[#CBD5E1] active:scale-95 transition-transform"
-          style={{ top: `${sheetTopPx - 44}px`, zIndex: 30, transition }}
+          style={{ top: `${sheetTopPx - 44}px`, zIndex: 1200, transition }}
           aria-label="지도 넓게 보기"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2.5" aria-hidden="true">
