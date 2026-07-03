@@ -48,7 +48,8 @@ function GameCard({
     <button
       type="button"
       onClick={handleClick}
-      className="w-full flex gap-3.5 bg-[#162032] rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform"
+      className="w-full flex gap-3.5 rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform border border-[#2A2A2A]"
+      style={{ background: '#1A1A1A' }}
     >
       {/* 커버 이미지 */}
       <div
@@ -95,13 +96,13 @@ function GameCard({
         {/* 재고 + 가격 */}
         <div className="flex items-center justify-between mt-auto pt-2.5">
           {hasStock ? (
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[#4ADE80]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80]" aria-hidden="true" />
+            <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[#BB86FC]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#BB86FC]" aria-hidden="true" />
               {summary.availableStoreCount}개 매장 재고
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[#475569]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#475569]" aria-hidden="true" />
+            <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[#CF6679]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#CF6679]" aria-hidden="true" />
               전 매장 품절
             </span>
           )}
@@ -162,18 +163,18 @@ export function GamesView({ onViewGame }: GamesViewProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#0F172A] overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden" style={{ background: '#121212' }}>
       {/* 헤더 영역 */}
       <div className="px-5 pt-14 pb-4">
-        <p className="text-[11px] text-[#475569] font-semibold mb-0.5">게임 찾기</p>
-        <h1 className="text-[28px] font-extrabold text-[#F8FAFC] leading-tight mb-4">
+        <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#6200EE' }}>게임 찾기</p>
+        <h1 className="text-[28px] font-extrabold text-white leading-tight mb-4">
           게임 검색
         </h1>
 
         {/* 검색창 */}
         <div className="relative mb-4">
           <svg
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#475569]"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4A4A4A]"
             width="17"
             height="17"
             viewBox="0 0 24 24"
@@ -191,7 +192,8 @@ export function GamesView({ onViewGame }: GamesViewProps) {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="게임명 또는 개발사 검색"
             aria-label="게임 검색"
-            className="w-full h-12 pl-11 pr-4 bg-[#162032] rounded-full text-[14px] text-[#F8FAFC] placeholder-[#475569] outline-none border border-transparent focus:border-[#4F46E5] transition-colors"
+            className="w-full h-12 pl-11 pr-4 rounded-full text-[14px] text-white placeholder-[#4A4A4A] outline-none border border-[#2C2C2C] focus:border-[#6200EE] transition-colors"
+            style={{ background: '#1E1E1E' }}
           />
         </div>
 
@@ -208,9 +210,10 @@ export function GamesView({ onViewGame }: GamesViewProps) {
             className={cn(
               'h-9 px-5 rounded-full text-[14px] font-bold flex-shrink-0 transition-all',
               platforms.size === 0
-                ? 'bg-[#4F46E5] text-white'
-                : 'bg-[#162032] text-[#94A3B8]'
+                ? 'text-white glow-purple'
+                : 'text-[#6A6A6A] border border-[#2C2C2C]'
             )}
+            style={platforms.size === 0 ? { background: 'linear-gradient(135deg,#6200EE,#9C27B0)' } : { background: '#1E1E1E' }}
           >
             전체
           </button>
@@ -223,9 +226,10 @@ export function GamesView({ onViewGame }: GamesViewProps) {
               className={cn(
                 'h-9 px-5 rounded-full text-[14px] font-bold flex-shrink-0 transition-all',
                 platforms.has(p)
-                  ? 'bg-[#4F46E5] text-white'
-                  : 'bg-[#1E2D3D] text-[#94A3B8]'
+                  ? 'text-white'
+                  : 'text-[#6A6A6A] border border-[#2C2C2C]'
               )}
+              style={platforms.has(p) ? { background: 'linear-gradient(135deg,#6200EE,#9C27B0)' } : { background: '#1E1E1E' }}
             >
               {PLATFORM_LABELS[p]}
             </button>
@@ -245,8 +249,8 @@ export function GamesView({ onViewGame }: GamesViewProps) {
             className={cn(
               'h-8 px-4 rounded-full text-[12px] font-semibold flex-shrink-0 whitespace-nowrap transition-all',
               genre === null
-                ? 'bg-[#253347] text-[#F8FAFC]'
-                : 'bg-[#162032] text-[#64748B]'
+                ? 'text-[#BB86FC] border border-[#6200EE]/50'
+                : 'text-[#4A4A4A] border border-[#2C2C2C]'
             )}
           >
             모든 장르
@@ -260,8 +264,8 @@ export function GamesView({ onViewGame }: GamesViewProps) {
               className={cn(
                 'h-8 px-4 rounded-full text-[12px] font-semibold flex-shrink-0 whitespace-nowrap transition-all',
                 genre === gn
-                  ? 'bg-[#253347] text-[#F8FAFC]'
-                  : 'bg-[#162032] text-[#64748B]'
+                  ? 'text-[#BB86FC] border border-[#6200EE]/50'
+                  : 'text-[#4A4A4A] border border-[#2C2C2C]'
               )}
             >
               {gn}
@@ -274,7 +278,8 @@ export function GamesView({ onViewGame }: GamesViewProps) {
       <div className="flex items-center justify-between px-5 pb-3">
         <p className="text-[14px] font-bold text-[#F8FAFC]">{results.length}개 게임</p>
         <div
-          className="flex items-center gap-0.5 bg-[#162032] rounded-full p-1"
+          className="flex items-center gap-0.5 rounded-full p-1 border border-[#2C2C2C]"
+          style={{ background: '#1A1A1A' }}
           role="group"
           aria-label="정렬"
         >
@@ -285,8 +290,9 @@ export function GamesView({ onViewGame }: GamesViewProps) {
               onClick={() => setSort(s.id)}
               className={cn(
                 'h-7 px-3 rounded-full text-[12px] font-bold transition-all whitespace-nowrap',
-                sort === s.id ? 'bg-[#4F46E5] text-white' : 'text-[#64748B]'
+                sort === s.id ? 'text-white' : 'text-[#4A4A4A]'
               )}
+              style={sort === s.id ? { background: 'linear-gradient(135deg,#6200EE,#9C27B0)' } : {}}
             >
               {s.label}
             </button>
@@ -298,19 +304,20 @@ export function GamesView({ onViewGame }: GamesViewProps) {
       <div className="flex-1 overflow-y-auto px-4 pb-24">
         {results.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 bg-[#162032] rounded-full flex items-center justify-center mb-4">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1.5" aria-hidden="true">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 border border-[#2C2C2C]" style={{ background: '#1E1E1E' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" strokeWidth="1.5" aria-hidden="true">
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
             </div>
-            <p className="text-[15px] font-bold text-[#F8FAFC] mb-1">검색 결과가 없어요</p>
-            <p className="text-[13px] text-[#64748B] mb-5">다른 검색어나 필터를 사용해 보세요</p>
+            <p className="text-[15px] font-bold text-white mb-1">검색 결과가 없어요</p>
+            <p className="text-[13px] mb-5" style={{ color: '#6A6A6A' }}>다른 검색어나 필터를 사용해 보세요</p>
             {hasActiveFilter && (
               <button
                 type="button"
                 onClick={clearAll}
-                className="h-9 px-5 rounded-full bg-[#1E293B] border border-[#334155] text-[13px] font-bold text-[#818CF8]"
+                className="h-9 px-5 rounded-full border border-[#2C2C2C] text-[13px] font-bold text-[#BB86FC]"
+                style={{ background: '#1E1E1E' }}
               >
                 필터 초기화
               </button>

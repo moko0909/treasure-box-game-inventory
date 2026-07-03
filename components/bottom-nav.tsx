@@ -41,7 +41,7 @@ export function BottomNav({
   return (
     <nav
       aria-label="주요 내비게이션"
-      className="w-full bg-[#0D1526]/95 backdrop-blur-md border-t border-[#1E293B] z-50 flex-shrink-0"
+      className="w-full bg-[#0D0D0D]/96 backdrop-blur-md border-t border-[#2C2C2C] z-50 flex-shrink-0"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <ul className="flex items-center justify-around h-[60px]">
@@ -58,18 +58,22 @@ export function BottomNav({
                 onClick={() => onNavigate(item.id)}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'relative flex w-full flex-col items-center justify-center gap-1 py-1 text-xs font-medium transition-colors duration-200',
-                  isActive ? 'text-[#818CF8]' : 'text-[#475569] hover:text-[#64748B]'
+                  'relative flex w-full flex-col items-center justify-center gap-1 py-1 transition-colors duration-200',
+                  isActive ? 'text-[#BB86FC]' : 'text-[#4A4A4A] hover:text-[#6A6A6A]'
                 )}
               >
                 {/* 뱃지 */}
                 {badge > 0 && (
                   <span
-                    className="absolute top-1 right-1/2 translate-x-[14px] min-w-[16px] h-[16px] rounded-full bg-[#EF4444] text-white text-[9px] font-extrabold flex items-center justify-center px-1 pointer-events-none"
+                    className="absolute top-1 right-1/2 translate-x-[14px] min-w-[16px] h-[16px] rounded-full bg-[#CF6679] text-white text-[9px] font-extrabold flex items-center justify-center px-1 pointer-events-none"
                     aria-label={`${badge}개 알림`}
                   >
                     {badge > 99 ? '99+' : badge}
                   </span>
+                )}
+                {/* 활성 탭 글로우 인디케이터 */}
+                {isActive && (
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-[#6200EE]" style={{ boxShadow: '0 0 8px 2px rgba(98,0,238,0.7)' }} aria-hidden="true" />
                 )}
                 <item.Icon
                   className={cn(
@@ -77,7 +81,7 @@ export function BottomNav({
                     isActive ? 'stroke-[2.5px] scale-110' : 'stroke-[2px]'
                   )}
                 />
-                <span className={cn('text-[9px] leading-none whitespace-nowrap', isActive && 'font-bold')}>
+                <span className={cn('text-[9px] leading-none whitespace-nowrap', isActive ? 'font-bold text-[#BB86FC]' : '')}>
                   {item.label}
                 </span>
               </button>

@@ -18,14 +18,14 @@ export function StockBadge({ status, count, size = 'md', className }: StockBadge
     md: 'text-xs px-2.5 py-1',
   }
   const colors = {
-    'in-stock': 'bg-green-500/15 text-green-400 border border-green-500/25',
-    'low-stock': 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/25',
-    'sold-out': 'bg-red-500/15 text-red-400 border border-red-500/25',
+    'in-stock':  'bg-[#BB86FC]/15 text-[#BB86FC] border border-[#BB86FC]/25',
+    'low-stock': 'bg-[#FFD600]/15 text-[#FFD600] border border-[#FFD600]/25',
+    'sold-out':  'bg-[#CF6679]/15 text-[#CF6679] border border-[#CF6679]/25',
   }
   const dots = {
-    'in-stock': 'bg-green-400',
-    'low-stock': 'bg-yellow-400',
-    'sold-out': 'bg-red-400',
+    'in-stock':  'bg-[#BB86FC]',
+    'low-stock': 'bg-[#FFD600]',
+    'sold-out':  'bg-[#CF6679]',
   }
 
   return (

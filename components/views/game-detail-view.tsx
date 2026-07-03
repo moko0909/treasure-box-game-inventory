@@ -183,59 +183,60 @@ export function GameDetailView({
   // ---------------- 완료 화면 ----------------
   if (mode === 'complete' && result) {
     return (
-      <div className="flex flex-col h-full bg-[#0F172A]">
+      <div className="flex flex-col h-full" style={{ background: '#121212' }}>
         <div className="flex-1 overflow-y-auto px-4 pt-14 pb-8">
           <div className="flex flex-col items-center text-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-green-500/15 flex items-center justify-center mb-3">
-              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" aria-hidden="true">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3" style={{ background: 'rgba(98,0,238,0.15)', boxShadow: '0 0 24px rgba(98,0,238,0.3)' }}>
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#BB86FC" strokeWidth="2.5" aria-hidden="true">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <h1 className="text-2xl font-extrabold text-[#F8FAFC] tracking-tight">예약이 완료되었어요</h1>
-            <p className="text-sm text-[#94A3B8] mt-1">매장에서 아래 예약 코드를 보여주세요</p>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight">예약이 완료되었어요</h1>
+            <p className="text-sm mt-1" style={{ color: '#6A6A6A' }}>매장에서 아래 예약 코드를 보여주세요</p>
           </div>
 
           {/* 바코드 카드 */}
-          <div className="bg-[#F8FAFC] rounded-[18px] p-5 mb-4">
+          <div className="rounded-[18px] p-5 mb-4" style={{ background: '#F5F5F5' }}>
             <Barcode code={result.code} />
-            <p className="text-center text-2xl font-extrabold text-[#0F172A] tracking-[0.2em] mt-3">
+            <p className="text-center text-2xl font-extrabold tracking-[0.2em] mt-3" style={{ color: '#121212' }}>
               {result.code}
             </p>
           </div>
 
           {/* 픽업 기한 */}
-          <div className="bg-[#F59E0B]/10 border border-[#F59E0B]/25 rounded-[14px] p-4 mb-4 flex items-center gap-3">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2.5" aria-hidden="true">
+          <div className="rounded-[14px] p-4 mb-4 flex items-center gap-3 border border-[#00E5FF]/25" style={{ background: 'rgba(0,229,255,0.08)' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" strokeWidth="2.5" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
               <polyline points="12 7 12 12 15 14" />
             </svg>
             <div>
-              <p className="text-[11px] text-[#F59E0B] font-bold">픽업 기한</p>
-              <p className="text-sm font-bold text-[#F8FAFC]">{formatDateTime(result.expiresAt)}까지</p>
+              <p className="text-[11px] font-bold" style={{ color: '#00E5FF' }}>픽업 기한</p>
+              <p className="text-sm font-bold text-white">{formatDateTime(result.expiresAt)}까지</p>
             </div>
           </div>
 
           {/* 요약 */}
-          <div className="bg-[#1E293B] rounded-[18px] border border-[#334155] divide-y divide-[#334155]">
+          <div className="rounded-[18px] border border-[#2A2A2A] divide-y divide-[#2A2A2A]" style={{ background: '#1A1A1A' }}>
             <SummaryRow label="게임" value={game.title} />
             <SummaryRow label="매장" value={currentStore.name} />
             <SummaryRow label="수량" value={`${quantity}개`} />
             {notes.trim() && <SummaryRow label="요청사항" value={notes.trim()} />}
           </div>
 
-          <p className="text-[12px] text-[#64748B] leading-relaxed mt-4 text-center">
+          <p className="text-[12px] leading-relaxed mt-4 text-center" style={{ color: '#6A6A6A' }}>
             기한 내 미방문 시 예약이 자동 취소되며, 노쇼가 반복되면 예약 이용이 제한될 수 있어요.
           </p>
         </div>
 
         <div
-          className="bg-[#1E293B] border-t border-[#334155] px-4 py-4"
-          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
+          className="border-t border-[#2A2A2A] px-4 py-4"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)', background: '#1A1A1A' }}
         >
           <button
             type="button"
             onClick={onBack}
-            className="w-full h-[52px] rounded-[14px] bg-[#4F46E5] text-white text-base font-extrabold hover:bg-[#4338CA] transition-colors active:scale-[0.98]"
+            className="w-full h-[52px] rounded-[14px] text-black text-base font-extrabold transition-all active:scale-[0.98] glow-cyan"
+            style={{ background: '#00E5FF' }}
           >
             확인
           </button>
@@ -247,40 +248,39 @@ export function GameDetailView({
   // ---------------- 예약 폼 (선점) 화면 ----------------
   if (mode === 'reserve') {
     return (
-      <div className="flex flex-col h-full bg-[#0F172A]">
+      <div className="flex flex-col h-full" style={{ background: '#121212' }}>
         {/* 헤더 */}
-        <div className="flex items-center gap-3 px-4 pt-12 pb-3 border-b border-[#334155]">
+        <div className="flex items-center gap-3 px-4 pt-12 pb-3 border-b border-[#2A2A2A]">
           <button
             type="button"
             onClick={() => setMode('detail')}
             aria-label="뒤로"
-            className="w-9 h-9 rounded-full bg-[#1E293B] border border-[#334155] flex items-center justify-center"
+            className="w-9 h-9 rounded-full border border-[#2A2A2A] flex items-center justify-center"
+            style={{ background: '#1E1E1E' }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8FAFC" strokeWidth="2.5" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" aria-hidden="true">
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
-          <h1 className="text-lg font-extrabold text-[#F8FAFC]">예약 요청</h1>
+          <h1 className="text-lg font-extrabold text-white">예약 요청</h1>
         </div>
 
         {/* 선점 타이머 배너 */}
         <div
-          className={cn(
-            'px-4 py-3 flex items-center justify-between',
-            lockExpired ? 'bg-red-500/10' : 'bg-[#4F46E5]/10'
-          )}
+          className="px-4 py-3 flex items-center justify-between"
+          style={{ background: lockExpired ? 'rgba(207,102,121,0.1)' : 'rgba(98,0,238,0.12)' }}
         >
           <div className="flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={lockExpired ? '#EF4444' : '#818CF8'} strokeWidth="2.5" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={lockExpired ? '#CF6679' : '#BB86FC'} strokeWidth="2.5" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
               <polyline points="12 7 12 12 15 14" />
             </svg>
-            <span className={cn('text-sm font-bold', lockExpired ? 'text-red-400' : 'text-[#A5B4FC]')}>
+            <span className={cn('text-sm font-bold', lockExpired ? 'text-[#CF6679]' : 'text-[#BB86FC]')}>
               {lockExpired ? '선점 시간이 만료됐어요' : '재고를 선점했어요'}
             </span>
           </div>
           {!lockExpired && (
-            <span className="text-sm font-extrabold text-[#F8FAFC] tabular-nums">
+            <span className="text-sm font-extrabold text-white tabular-nums">
               {mm}:{ss}
             </span>
           )}
@@ -332,21 +332,23 @@ export function GameDetailView({
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={quantity <= 1}
                   aria-label="수량 감소"
-                  className="w-11 h-11 rounded-xl bg-[#1E293B] border border-[#334155] text-[#F8FAFC] text-xl font-bold disabled:opacity-40"
+                  className="w-11 h-11 rounded-xl border border-[#2A2A2A] text-white text-xl font-bold disabled:opacity-40"
+                  style={{ background: '#1E1E1E' }}
                 >
                   −
                 </button>
-                <span className="text-lg font-extrabold text-[#F8FAFC] w-8 text-center tabular-nums">{quantity}</span>
+                <span className="text-lg font-extrabold text-white w-8 text-center tabular-nums">{quantity}</span>
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.min(maxQty, q + 1))}
                   disabled={quantity >= maxQty}
                   aria-label="수량 증가"
-                  className="w-11 h-11 rounded-xl bg-[#1E293B] border border-[#334155] text-[#F8FAFC] text-xl font-bold disabled:opacity-40"
+                  className="w-11 h-11 rounded-xl border border-[#2A2A2A] text-white text-xl font-bold disabled:opacity-40"
+                  style={{ background: '#1E1E1E' }}
                 >
                   +
                 </button>
-                <span className="text-xs text-[#64748B] ml-1">재고 {maxQty}개</span>
+                <span className="text-xs ml-1" style={{ color: '#6A6A6A' }}>재고 {maxQty}개</span>
               </div>
 
               {/* 픽업 일시 */}
@@ -357,7 +359,8 @@ export function GameDetailView({
                 value={pickupAt}
                 min={defaultPickupValue()}
                 onChange={(e) => setPickupAt(e.target.value)}
-                className="w-full h-12 rounded-[14px] bg-[#1E293B] border border-[#334155] px-4 text-sm text-[#F8FAFC] mb-5 [color-scheme:dark]"
+                className="w-full h-12 rounded-[14px] border border-[#2A2A2A] px-4 text-sm text-white mb-5 [color-scheme:dark]"
+                style={{ background: '#1E1E1E' }}
               />
 
               {/* 요청사항 */}
@@ -370,13 +373,14 @@ export function GameDetailView({
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 placeholder="예: 방문 30분 전에 연락 주세요"
-                className="w-full rounded-[14px] bg-[#1E293B] border border-[#334155] px-4 py-3 text-sm text-[#F8FAFC] placeholder:text-[#475569] mb-5 resize-none"
+                className="w-full rounded-[14px] border border-[#2A2A2A] px-4 py-3 text-sm text-white placeholder:text-[#4A4A4A] mb-5 resize-none"
+                style={{ background: '#1E1E1E' }}
               />
 
               {/* 노쇼 규정 안내 */}
-              <div className="bg-[#1E293B] rounded-[14px] border border-[#334155] p-4 mb-4">
-                <p className="text-xs font-bold text-[#F8FAFC] mb-2">노쇼 규정 안내</p>
-                <ul className="text-[12px] text-[#94A3B8] leading-relaxed list-disc pl-4 space-y-1">
+              <div className="rounded-[14px] border border-[#2A2A2A] p-4 mb-4" style={{ background: '#1A1A1A' }}>
+                <p className="text-xs font-bold text-white mb-2">노쇼 규정 안내</p>
+                <ul className="text-[12px] leading-relaxed list-disc pl-4 space-y-1" style={{ color: '#6A6A6A' }}>
                   <li>픽업 기한 내 미방문 시 예약이 자동 취소됩니다.</li>
                   <li>노쇼가 3회 누적되면 30일간 예약이 제한됩��다.</li>
                   <li>방문이 어려운 경우 미리 예약을 취소해 주세요.</li>
@@ -386,7 +390,7 @@ export function GameDetailView({
                     type="checkbox"
                     checked={agreed}
                     onChange={(e) => setAgreed(e.target.checked)}
-                    className="w-5 h-5 rounded border-[#334155] accent-[#4F46E5]"
+                    className="w-5 h-5 rounded border-[#2A2A2A] accent-[#6200EE]"
                   />
                   <span className="text-sm font-medium text-[#F8FAFC]">위 노쇼 규정에 동의합니다</span>
                 </label>
@@ -395,8 +399,8 @@ export function GameDetailView({
 
             {/* 확정 버튼 */}
             <div
-              className="bg-[#1E293B] border-t border-[#334155] px-4 py-4"
-              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
+              className="border-t border-[#2A2A2A] px-4 py-4"
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)', background: '#1A1A1A' }}
             >
               <button
                 type="button"
@@ -405,9 +409,10 @@ export function GameDetailView({
                 className={cn(
                   'w-full h-[52px] rounded-[14px] text-base font-extrabold tracking-wide transition-all active:scale-[0.98]',
                   agreed && !submitting
-                    ? 'bg-[#F59E0B] text-[#0F172A] shadow-lg shadow-[#F59E0B]/20 hover:bg-[#D97706]'
-                    : 'bg-[#0F172A] text-[#475569] cursor-not-allowed border border-[#334155]'
+                    ? 'text-black glow-cyan'
+                    : 'text-[#4A4A4A] cursor-not-allowed border border-[#2A2A2A]'
                 )}
+                style={agreed && !submitting ? { background: '#00E5FF' } : { background: '#1E1E1E' }}
               >
                 {submitting ? '예약 처리 중...' : '예약 확정'}
               </button>
@@ -420,7 +425,7 @@ export function GameDetailView({
 
   // ---------------- 상세 화면 ----------------
   return (
-    <div className="flex flex-col h-full bg-[#0F172A]">
+    <div className="flex flex-col h-full" style={{ background: '#121212' }}>
       <div className="relative">
         <div
           className="relative w-full h-[300px]"
@@ -431,7 +436,7 @@ export function GameDetailView({
           )}
           <div
             className="absolute bottom-0 left-0 right-0 h-32"
-            style={{ background: 'linear-gradient(to top, #0F172A, transparent)' }}
+            style={{ background: 'linear-gradient(to top, #121212, transparent)' }}
             aria-hidden="true"
           />
         </div>
@@ -440,7 +445,8 @@ export function GameDetailView({
           type="button"
           onClick={onBack}
           aria-label="뒤로"
-          className="absolute top-12 left-4 w-10 h-10 rounded-full bg-[#0F172A]/80 backdrop-blur border border-[#334155] flex items-center justify-center"
+          className="absolute top-12 left-4 w-10 h-10 rounded-full backdrop-blur border border-[#2A2A2A] flex items-center justify-center"
+          style={{ background: 'rgba(18,18,18,0.85)' }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8FAFC" strokeWidth="2.5" aria-hidden="true">
             <polyline points="15 18 9 12 15 6" />
@@ -474,17 +480,17 @@ export function GameDetailView({
           </div>
           <p className="text-xs text-[#475569] mb-4">개발사 {game.developer}</p>
 
-          <div className="bg-[#1E293B] rounded-[18px] border border-[#334155] p-4 mb-4">
+          <div className="rounded-[18px] border border-[#2A2A2A] p-4 mb-4" style={{ background: '#1A1A1A' }}>
             <div className="flex items-center justify-between mb-2">
               <div>
-                <p className="text-[11px] text-[#64748B] font-medium">판매 매장</p>
-                <p className="text-sm font-bold text-[#F8FAFC] truncate">{currentStore.name}</p>
+                <p className="text-[11px] font-medium" style={{ color: '#6A6A6A' }}>판매 매장</p>
+                <p className="text-sm font-bold text-white truncate">{currentStore.name}</p>
               </div>
-              <p className="text-2xl font-extrabold text-[#F8FAFC]">
+              <p className="text-2xl font-extrabold text-white">
                 ${currentInventory?.price.toFixed(2) ?? game.price.toFixed(2)}
               </p>
             </div>
-            <div className="flex items-center gap-2 text-xs text-[#64748B]">
+            <div className="flex items-center gap-2 text-xs" style={{ color: '#6A6A6A' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
                 <circle cx="12" cy="10" r="3" />
@@ -494,7 +500,7 @@ export function GameDetailView({
             </div>
           </div>
 
-          <div className="flex border-b border-[#334155] mb-4">
+          <div className="flex border-b border-[#2A2A2A] mb-4">
             {(['info', 'stores'] as const).map((tab) => (
               <button
                 key={tab}
@@ -502,7 +508,7 @@ export function GameDetailView({
                 onClick={() => setActiveTab(tab)}
                 className={cn(
                   'flex-1 py-2.5 text-sm font-bold transition-colors',
-                  activeTab === tab ? 'text-[#4F46E5] border-b-2 border-[#4F46E5] -mb-px' : 'text-[#475569]'
+                  activeTab === tab ? 'text-[#BB86FC] border-b-2 border-[#6200EE] -mb-px' : 'text-[#4A4A4A]'
                 )}
               >
                 {tab === 'info' ? '게임 정보' : '판매 매장'}
@@ -523,9 +529,9 @@ export function GameDetailView({
                   { label: '개발사', value: game.developer },
                   { label: '출시연도', value: String(game.releaseYear) },
                 ].map(({ label, value }) => (
-                  <div key={label} className="bg-[#1E293B] rounded-xl border border-[#334155] p-3">
-                    <p className="text-[11px] text-[#64748B] mb-0.5">{label}</p>
-                    <p className="text-xs font-bold text-[#F8FAFC]">{value}</p>
+                  <div key={label} className="rounded-xl border border-[#2A2A2A] p-3" style={{ background: '#1A1A1A' }}>
+                    <p className="text-[11px] mb-0.5" style={{ color: '#6A6A6A' }}>{label}</p>
+                    <p className="text-xs font-bold text-white">{value}</p>
                   </div>
                 ))}
               </div>
@@ -551,9 +557,10 @@ export function GameDetailView({
                   <div
                     key={store.id}
                     className={cn(
-                      'bg-[#1E293B] rounded-[14px] border p-3 flex items-center justify-between gap-3',
-                      store.id === storeId ? 'border-[#4F46E5] bg-[#4F46E5]/5' : 'border-[#334155]'
+                      'rounded-[14px] border p-3 flex items-center justify-between gap-3',
+                      store.id === storeId ? 'border-[#6200EE]' : 'border-[#2A2A2A]'
                     )}
+                    style={{ background: store.id === storeId ? 'rgba(98,0,238,0.08)' : '#1A1A1A' }}
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-[#F8FAFC] truncate">{store.name}</p>
@@ -571,24 +578,25 @@ export function GameDetailView({
 
       {/* 하단 CTA */}
       <div
-        className="absolute bottom-0 left-0 right-0 bg-[#1E293B] border-t border-[#334155] px-4 py-4"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
+        className="absolute bottom-0 left-0 right-0 border-t border-[#2A2A2A] px-4 py-4"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)', background: '#1A1A1A' }}
       >
         {isSoldOut ? (
           restockRequested ? (
-            <div className="bg-[#4F46E5]/10 border border-[#4F46E5]/25 rounded-[14px] py-4 flex items-center justify-center gap-2">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2.5" aria-hidden="true">
+            <div className="rounded-[14px] py-4 flex items-center justify-center gap-2 border border-[#6200EE]/30" style={{ background: 'rgba(98,0,238,0.1)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BB86FC" strokeWidth="2.5" aria-hidden="true">
                 <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
                 <path d="M13.73 21a2 2 0 01-3.46 0" />
               </svg>
-              <span className="text-sm font-bold text-[#A5B4FC]">재입고 알림을 신청했어요</span>
+              <span className="text-sm font-bold text-[#BB86FC]">재입고 알림을 신청했어요</span>
             </div>
           ) : (
             <button
               type="button"
               onClick={handleRestock}
               disabled={restockBusy}
-              className="w-full h-[52px] rounded-[14px] bg-[#4F46E5] text-white text-base font-extrabold tracking-wide hover:bg-[#4338CA] transition-all active:scale-[0.98] disabled:opacity-60"
+              className="w-full h-[52px] rounded-[14px] text-white text-base font-extrabold tracking-wide transition-all active:scale-[0.98] disabled:opacity-60 glow-purple"
+              style={{ background: 'linear-gradient(135deg,#6200EE,#9C27B0)' }}
             >
               {restockBusy ? '신청 중...' : '재입고 알림 신청'}
             </button>
@@ -597,12 +605,13 @@ export function GameDetailView({
           <button
             type="button"
             onClick={startReserve}
-            className="w-full h-[52px] rounded-[14px] bg-[#F59E0B] text-[#0F172A] text-base font-extrabold tracking-wide shadow-lg shadow-[#F59E0B]/20 hover:bg-[#D97706] transition-all active:scale-[0.98]"
+            className="w-full h-[52px] rounded-[14px] text-black text-base font-extrabold tracking-wide transition-all active:scale-[0.98] glow-cyan"
+            style={{ background: '#00E5FF' }}
           >
             {currentStore.name}에서 예약하기
           </button>
         )}
-        <p className="text-[11px] text-center text-[#475569] mt-2">
+        <p className="text-[11px] text-center mt-2" style={{ color: '#4A4A4A' }}>
           {isSoldOut
             ? '입고되면 알림으로 알려드려요'
             : '무료 예약 · 결제는 매장 방문 시 · 노쇼 규정 적용'}
@@ -615,8 +624,8 @@ export function GameDetailView({
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3">
-      <span className="text-xs text-[#64748B] flex-shrink-0">{label}</span>
-      <span className="text-sm font-bold text-[#F8FAFC] text-right">{value}</span>
+      <span className="text-xs flex-shrink-0" style={{ color: '#6A6A6A' }}>{label}</span>
+      <span className="text-sm font-bold text-white text-right">{value}</span>
     </div>
   )
 }
