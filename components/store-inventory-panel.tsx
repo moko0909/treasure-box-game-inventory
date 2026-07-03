@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import {
   GAMES,
@@ -15,6 +16,7 @@ interface StoreInventoryPanelProps {
   store: Store
   onClose: () => void
   onReserve: (gameId: string, storeId: string) => void
+  isGuest?: boolean
 }
 
 const STATUS_ORDER: StockStatus[] = ['in-stock', 'low-stock', 'sold-out']
@@ -29,6 +31,7 @@ export function StoreInventoryPanel({
   store,
   onClose,
   onReserve,
+  isGuest = false,
 }: StoreInventoryPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -211,7 +214,18 @@ export function StoreInventoryPanel({
 
                 {/* 예약 버튼 */}
                 <div className="flex-shrink-0">
-                  {canReserve ? (
+                  {!canReserve ? (
+                    <span className="h-9 px-3 flex items-center text-[11px] font-bold text-muted-foreground bg-muted rounded-[10px]">
+                      품절
+                    </span>
+                  ) : isGuest ? (
+                    <Link
+                      href="/sign-in"
+                      className="h-9 px-3 flex items-center text-[11px] font-bold text-muted-foreground bg-muted rounded-[10px] whitespace-nowrap"
+                    >
+                      로그인 필요
+                    </Link>
+                  ) : (
                     <button
                       type="button"
                       onClick={() => onReserve(game.id, store.id)}
@@ -224,16 +238,33 @@ export function StoreInventoryPanel({
                     >
                       예약
                     </button>
-                  ) : (
-                    <span className="h-9 px-3 flex items-center text-[11px] font-bold text-muted-foreground bg-muted rounded-[10px]">
-                      품절
-                    </span>
                   )}
                 </div>
               </div>
             )
           })}
         </div>
+
+        {/* 게스트 안내 배너 */}
+        {isGuest && (
+          <div className="flex-shrink-0 mx-5 mb-3 rounded-[14px] bg-primary/10 border border-primary/20 px-4 py-3 flex items-center gap-3">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary flex-shrink-0" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-primary">예약하려면 로그인이 필요합니다</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">게스트는 재고 조회만 가능합니다</p>
+            </div>
+            <Link
+              href="/sign-in"
+              className="flex-shrink-0 text-xs font-bold text-primary-foreground bg-primary px-3 py-1.5 rounded-full"
+            >
+              로그인
+            </Link>
+          </div>
+        )}
 
         {/* 전화 문의 버튼 */}
         <div className="flex-shrink-0 px-5 pt-3 pb-6 border-t border-border">

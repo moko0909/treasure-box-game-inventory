@@ -19,6 +19,7 @@ interface GameDetailViewProps {
   onBack: () => void
   onReserve: (input: CreateReservationInput) => Promise<{ code: string; expiresAt: string }>
   onRequestRestock: (gameId: string, storeId: string) => Promise<{ alreadyExists: boolean }>
+  isGuest?: boolean
 }
 
 // 재고 선점 유지 시간 (초) — 3분
@@ -90,6 +91,7 @@ export function GameDetailView({
   onBack,
   onReserve,
   onRequestRestock,
+  isGuest = false,
 }: GameDetailViewProps) {
   const [mode, setMode] = useState<Mode>('detail')
   const [activeTab, setActiveTab] = useState<'info' | 'stores'>('info')
@@ -382,7 +384,7 @@ export function GameDetailView({
                 <ul className="text-[12px] leading-relaxed list-disc pl-4 space-y-1" style={{ color: '#6A6A6A' }}>
                   <li>픽업 기한 내 미방문 시 예약이 자동 취소됩니다.</li>
                   <li>노쇼가 3회 누적되면 30일��� ���약이 제한됩��다.</li>
-                  <li>방문이 어려운 경우 미리 예약을 취소해 주세요.</li>
+                  <li>방문이 어��운 경우 미리 예약을 취소해 주세요.</li>
                 </ul>
                 <label className="flex items-center gap-2.5 mt-3 cursor-pointer">
                   <input
@@ -597,6 +599,16 @@ export function GameDetailView({
               {restockBusy ? '신청 중...' : '재입고 알림 신청'}
             </button>
           )
+        ) : isGuest ? (
+          <a
+            href="/sign-in"
+            className="w-full h-[52px] rounded-[14px] text-base font-extrabold tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2 bg-muted text-muted-foreground border border-border"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
+            </svg>
+            로그인 후 예약하기
+          </a>
         ) : (
           <button
             type="button"
@@ -610,7 +622,9 @@ export function GameDetailView({
         <p className="text-[11px] text-center mt-2" style={{ color: '#4A4A4A' }}>
           {isSoldOut
             ? '입고되면 알림으로 알려드려요'
-            : '무료 예약 · 결제는 매장 방문 시 · 노쇼 규정 적용'}
+            : isGuest
+              ? '예약 기능은 로그인 후 이용할 수 있습니다'
+              : '무료 예약 · 결제는 매장 방문 시 · 노쇼 규정 적용'}
         </p>
       </div>
     </div>

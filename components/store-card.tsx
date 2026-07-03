@@ -32,8 +32,8 @@ export function StoreCard({
       id={`store-card-${store.id}`}
       role="button"
       tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
+      onClick={() => { onClick?.(); onViewInventory?.() }}
+      onKeyDown={(e) => { if (e.key === 'Enter') { onClick?.(); onViewInventory?.() } }}
       aria-selected={selected}
       className={cn(
         'rounded-[18px] p-4 border bg-card transition-all duration-200 cursor-pointer active:scale-[0.98]',
@@ -137,16 +137,12 @@ export function StoreCard({
             <span className="text-xs text-muted-foreground">타이틀 {totalCount}종 관리 중</span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onViewInventory?.()
-          }}
-          className="text-xs font-bold text-primary transition-colors min-h-[44px] flex items-center px-1"
-        >
-          재고 보기 →
-        </button>
+        <span className="text-xs font-bold text-primary flex items-center gap-0.5">
+          재고 보기
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </span>
       </div>
     </div>
   )

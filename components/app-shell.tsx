@@ -26,6 +26,7 @@ export interface AppShellProps {
   userName: string
   userEmail: string
   role: 'user' | 'owner'
+  isGuest?: boolean
   storeLocation: string | null
   reservations: Reservation[]
   favoriteStoreIds: string[]
@@ -38,6 +39,7 @@ export function AppShell({
   userName,
   userEmail,
   role,
+  isGuest = false,
   storeLocation,
   reservations,
   favoriteStoreIds,
@@ -156,6 +158,7 @@ export function AppShell({
                 onBack={closeGameDetail}
                 onReserve={handleReserve}
                 onRequestRestock={handleRequestRestock}
+                isGuest={isGuest}
               />
             </div>
           )}
@@ -168,6 +171,7 @@ export function AppShell({
                   onViewGame={openGameDetail}
                   favoriteStoreIds={favoriteStoreIds}
                   onToggleFavorite={handleToggleFavorite}
+                  isGuest={isGuest}
                 />
               </div>
             )}

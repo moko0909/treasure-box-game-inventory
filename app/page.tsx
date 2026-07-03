@@ -43,7 +43,9 @@ export default async function TreasureBoxApp() {
     notifiedAt: a.notifiedAt,
   }))
 
-  const role = (session.user as { role?: string }).role === 'owner' ? 'owner' : 'user'
+  const rawRole = (session.user as { role?: string }).role
+  const role = rawRole === 'owner' ? 'owner' : 'user'
+  const isGuest = rawRole === 'guest'
   const storeLocation = (session.user as { storeLocation?: string }).storeLocation ?? null
 
   return (
@@ -51,6 +53,7 @@ export default async function TreasureBoxApp() {
       userName={session.user.name}
       userEmail={session.user.email}
       role={role}
+      isGuest={isGuest}
       storeLocation={storeLocation}
       reservations={reservations}
       favoriteStoreIds={favoriteStoreIds}

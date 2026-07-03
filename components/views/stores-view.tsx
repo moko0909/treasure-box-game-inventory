@@ -22,9 +22,10 @@ interface StoresViewProps {
   onViewGame: (gameId: string, storeId: string) => void
   favoriteStoreIds?: string[]
   onToggleFavorite?: (storeId: string) => void
+  isGuest?: boolean
 }
 
-export function StoresView({ onViewGame, favoriteStoreIds = [], onToggleFavorite }: StoresViewProps) {
+export function StoresView({ onViewGame, favoriteStoreIds = [], onToggleFavorite, isGuest = false }: StoresViewProps) {
   const [search, setSearch] = useState('')
   const [platforms, setPlatforms] = useState<Set<Platform>>(new Set())
   const [selectedId, setSelectedId] = useState<string>(STORES[0].id)
@@ -148,6 +149,7 @@ export function StoresView({ onViewGame, favoriteStoreIds = [], onToggleFavorite
           <StoreInventoryPanel
             store={panelStore}
             onClose={() => setInventoryStoreId(null)}
+            isGuest={isGuest}
             onReserve={(gameId, storeId) => {
               setInventoryStoreId(null)
               onViewGame(gameId, storeId)
