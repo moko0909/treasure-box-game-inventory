@@ -14,6 +14,7 @@ import { createReservation, cancelReservation, type CreateReservationInput } fro
 import { toggleFavorite as toggleFavoriteAction } from '@/app/actions/favorites'
 import { requestRestockAlert, cancelRestockAlert } from '@/app/actions/restock'
 import { chargeBalance } from '@/app/actions/balance'
+import { updateProfile } from '@/app/actions/profile'
 import type { Reservation, RestockAlert } from '@/lib/data'
 
 interface GameDetailState {
@@ -48,6 +49,7 @@ export function AppShell({
   const [gameDetail, setGameDetail] = useState<GameDetailState | null>(null)
   const [reserveToast, setReserveToast] = useState<string | null>(null)
   const [balance, setBalance] = useState(initialBalance)
+  const [localUserName, setLocalUserName] = useState(userName)
 
   const isOwner = role === 'owner'
 
@@ -102,6 +104,11 @@ export function AppShell({
   const handleCharge = async (amount: number) => {
     const result = await chargeBalance(amount)
     setBalance(result.balance)
+  }
+
+  const handleUpdateProfile = async (name: string) => {
+    const result = await updateProfile({ name })
+    setLocalUserName(result.name)
   }
 
   const handleNavigate = (tab: Tab) => {
@@ -185,8 +192,9 @@ export function AppShell({
             </div>
             <div className={activeTab === 'mypage' ? 'flex flex-col h-full' : 'hidden'}>
               <MyPageView
-                userName={userName}
+                userName={localUserName}
                 userEmail={userEmail}
+                onUpdateProfile={handleUpdateProfile}
                 role={role}
                 reservations={reservations}
                 favoriteStoreIds={favoriteStoreIds}

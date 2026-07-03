@@ -17,6 +17,7 @@ interface MyPageViewProps {
   balance: number
   onToggleFavorite: (storeId: string) => void
   onCharge: (amount: number) => Promise<void>
+  onUpdateProfile: (name: string) => Promise<void>
   onViewGame: (gameId: string, storeId: string) => void
 }
 
@@ -408,12 +409,14 @@ export function MyPageView({
   balance,
   onToggleFavorite,
   onCharge,
+  onUpdateProfile,
   onViewGame,
 }: MyPageViewProps) {
   const router = useRouter()
   const t = useT()
   const [showSettings, setShowSettings] = useState(false)
   const [showCharge, setShowCharge] = useState(false)
+  const [showEditProfile, setShowEditProfile] = useState(false)
   const favoriteIds = new Set(favoriteStoreIds)
 
   const favoriteStores = STORES.filter((s) => favoriteIds.has(s.id))
@@ -492,6 +495,19 @@ export function MyPageView({
         />
       )}
 
+      {/* 프로필 편집 모달 */}
+      {showEditProfile && (
+        <ProfileEditModal
+          currentName={userName}
+          currentEmail={userEmail}
+          onClose={() => setShowEditProfile(false)}
+          onSave={async (name) => {
+            await onUpdateProfile(name)
+            setShowEditProfile(false)
+          }}
+        />
+      )}
+
       <div className="flex-1 overflow-y-auto pb-24 bg-background">
         {/* Profile hero */}
         <div
@@ -517,7 +533,8 @@ export function MyPageView({
             <button
               type="button"
               aria-label="프로필 편집"
-              className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center"
+              onClick={() => setShowEditProfile(true)}
+              className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center transition-transform active:scale-90"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-primary" strokeWidth="2" aria-hidden="true">
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
@@ -697,6 +714,210 @@ export function MyPageView({
             {t('mypage_logout')}
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ── 프로필 편집 모달 ───────────────────────────────────────────────────────────
+function ProfileEditModal({
+  currentName,
+  currentEmail,
+  onClose,
+  onSave,
+}: {
+  currentName: string
+  currentEmail: string
+  onClose: () => void
+  onSave: (name: string) => Promise<void>
+}) {
+  const [name, setName] = useState(currentName)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // 마운트 시 입력창 포커스
+  useEffect(() => {
+    const t = setTimeout(() => inputRef.current?.focus(), 150)
+    return () => clearTimeout(t)
+  }, [])
+
+  const hasChanged = name.trim() !== currentName
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = name.trim()
+    if (!trimmed) { setError('이름을 입력해주세요'); return }
+    if (trimmed.length > 20) { setError('이름은 20자 이내로 입력해주세요'); return }
+    setError('')
+    setSaving(true)
+    try {
+      await onSave(trimmed)
+      setSaved(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '저장에 실패했습니다')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div
+      className="absolute inset-0 z-50 flex items-end bg-black/70"
+      onClick={saved ? onClose : onClose}
+    >
+      <div
+        className="w-full bg-card rounded-t-[28px] border-t border-x border-border p-5 pb-10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 핸들 */}
+        <div className="w-10 h-1 rounded-full bg-border mx-auto mb-5" aria-hidden="true" />
+
+        {saved ? (
+          /* ── 저장 완료 화면 ── */
+          <div className="flex flex-col items-center py-6 gap-4">
+            <div
+              className="w-16 h-16 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center"
+              style={{ animation: 'profileSavePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}
+            >
+              <svg
+                width="28" height="28" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" className="text-primary"
+                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-extrabold text-foreground">저장 완료</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                이름이 <span className="text-primary font-bold">{name.trim()}</span>으로 변경됐어요
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full h-12 rounded-[14px] bg-primary text-primary-foreground font-bold text-sm mt-1"
+            >
+              확인
+            </button>
+          </div>
+        ) : (
+          /* ── 편집 화면 ── */
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-extrabold text-foreground">프로필 편집</h2>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
+                aria-label="닫기"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-muted-foreground" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            {/* 아바타 미리보기 */}
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-16 h-16 rounded-full bg-primary/30 border-2 border-primary/40 flex items-center justify-center">
+                <span className="text-foreground text-2xl font-extrabold" aria-hidden="true">
+                  {(name.trim() || currentName).charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">아바타는 이름 첫 글자로 자동 생성됩니다</p>
+            </div>
+
+            {/* 이름 입력 */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="profile-name" className="text-xs font-bold text-muted-foreground">
+                이름
+              </label>
+              <div className="relative">
+                <input
+                  ref={inputRef}
+                  id="profile-name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => { setName(e.target.value); setError('') }}
+                  maxLength={20}
+                  autoComplete="name"
+                  className={cn(
+                    'w-full h-12 rounded-[12px] bg-muted border px-4 pr-14 text-sm font-bold text-foreground placeholder:text-muted-foreground outline-none transition-colors',
+                    error ? 'border-destructive focus:border-destructive' : 'border-border focus:border-primary',
+                  )}
+                  placeholder="이름 입력"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground tabular-nums">
+                  {name.length}/20
+                </span>
+              </div>
+              {error && (
+                <p className="text-[11px] text-destructive font-medium flex items-center gap-1" role="alert">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  {error}
+                </p>
+              )}
+            </div>
+
+            {/* 이메일 (읽기 전용) */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="profile-email" className="text-xs font-bold text-muted-foreground">
+                이메일 <span className="text-muted-foreground/60 font-normal">(변경 불가)</span>
+              </label>
+              <div className="relative">
+                <input
+                  id="profile-email"
+                  type="email"
+                  value={currentEmail}
+                  readOnly
+                  disabled
+                  className="w-full h-12 rounded-[12px] bg-muted/50 border border-border px-4 text-sm text-muted-foreground outline-none cursor-not-allowed"
+                />
+                <svg
+                  width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/50"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+              </div>
+            </div>
+
+            {/* 저장 버튼 */}
+            <button
+              type="submit"
+              disabled={saving || !hasChanged}
+              className={cn(
+                'w-full h-12 rounded-[14px] font-bold text-sm transition-all',
+                hasChanged && !saving
+                  ? 'bg-primary text-primary-foreground active:scale-[0.98]'
+                  : 'bg-muted text-muted-foreground cursor-not-allowed',
+              )}
+            >
+              {saving ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg
+                    className="text-primary-foreground" width="16" height="16" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"
+                    style={{ animation: 'spin 0.8s linear infinite' }}
+                  >
+                    <path d="M21 12a9 9 0 11-6.219-8.56" />
+                  </svg>
+                  저장 중...
+                </span>
+              ) : hasChanged ? '저장하기' : '변경사항 없음'}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   )
