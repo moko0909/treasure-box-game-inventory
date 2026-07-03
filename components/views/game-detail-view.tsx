@@ -41,7 +41,7 @@ function StarRating({ rating }: { rating: number }) {
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
       ))}
-      <span className="text-sm font-bold text-[#F8FAFC] ml-1">{rating}</span>
+      <span className="text-sm font-bold text-foreground ml-1">{rating}</span>
     </div>
   )
 }
@@ -61,7 +61,7 @@ function Barcode({ code }: { code: string }) {
       {bars.map((w, i) => (
         <div
           key={i}
-          className="bg-[#0F172A] h-full"
+          className="bg-foreground h-full"
           style={{ width: `${w}px` }}
         />
       ))}
@@ -72,7 +72,7 @@ function Barcode({ code }: { code: string }) {
 function formatDateTime(iso: string) {
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}. ${pad(d.getMonth() + 1)}. ${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return `${d.getUTCFullYear()}. ${pad(d.getUTCMonth() + 1)}. ${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`
 }
 
 function defaultPickupValue() {
@@ -183,59 +183,59 @@ export function GameDetailView({
   // ---------------- 완료 화면 ----------------
   if (mode === 'complete' && result) {
     return (
-      <div className="flex flex-col h-full bg-[#0F172A]">
+      <div className="flex flex-col h-full bg-background">
         <div className="flex-1 overflow-y-auto px-4 pt-14 pb-8">
           <div className="flex flex-col items-center text-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-green-500/15 flex items-center justify-center mb-3">
-              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" aria-hidden="true">
+            <div className="w-16 h-16 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center mb-3" style={{ boxShadow: '0 0 24px rgba(98,0,238,0.3)' }}>
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-primary" strokeWidth="2.5" aria-hidden="true">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <h1 className="text-2xl font-extrabold text-[#F8FAFC] tracking-tight">예약이 완료되었어요</h1>
-            <p className="text-sm text-[#94A3B8] mt-1">매장에서 아래 예약 코드를 보여주세요</p>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">예약이 완료되었어요</h1>
+            <p className="text-sm text-muted-foreground mt-1">매장에서 아래 예약 코드를 보여주세요</p>
           </div>
 
           {/* 바코드 카드 */}
-          <div className="bg-[#F8FAFC] rounded-[18px] p-5 mb-4">
+          <div className="rounded-[18px] bg-white dark:bg-card border border-border p-5 mb-4">
             <Barcode code={result.code} />
-            <p className="text-center text-2xl font-extrabold text-[#0F172A] tracking-[0.2em] mt-3">
+            <p className="text-center text-2xl font-extrabold tracking-[0.2em] mt-3 text-foreground">
               {result.code}
             </p>
           </div>
 
           {/* 픽업 기한 */}
-          <div className="bg-[#F59E0B]/10 border border-[#F59E0B]/25 rounded-[14px] p-4 mb-4 flex items-center gap-3">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2.5" aria-hidden="true">
+          <div className="rounded-[14px] p-4 mb-4 flex items-center gap-3 border border-accent/25 bg-accent/8">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-accent flex-shrink-0" strokeWidth="2.5" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
               <polyline points="12 7 12 12 15 14" />
             </svg>
             <div>
-              <p className="text-[11px] text-[#F59E0B] font-bold">픽업 기한</p>
-              <p className="text-sm font-bold text-[#F8FAFC]">{formatDateTime(result.expiresAt)}까지</p>
+              <p className="text-[11px] font-bold text-accent">픽업 기한</p>
+              <p className="text-sm font-bold text-foreground" suppressHydrationWarning>{formatDateTime(result.expiresAt)}까지</p>
             </div>
           </div>
 
           {/* 요약 */}
-          <div className="bg-[#1E293B] rounded-[18px] border border-[#334155] divide-y divide-[#334155]">
+          <div className="rounded-[18px] border border-border bg-card divide-y divide-border">
             <SummaryRow label="게임" value={game.title} />
             <SummaryRow label="매장" value={currentStore.name} />
             <SummaryRow label="수량" value={`${quantity}개`} />
             {notes.trim() && <SummaryRow label="요청사항" value={notes.trim()} />}
           </div>
 
-          <p className="text-[12px] text-[#64748B] leading-relaxed mt-4 text-center">
+          <p className="text-[12px] leading-relaxed mt-4 text-center text-muted-foreground">
             기한 내 미방문 시 예약이 자동 취소되며, 노쇼가 반복되면 예약 이용이 제한될 수 있어요.
           </p>
         </div>
 
         <div
-          className="bg-[#1E293B] border-t border-[#334155] px-4 py-4"
+          className="border-t border-border px-4 py-4 bg-card"
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
         >
           <button
             type="button"
             onClick={onBack}
-            className="w-full h-[52px] rounded-[14px] bg-[#4F46E5] text-white text-base font-extrabold hover:bg-[#4338CA] transition-colors active:scale-[0.98]"
+            className="w-full h-[52px] rounded-[14px] bg-accent text-accent-foreground text-base font-extrabold transition-all active:scale-[0.98] glow-cyan"
           >
             확인
           </button>
@@ -247,40 +247,39 @@ export function GameDetailView({
   // ---------------- 예약 폼 (선점) 화면 ----------------
   if (mode === 'reserve') {
     return (
-      <div className="flex flex-col h-full bg-[#0F172A]">
+      <div className="flex flex-col h-full" style={{ background: '#121212' }}>
         {/* 헤더 */}
-        <div className="flex items-center gap-3 px-4 pt-12 pb-3 border-b border-[#334155]">
+        <div className="flex items-center gap-3 px-4 pt-12 pb-3 border-b border-[#2A2A2A]">
           <button
             type="button"
             onClick={() => setMode('detail')}
             aria-label="뒤로"
-            className="w-9 h-9 rounded-full bg-[#1E293B] border border-[#334155] flex items-center justify-center"
+            className="w-9 h-9 rounded-full border border-[#2A2A2A] flex items-center justify-center"
+            style={{ background: '#1E1E1E' }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8FAFC" strokeWidth="2.5" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" aria-hidden="true">
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
-          <h1 className="text-lg font-extrabold text-[#F8FAFC]">예약 요청</h1>
+          <h1 className="text-lg font-extrabold text-white">예약 요청</h1>
         </div>
 
         {/* 선점 타이머 배너 */}
         <div
-          className={cn(
-            'px-4 py-3 flex items-center justify-between',
-            lockExpired ? 'bg-red-500/10' : 'bg-[#4F46E5]/10'
-          )}
+          className="px-4 py-3 flex items-center justify-between"
+          style={{ background: lockExpired ? 'rgba(207,102,121,0.1)' : 'rgba(98,0,238,0.12)' }}
         >
           <div className="flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={lockExpired ? '#EF4444' : '#818CF8'} strokeWidth="2.5" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={lockExpired ? '#CF6679' : '#BB86FC'} strokeWidth="2.5" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
               <polyline points="12 7 12 12 15 14" />
             </svg>
-            <span className={cn('text-sm font-bold', lockExpired ? 'text-red-400' : 'text-[#A5B4FC]')}>
+            <span className={cn('text-sm font-bold', lockExpired ? 'text-[#CF6679]' : 'text-[#BB86FC]')}>
               {lockExpired ? '선점 시간이 만료됐어요' : '재고를 선점했어요'}
             </span>
           </div>
           {!lockExpired && (
-            <span className="text-sm font-extrabold text-[#F8FAFC] tabular-nums">
+            <span className="text-sm font-extrabold text-white tabular-nums">
               {mm}:{ss}
             </span>
           )}
@@ -295,8 +294,8 @@ export function GameDetailView({
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
             </div>
-            <p className="text-base font-bold text-[#F8FAFC] mb-1">선점 시간이 만료됐어요</p>
-            <p className="text-sm text-[#94A3B8] mb-5">다시 시도하면 재고를 새로 선점할 수 있어요.</p>
+        <p className="text-base font-bold text-foreground mb-1">선점 시간이 만료됐어요</p>
+          <p className="text-sm text-muted-foreground mb-5">다시 시도하면 재고를 새로 선점할 수 있어요.</p>
             <button
               type="button"
               onClick={startReserve}
@@ -316,53 +315,56 @@ export function GameDetailView({
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-[#F8FAFC] truncate">{game.title}</p>
-                  <p className="text-xs text-[#64748B] truncate">{currentStore.name}</p>
-                </div>
-                <p className="ml-auto text-lg font-extrabold text-[#F8FAFC]">
+          <p className="text-sm font-bold text-foreground truncate">{game.title}</p>
+            <p className="text-xs text-muted-foreground truncate">{currentStore.name}</p>
+          </div>
+          <p className="ml-auto text-lg font-extrabold text-foreground">
                   ${(currentInventory?.price ?? game.price).toFixed(2)}
                 </p>
               </div>
 
               {/* 수량 */}
-              <label className="block text-sm font-bold text-[#F8FAFC] mb-2">수량</label>
+              <label className="block text-sm font-bold text-foreground mb-2">수량</label>
               <div className="flex items-center gap-4 mb-5">
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={quantity <= 1}
                   aria-label="수량 감소"
-                  className="w-11 h-11 rounded-xl bg-[#1E293B] border border-[#334155] text-[#F8FAFC] text-xl font-bold disabled:opacity-40"
+                  className="w-11 h-11 rounded-xl border border-[#2A2A2A] text-white text-xl font-bold disabled:opacity-40"
+                  style={{ background: '#1E1E1E' }}
                 >
                   −
                 </button>
-                <span className="text-lg font-extrabold text-[#F8FAFC] w-8 text-center tabular-nums">{quantity}</span>
+                <span className="text-lg font-extrabold text-white w-8 text-center tabular-nums">{quantity}</span>
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.min(maxQty, q + 1))}
                   disabled={quantity >= maxQty}
                   aria-label="수량 증가"
-                  className="w-11 h-11 rounded-xl bg-[#1E293B] border border-[#334155] text-[#F8FAFC] text-xl font-bold disabled:opacity-40"
+                  className="w-11 h-11 rounded-xl border border-[#2A2A2A] text-white text-xl font-bold disabled:opacity-40"
+                  style={{ background: '#1E1E1E' }}
                 >
                   +
                 </button>
-                <span className="text-xs text-[#64748B] ml-1">재고 {maxQty}개</span>
+                <span className="text-xs ml-1" style={{ color: '#6A6A6A' }}>재고 {maxQty}개</span>
               </div>
 
               {/* 픽업 일시 */}
-              <label htmlFor="pickup" className="block text-sm font-bold text-[#F8FAFC] mb-2">픽업 일시</label>
+              <label htmlFor="pickup" className="block text-sm font-bold text-foreground mb-2">픽업 일시</label>
               <input
                 id="pickup"
                 type="datetime-local"
                 value={pickupAt}
                 min={defaultPickupValue()}
                 onChange={(e) => setPickupAt(e.target.value)}
-                className="w-full h-12 rounded-[14px] bg-[#1E293B] border border-[#334155] px-4 text-sm text-[#F8FAFC] mb-5 [color-scheme:dark]"
+                className="w-full h-12 rounded-[14px] border border-[#2A2A2A] px-4 text-sm text-white mb-5 [color-scheme:dark]"
+                style={{ background: '#1E1E1E' }}
               />
 
               {/* 요청사항 */}
-              <label htmlFor="notes" className="block text-sm font-bold text-[#F8FAFC] mb-2">
-                요청사항 <span className="text-[#64748B] font-normal">(선택)</span>
+          <label htmlFor="notes" className="block text-sm font-bold text-foreground mb-2">
+            요청사항 <span className="text-muted-foreground font-normal">(선택)</span>
               </label>
               <textarea
                 id="notes"
@@ -370,15 +372,16 @@ export function GameDetailView({
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 placeholder="예: 방문 30분 전에 연락 주세요"
-                className="w-full rounded-[14px] bg-[#1E293B] border border-[#334155] px-4 py-3 text-sm text-[#F8FAFC] placeholder:text-[#475569] mb-5 resize-none"
+                className="w-full rounded-[14px] border border-[#2A2A2A] px-4 py-3 text-sm text-white placeholder:text-[#4A4A4A] mb-5 resize-none"
+                style={{ background: '#1E1E1E' }}
               />
 
               {/* 노쇼 규정 안내 */}
-              <div className="bg-[#1E293B] rounded-[14px] border border-[#334155] p-4 mb-4">
-                <p className="text-xs font-bold text-[#F8FAFC] mb-2">노쇼 규정 안내</p>
-                <ul className="text-[12px] text-[#94A3B8] leading-relaxed list-disc pl-4 space-y-1">
+              <div className="rounded-[14px] border border-[#2A2A2A] p-4 mb-4" style={{ background: '#1A1A1A' }}>
+                <p className="text-xs font-bold text-white mb-2">노쇼 규정 안내</p>
+                <ul className="text-[12px] leading-relaxed list-disc pl-4 space-y-1" style={{ color: '#6A6A6A' }}>
                   <li>픽업 기한 내 미방문 시 예약이 자동 취소됩니다.</li>
-                  <li>노쇼가 3회 누적되면 30일간 예약이 제한됩��다.</li>
+                  <li>노쇼가 3회 누적되면 30일��� ���약이 제한됩��다.</li>
                   <li>방문이 어려운 경우 미리 예약을 취소해 주세요.</li>
                 </ul>
                 <label className="flex items-center gap-2.5 mt-3 cursor-pointer">
@@ -386,16 +389,16 @@ export function GameDetailView({
                     type="checkbox"
                     checked={agreed}
                     onChange={(e) => setAgreed(e.target.checked)}
-                    className="w-5 h-5 rounded border-[#334155] accent-[#4F46E5]"
+                    className="w-5 h-5 rounded border-[#2A2A2A] accent-[#6200EE]"
                   />
-                  <span className="text-sm font-medium text-[#F8FAFC]">위 노쇼 규정에 동의합니다</span>
+                  <span className="text-sm font-medium text-foreground">위 노쇼 규정에 동의합니다</span>
                 </label>
               </div>
             </div>
 
             {/* 확정 버튼 */}
             <div
-              className="bg-[#1E293B] border-t border-[#334155] px-4 py-4"
+              className="border-t border-border px-4 py-4 bg-card"
               style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
             >
               <button
@@ -405,8 +408,8 @@ export function GameDetailView({
                 className={cn(
                   'w-full h-[52px] rounded-[14px] text-base font-extrabold tracking-wide transition-all active:scale-[0.98]',
                   agreed && !submitting
-                    ? 'bg-[#F59E0B] text-[#0F172A] shadow-lg shadow-[#F59E0B]/20 hover:bg-[#D97706]'
-                    : 'bg-[#0F172A] text-[#475569] cursor-not-allowed border border-[#334155]'
+                    ? 'bg-accent text-accent-foreground glow-cyan'
+                    : 'bg-muted text-muted-foreground cursor-not-allowed border border-border'
                 )}
               >
                 {submitting ? '예약 처리 중...' : '예약 확정'}
@@ -420,7 +423,7 @@ export function GameDetailView({
 
   // ---------------- 상세 화면 ----------------
   return (
-    <div className="flex flex-col h-full bg-[#0F172A]">
+    <div className="flex flex-col h-full bg-background">
       <div className="relative">
         <div
           className="relative w-full h-[300px]"
@@ -431,7 +434,7 @@ export function GameDetailView({
           )}
           <div
             className="absolute bottom-0 left-0 right-0 h-32"
-            style={{ background: 'linear-gradient(to top, #0F172A, transparent)' }}
+            style={{ background: 'linear-gradient(to top, var(--background), transparent)' }}
             aria-hidden="true"
           />
         </div>
@@ -440,9 +443,9 @@ export function GameDetailView({
           type="button"
           onClick={onBack}
           aria-label="뒤로"
-          className="absolute top-12 left-4 w-10 h-10 rounded-full bg-[#0F172A]/80 backdrop-blur border border-[#334155] flex items-center justify-center"
+          className="absolute top-12 left-4 w-10 h-10 rounded-full backdrop-blur border border-border flex items-center justify-center bg-background/85"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8FAFC" strokeWidth="2.5" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-foreground" strokeWidth="2.5" aria-hidden="true">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
@@ -457,7 +460,7 @@ export function GameDetailView({
       <div className="flex-1 overflow-y-auto pb-32">
         <div className="px-4 -mt-4">
           <div className="flex items-start justify-between gap-3 mb-2">
-            <h1 className="text-2xl font-extrabold text-[#F8FAFC] leading-tight flex-1 text-balance tracking-tight">
+            <h1 className="text-2xl font-extrabold text-foreground leading-tight flex-1 text-balance tracking-tight">
               {game.title}
             </h1>
             {currentInventory && (
@@ -469,22 +472,22 @@ export function GameDetailView({
 
           <div className="flex items-center gap-3 mb-1">
             <StarRating rating={game.rating} />
-            <span className="text-xs text-[#64748B]">{game.genre}</span>
-            <span className="text-xs text-[#64748B]">{game.releaseYear}</span>
+            <span className="text-xs text-muted-foreground">{game.genre}</span>
+            <span className="text-xs text-muted-foreground">{game.releaseYear}</span>
           </div>
-          <p className="text-xs text-[#475569] mb-4">개발사 {game.developer}</p>
+          <p className="text-xs text-muted-foreground mb-4">개발사 {game.developer}</p>
 
-          <div className="bg-[#1E293B] rounded-[18px] border border-[#334155] p-4 mb-4">
+          <div className="rounded-[18px] border border-border bg-card p-4 mb-4">
             <div className="flex items-center justify-between mb-2">
               <div>
-                <p className="text-[11px] text-[#64748B] font-medium">판매 매장</p>
-                <p className="text-sm font-bold text-[#F8FAFC] truncate">{currentStore.name}</p>
+                <p className="text-[11px] font-medium text-muted-foreground">판매 매장</p>
+                <p className="text-sm font-bold text-foreground truncate">{currentStore.name}</p>
               </div>
-              <p className="text-2xl font-extrabold text-[#F8FAFC]">
+              <p className="text-2xl font-extrabold text-foreground">
                 ${currentInventory?.price.toFixed(2) ?? game.price.toFixed(2)}
               </p>
             </div>
-            <div className="flex items-center gap-2 text-xs text-[#64748B]">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
                 <circle cx="12" cy="10" r="3" />
@@ -494,7 +497,7 @@ export function GameDetailView({
             </div>
           </div>
 
-          <div className="flex border-b border-[#334155] mb-4">
+          <div className="flex border-b border-border mb-4">
             {(['info', 'stores'] as const).map((tab) => (
               <button
                 key={tab}
@@ -502,7 +505,7 @@ export function GameDetailView({
                 onClick={() => setActiveTab(tab)}
                 className={cn(
                   'flex-1 py-2.5 text-sm font-bold transition-colors',
-                  activeTab === tab ? 'text-[#4F46E5] border-b-2 border-[#4F46E5] -mb-px' : 'text-[#475569]'
+                  activeTab === tab ? 'text-primary border-b-2 border-primary -mb-px' : 'text-muted-foreground'
                 )}
               >
                 {tab === 'info' ? '게임 정보' : '판매 매장'}
@@ -512,10 +515,10 @@ export function GameDetailView({
 
           {activeTab === 'info' ? (
             <div>
-              <h2 className="text-sm font-bold text-[#F8FAFC] mb-2">소개</h2>
-              <p className="text-sm text-[#94A3B8] leading-relaxed mb-6">{game.description}</p>
+              <h2 className="text-sm font-bold text-foreground mb-2">소개</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-6">{game.description}</p>
 
-              <h2 className="text-sm font-bold text-[#F8FAFC] mb-3">상세 정보</h2>
+              <h2 className="text-sm font-bold text-foreground mb-3">상세 정보</h2>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { label: '플랫폼', value: game.platform },
@@ -523,27 +526,27 @@ export function GameDetailView({
                   { label: '개발사', value: game.developer },
                   { label: '출시연도', value: String(game.releaseYear) },
                 ].map(({ label, value }) => (
-                  <div key={label} className="bg-[#1E293B] rounded-xl border border-[#334155] p-3">
-                    <p className="text-[11px] text-[#64748B] mb-0.5">{label}</p>
-                    <p className="text-xs font-bold text-[#F8FAFC]">{value}</p>
+                  <div key={label} className="rounded-xl border border-border bg-card p-3">
+                    <p className="text-[11px] mb-0.5 text-muted-foreground">{label}</p>
+                    <p className="text-xs font-bold text-foreground">{value}</p>
                   </div>
                 ))}
               </div>
             </div>
           ) : (
             <div>
-              <h2 className="text-sm font-bold text-[#F8FAFC] mb-3">
+              <h2 className="text-sm font-bold text-foreground mb-3">
                 이 타이틀을 보유한 매장 {storesWithGame.length}곳
               </h2>
               {storesWithGame.length === 0 ? (
                 <div className="text-center py-12 px-6">
-                  <div className="w-12 h-12 mx-auto rounded-full bg-[#1E293B] border border-[#334155] flex items-center justify-center mb-3">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" aria-hidden="true">
+                  <div className="w-12 h-12 mx-auto rounded-full bg-card border border-border flex items-center justify-center mb-3">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-muted-foreground" strokeWidth="2" aria-hidden="true">
                       <rect x="3" y="8" width="18" height="12" rx="2" />
                       <path d="M3 8l3-4h12l3 4M12 12v4" />
                     </svg>
                   </div>
-                  <p className="text-[#94A3B8] text-sm font-medium">현재 등록된 재고 정보가 없습니다.</p>
+                  <p className="text-muted-foreground text-sm font-medium">현재 등록된 재고 정보가 없습니다.</p>
                 </div>
               ) : (
               <div className="flex flex-col gap-2">
@@ -551,13 +554,13 @@ export function GameDetailView({
                   <div
                     key={store.id}
                     className={cn(
-                      'bg-[#1E293B] rounded-[14px] border p-3 flex items-center justify-between gap-3',
-                      store.id === storeId ? 'border-[#4F46E5] bg-[#4F46E5]/5' : 'border-[#334155]'
+                      'rounded-[14px] border bg-card p-3 flex items-center justify-between gap-3',
+                      store.id === storeId ? 'border-primary bg-primary/5' : 'border-border'
                     )}
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-[#F8FAFC] truncate">{store.name}</p>
-                      <p className="text-xs text-[#64748B]">{store.distance} km · ${inv.price.toFixed(2)}</p>
+                      <p className="text-sm font-bold text-foreground truncate">{store.name}</p>
+                      <p className="text-xs text-muted-foreground">{store.distance} km · ${inv.price.toFixed(2)}</p>
                     </div>
                     <StockBadge status={inv.stockStatus} count={inv.stockCount} size="sm" />
                   </div>
@@ -571,24 +574,25 @@ export function GameDetailView({
 
       {/* 하단 CTA */}
       <div
-        className="absolute bottom-0 left-0 right-0 bg-[#1E293B] border-t border-[#334155] px-4 py-4"
+        className="absolute bottom-0 left-0 right-0 border-t border-border px-4 py-4 bg-card"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
       >
         {isSoldOut ? (
           restockRequested ? (
-            <div className="bg-[#4F46E5]/10 border border-[#4F46E5]/25 rounded-[14px] py-4 flex items-center justify-center gap-2">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2.5" aria-hidden="true">
+            <div className="rounded-[14px] py-4 flex items-center justify-center gap-2 border border-[#6200EE]/30" style={{ background: 'rgba(98,0,238,0.1)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BB86FC" strokeWidth="2.5" aria-hidden="true">
                 <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
                 <path d="M13.73 21a2 2 0 01-3.46 0" />
               </svg>
-              <span className="text-sm font-bold text-[#A5B4FC]">재입고 알림을 신청했어요</span>
+              <span className="text-sm font-bold text-[#BB86FC]">재입고 알림을 신청했어요</span>
             </div>
           ) : (
             <button
               type="button"
               onClick={handleRestock}
               disabled={restockBusy}
-              className="w-full h-[52px] rounded-[14px] bg-[#4F46E5] text-white text-base font-extrabold tracking-wide hover:bg-[#4338CA] transition-all active:scale-[0.98] disabled:opacity-60"
+              className="w-full h-[52px] rounded-[14px] text-white text-base font-extrabold tracking-wide transition-all active:scale-[0.98] disabled:opacity-60 glow-purple"
+              style={{ background: 'linear-gradient(135deg,#6200EE,#9C27B0)' }}
             >
               {restockBusy ? '신청 중...' : '재입고 알림 신청'}
             </button>
@@ -597,12 +601,13 @@ export function GameDetailView({
           <button
             type="button"
             onClick={startReserve}
-            className="w-full h-[52px] rounded-[14px] bg-[#F59E0B] text-[#0F172A] text-base font-extrabold tracking-wide shadow-lg shadow-[#F59E0B]/20 hover:bg-[#D97706] transition-all active:scale-[0.98]"
+            className="w-full h-[52px] rounded-[14px] text-black text-base font-extrabold tracking-wide transition-all active:scale-[0.98] glow-cyan"
+            style={{ background: '#00E5FF' }}
           >
             {currentStore.name}에서 예약하기
           </button>
         )}
-        <p className="text-[11px] text-center text-[#475569] mt-2">
+        <p className="text-[11px] text-center mt-2" style={{ color: '#4A4A4A' }}>
           {isSoldOut
             ? '입고되면 알림으로 알려드려요'
             : '무료 예약 · 결제는 매장 방문 시 · 노쇼 규정 적용'}
@@ -615,8 +620,8 @@ export function GameDetailView({
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3">
-      <span className="text-xs text-[#64748B] flex-shrink-0">{label}</span>
-      <span className="text-sm font-bold text-[#F8FAFC] text-right">{value}</span>
+      <span className="text-xs flex-shrink-0 text-muted-foreground">{label}</span>
+      <span className="text-sm font-bold text-foreground text-right">{value}</span>
     </div>
   )
 }

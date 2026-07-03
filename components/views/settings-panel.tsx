@@ -1,15 +1,14 @@
 'use client'
 
-import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useSettingsStore, type Language, type Theme } from '@/lib/settings-store'
+import { useT } from '@/lib/i18n'
+import { useState } from 'react'
 
 interface SettingsPanelProps {
   role: 'user' | 'owner'
   onBack: () => void
 }
-
-type Language = 'ko' | 'en' | 'ja'
-type Theme = 'dark' | 'light' | 'system'
 
 const LANGUAGES: { id: Language; label: string; native: string }[] = [
   { id: 'ko', label: 'Korean', native: '한국어' },
@@ -62,7 +61,7 @@ function Toggle({ on, onToggle, label }: { on: boolean; onToggle: () => void; la
       onClick={onToggle}
       className={cn(
         'relative w-11 h-6 rounded-full transition-colors flex-shrink-0',
-        on ? 'bg-[#4F46E5]' : 'bg-[#334155]'
+        on ? 'bg-primary' : 'bg-muted-foreground/30'
       )}
     >
       <span
@@ -77,57 +76,61 @@ function Toggle({ on, onToggle, label }: { on: boolean; onToggle: () => void; la
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-widest px-1 mb-2 mt-6 first:mt-0">
+    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest px-1 mb-2 mt-6 first:mt-0">
       {children}
     </p>
   )
 }
 
 export function SettingsPanel({ role, onBack }: SettingsPanelProps) {
-  const [language, setLanguage] = useState<Language>('ko')
-  const [theme, setTheme] = useState<Theme>('dark')
+  const t = useT()
+  // 전역 스토어 — 변경 즉시 앱 전체에 반영
+  const language = useSettingsStore((s) => s.language)
+  const theme = useSettingsStore((s) => s.theme)
+  const setLanguage = useSettingsStore((s) => s.setLanguage)
+  const setTheme = useSettingsStore((s) => s.setTheme)
   const [pushNotif, setPushNotif] = useState(true)
   const [stockAlerts, setStockAlerts] = useState(true)
   const [reservationAlerts, setReservationAlerts] = useState(true)
   const [marketing, setMarketing] = useState(false)
 
   return (
-    <div className="flex flex-col h-full bg-[#0F172A]">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <header className="flex items-center gap-3 px-4 pt-14 pb-4 bg-[#1E293B] border-b border-[#334155]">
+      <header className="flex items-center gap-3 px-4 pt-14 pb-4 bg-card border-b border-border">
         <button
           type="button"
           onClick={onBack}
           aria-label="뒤로가기"
-          className="w-9 h-9 rounded-full bg-[#0F172A] border border-[#334155] flex items-center justify-center flex-shrink-0"
+          className="w-9 h-9 rounded-full bg-background border border-border flex items-center justify-center flex-shrink-0"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8FAFC" strokeWidth="2" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-foreground" strokeWidth="2" aria-hidden="true">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <h1 className="text-lg font-extrabold text-[#F8FAFC] tracking-tight">설정</h1>
+        <h1 className="text-lg font-extrabold text-foreground tracking-tight">{t('settings_title')}</h1>
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">
         {/* Language */}
-        <SectionLabel>사용자 언어</SectionLabel>
-        <div className="bg-[#1E293B] rounded-[18px] border border-[#334155] overflow-hidden">
+        <SectionLabel>{t('settings_language')}</SectionLabel>
+        <div className="bg-card rounded-[18px] border border-border overflow-hidden">
           {LANGUAGES.map((lang, i) => (
             <button
               key={lang.id}
               type="button"
               onClick={() => setLanguage(lang.id)}
               className={cn(
-                'w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-[#263347] transition-colors min-h-[52px]',
-                i !== 0 && 'border-t border-[#334155]'
+                'w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-muted/50 transition-colors min-h-[52px]',
+                i !== 0 && 'border-t border-border'
               )}
             >
-              <span className="flex-1 text-sm font-semibold text-[#F8FAFC]">
+              <span className="flex-1 text-sm font-semibold text-foreground">
                 {lang.native}
-                <span className="text-[#64748B] font-normal ml-2">{lang.label}</span>
+                <span className="text-muted-foreground font-normal ml-2">{lang.label}</span>
               </span>
               {language === lang.id && (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2.5" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-primary" strokeWidth="2.5" aria-hidden="true">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               )}
@@ -136,69 +139,69 @@ export function SettingsPanel({ role, onBack }: SettingsPanelProps) {
         </div>
 
         {/* Theme */}
-        <SectionLabel>테마</SectionLabel>
+        <SectionLabel>{t('settings_theme')}</SectionLabel>
         <div className="flex gap-2">
-          {THEMES.map((t) => (
+          {THEMES.map((themeItem) => (
             <button
-              key={t.id}
+              key={themeItem.id}
               type="button"
-              onClick={() => setTheme(t.id)}
+              onClick={() => setTheme(themeItem.id)}
               className={cn(
                 'flex-1 flex flex-col items-center gap-2 py-4 rounded-[16px] border transition-colors',
-                theme === t.id
-                  ? 'bg-[#4F46E5]/15 border-[#4F46E5] text-[#818CF8]'
-                  : 'bg-[#1E293B] border-[#334155] text-[#64748B]'
+                theme === themeItem.id
+                  ? 'bg-primary/15 border-primary text-primary'
+                  : 'bg-card border-border text-muted-foreground hover:border-primary/50'
               )}
             >
-              {t.icon}
-              <span className={cn('text-xs font-bold', theme === t.id ? 'text-[#F8FAFC]' : 'text-[#94A3B8]')}>
-                {t.label}
+              {themeItem.icon}
+              <span className={cn('text-xs font-bold', theme === themeItem.id ? 'text-primary' : 'text-muted-foreground')}>
+                {t(themeItem.id === 'dark' ? 'settings_theme_dark' : themeItem.id === 'light' ? 'settings_theme_light' : 'settings_theme_system')}
               </span>
             </button>
           ))}
         </div>
 
         {/* Notifications */}
-        <SectionLabel>알림</SectionLabel>
-        <div className="bg-[#1E293B] rounded-[18px] border border-[#334155] overflow-hidden">
+        <SectionLabel>{t('settings_notifications')}</SectionLabel>
+        <div className="bg-card rounded-[18px] border border-border overflow-hidden">
           <div className="flex items-center gap-3 px-4 py-3.5 min-h-[52px]">
             <div className="flex-1">
-              <p className="text-sm font-semibold text-[#F8FAFC]">푸시 알림</p>
-              <p className="text-[11px] text-[#64748B]">앱 전체 푸시 알림 받기</p>
+              <p className="text-sm font-semibold text-foreground">{t('settings_push')}</p>
+              <p className="text-[11px] text-muted-foreground">{t('settings_push_desc')}</p>
             </div>
-            <Toggle on={pushNotif} onToggle={() => setPushNotif((v) => !v)} label="푸시 알림" />
+            <Toggle on={pushNotif} onToggle={() => setPushNotif((v) => !v)} label={t('settings_push')} />
           </div>
-          <div className="flex items-center gap-3 px-4 py-3.5 min-h-[52px] border-t border-[#334155]">
+          <div className="flex items-center gap-3 px-4 py-3.5 min-h-[52px] border-t border-border">
             <div className="flex-1">
-              <p className="text-sm font-semibold text-[#F8FAFC]">재고 입고 알림</p>
-              <p className="text-[11px] text-[#64748B]">찜한 게임 입고 시 알림</p>
+              <p className="text-sm font-semibold text-foreground">{t('settings_stock_alerts')}</p>
+              <p className="text-[11px] text-muted-foreground">{t('settings_stock_alerts_desc')}</p>
             </div>
-            <Toggle on={stockAlerts} onToggle={() => setStockAlerts((v) => !v)} label="재고 입고 알림" />
+            <Toggle on={stockAlerts} onToggle={() => setStockAlerts((v) => !v)} label={t('settings_stock_alerts')} />
           </div>
-          <div className="flex items-center gap-3 px-4 py-3.5 min-h-[52px] border-t border-[#334155]">
+          <div className="flex items-center gap-3 px-4 py-3.5 min-h-[52px] border-t border-border">
             <div className="flex-1">
-              <p className="text-sm font-semibold text-[#F8FAFC]">예약 알림</p>
-              <p className="text-[11px] text-[#64748B]">예약 상태 및 만료 알림</p>
+              <p className="text-sm font-semibold text-foreground">{t('settings_reservation_alerts')}</p>
+              <p className="text-[11px] text-muted-foreground">{t('settings_reservation_alerts_desc')}</p>
             </div>
-            <Toggle on={reservationAlerts} onToggle={() => setReservationAlerts((v) => !v)} label="예약 알림" />
+            <Toggle on={reservationAlerts} onToggle={() => setReservationAlerts((v) => !v)} label={t('settings_reservation_alerts')} />
           </div>
-          <div className="flex items-center gap-3 px-4 py-3.5 min-h-[52px] border-t border-[#334155]">
+          <div className="flex items-center gap-3 px-4 py-3.5 min-h-[52px] border-t border-border">
             <div className="flex-1">
-              <p className="text-sm font-semibold text-[#F8FAFC]">마케팅 알림</p>
-              <p className="text-[11px] text-[#64748B]">할인 및 이벤트 소식</p>
+              <p className="text-sm font-semibold text-foreground">{t('settings_marketing')}</p>
+              <p className="text-[11px] text-muted-foreground">{t('settings_marketing_desc')}</p>
             </div>
-            <Toggle on={marketing} onToggle={() => setMarketing((v) => !v)} label="마케팅 알림" />
+            <Toggle on={marketing} onToggle={() => setMarketing((v) => !v)} label={t('settings_marketing')} />
           </div>
         </div>
 
         {/* Account role */}
-        <SectionLabel>사용자 권한</SectionLabel>
-        <div className="bg-[#1E293B] rounded-[18px] border border-[#334155] p-4">
+        <SectionLabel>{t('settings_role')}</SectionLabel>
+        <div className="bg-card rounded-[18px] border border-border p-4">
           <div className="flex items-center gap-3">
             <div
               className={cn(
                 'w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0',
-                role === 'owner' ? 'bg-[#F59E0B]/15' : 'bg-[#4F46E5]/15'
+                role === 'owner' ? 'bg-[#F59E0B]/15' : 'bg-primary/15'
               )}
             >
               {role === 'owner' ? (
@@ -207,26 +210,24 @@ export function SettingsPanel({ role, onBack }: SettingsPanelProps) {
                   <polyline points="9 22 9 12 15 12 15 22" />
                 </svg>
               ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-primary" strokeWidth="2" aria-hidden="true">
                   <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-extrabold text-[#F8FAFC]">
-                {role === 'owner' ? '점주 계정' : '일반 사용자'}
+              <p className="text-sm font-extrabold text-foreground">
+                {role === 'owner' ? t('settings_role_owner') : t('settings_role_user')}
               </p>
-              <p className="text-[11px] text-[#64748B]">
-                {role === 'owner'
-                  ? '재고 관리 및 예약 관리 권한'
-                  : '게임 검색 및 예약 이용 권한'}
+              <p className="text-[11px] text-muted-foreground">
+                {role === 'owner' ? t('settings_role_owner_desc') : t('settings_role_user_desc')}
               </p>
             </div>
             <span
               className={cn(
                 'text-[11px] font-bold px-2.5 py-1 rounded-full',
-                role === 'owner' ? 'bg-[#F59E0B]/15 text-[#F59E0B]' : 'bg-[#4F46E5]/15 text-[#818CF8]'
+                role === 'owner' ? 'bg-[#F59E0B]/15 text-[#F59E0B]' : 'bg-primary/15 text-primary'
               )}
             >
               {role === 'owner' ? 'OWNER' : 'USER'}
@@ -235,9 +236,9 @@ export function SettingsPanel({ role, onBack }: SettingsPanelProps) {
           {role === 'user' && (
             <button
               type="button"
-              className="mt-3 w-full h-11 rounded-[12px] bg-[#4F46E5]/15 border border-[#4F46E5]/30 text-[#818CF8] text-sm font-bold hover:bg-[#4F46E5]/25 transition-colors"
+              className="mt-3 w-full h-11 rounded-[12px] bg-primary/15 border border-primary/30 text-primary text-sm font-bold hover:bg-primary/25 transition-colors"
             >
-              점주 계정으로 전환 신청
+              {t('settings_apply_owner')}
             </button>
           )}
         </div>

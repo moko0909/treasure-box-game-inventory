@@ -14,6 +14,8 @@ export const user = pgTable('user', {
   role: text('role').notNull().default('user'),
   businessNumber: text('businessNumber'),
   storeLocation: text('storeLocation'),
+  // 예약금 잔액 (원 단위). 충전 시 증가, 예약 완료 시 차감.
+  balance: integer('balance').notNull().default(0),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })

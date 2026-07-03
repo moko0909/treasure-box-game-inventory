@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { SettingsBootstrap } from '@/components/settings-bootstrap'
 
 export const metadata: Metadata = {
-  title: '보물상자 — 내 주변 게임 재고',
+  title: '보물상자 — 게임 스토어 & 예약 플랫폼',
   description:
     '내 주변 게임 매장을 찾고, 실시간 재고를 확인하고, 방문 전에 게임을 예약하세요.',
   generator: 'v0.app',
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'dark',
-  themeColor: '#0F172A',
+  themeColor: '#121212',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -24,8 +25,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko" className="bg-background">
+    <html lang="ko" className="dark">
       <body className="font-sans antialiased bg-background">
+        <SettingsBootstrap />
         {children}
       </body>
     </html>
