@@ -41,7 +41,7 @@ function StarRating({ rating }: { rating: number }) {
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
       ))}
-      <span className="text-sm font-bold text-[#F8FAFC] ml-1">{rating}</span>
+      <span className="text-sm font-bold text-foreground ml-1">{rating}</span>
     </div>
   )
 }
@@ -61,7 +61,7 @@ function Barcode({ code }: { code: string }) {
       {bars.map((w, i) => (
         <div
           key={i}
-          className="bg-[#0F172A] h-full"
+          className="bg-foreground h-full"
           style={{ width: `${w}px` }}
         />
       ))}
@@ -295,8 +295,8 @@ export function GameDetailView({
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
             </div>
-            <p className="text-base font-bold text-[#F8FAFC] mb-1">선점 시간이 만료됐어요</p>
-            <p className="text-sm text-[#94A3B8] mb-5">다시 시도하면 재고를 새로 선점할 수 있어요.</p>
+        <p className="text-base font-bold text-foreground mb-1">선점 시간이 만료됐어요</p>
+          <p className="text-sm text-muted-foreground mb-5">다시 시도하면 재고를 새로 선점할 수 있어요.</p>
             <button
               type="button"
               onClick={startReserve}
@@ -316,16 +316,16 @@ export function GameDetailView({
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-[#F8FAFC] truncate">{game.title}</p>
-                  <p className="text-xs text-[#64748B] truncate">{currentStore.name}</p>
-                </div>
-                <p className="ml-auto text-lg font-extrabold text-[#F8FAFC]">
+          <p className="text-sm font-bold text-foreground truncate">{game.title}</p>
+            <p className="text-xs text-muted-foreground truncate">{currentStore.name}</p>
+          </div>
+          <p className="ml-auto text-lg font-extrabold text-foreground">
                   ${(currentInventory?.price ?? game.price).toFixed(2)}
                 </p>
               </div>
 
               {/* 수량 */}
-              <label className="block text-sm font-bold text-[#F8FAFC] mb-2">수량</label>
+              <label className="block text-sm font-bold text-foreground mb-2">수량</label>
               <div className="flex items-center gap-4 mb-5">
                 <button
                   type="button"
@@ -352,7 +352,7 @@ export function GameDetailView({
               </div>
 
               {/* 픽업 일시 */}
-              <label htmlFor="pickup" className="block text-sm font-bold text-[#F8FAFC] mb-2">픽업 일시</label>
+              <label htmlFor="pickup" className="block text-sm font-bold text-foreground mb-2">픽업 일시</label>
               <input
                 id="pickup"
                 type="datetime-local"
@@ -364,8 +364,8 @@ export function GameDetailView({
               />
 
               {/* 요청사항 */}
-              <label htmlFor="notes" className="block text-sm font-bold text-[#F8FAFC] mb-2">
-                요청사항 <span className="text-[#64748B] font-normal">(선택)</span>
+          <label htmlFor="notes" className="block text-sm font-bold text-foreground mb-2">
+            요청사항 <span className="text-muted-foreground font-normal">(선택)</span>
               </label>
               <textarea
                 id="notes"
@@ -382,7 +382,7 @@ export function GameDetailView({
                 <p className="text-xs font-bold text-white mb-2">노쇼 규정 안내</p>
                 <ul className="text-[12px] leading-relaxed list-disc pl-4 space-y-1" style={{ color: '#6A6A6A' }}>
                   <li>픽업 기한 내 미방문 시 예약이 자동 취소됩니다.</li>
-                  <li>노쇼가 3회 누적되면 30일간 예약이 제한됩��다.</li>
+                  <li>노쇼가 3회 누적되면 30일��� 예약이 제한됩��다.</li>
                   <li>방문이 어려운 경우 미리 예약을 취소해 주세요.</li>
                 </ul>
                 <label className="flex items-center gap-2.5 mt-3 cursor-pointer">
@@ -392,7 +392,7 @@ export function GameDetailView({
                     onChange={(e) => setAgreed(e.target.checked)}
                     className="w-5 h-5 rounded border-[#2A2A2A] accent-[#6200EE]"
                   />
-                  <span className="text-sm font-medium text-[#F8FAFC]">위 노쇼 규정에 동의합니다</span>
+                  <span className="text-sm font-medium text-foreground">위 노쇼 규정에 동의합니다</span>
                 </label>
               </div>
             </div>

@@ -190,7 +190,7 @@ html.light {
   min-height: 100dvh;
   margin: 0 auto;
   position: relative;
-  background: #121212;
+  background: var(--background);
   overflow-x: hidden;
 }
 

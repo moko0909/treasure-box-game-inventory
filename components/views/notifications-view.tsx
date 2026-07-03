@@ -70,20 +70,20 @@ function StoreStockCard({ item, onViewGame }: { item: StoreStockItem; onViewGame
     <button
       type="button"
       onClick={() => onViewGame(item.gameId, item.storeId)}
-      className="w-full bg-[#1E293B] rounded-[16px] border border-[#334155] p-3.5 flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
+      className="w-full bg-card rounded-[16px] border border-border p-3.5 flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
     >
       {/* 게임 커버 */}
-      <div className="w-12 h-[68px] rounded-xl overflow-hidden flex-shrink-0 border border-[#334155]" style={{ background: game.coverColor }}>
+      <div className="w-12 h-[68px] rounded-xl overflow-hidden flex-shrink-0 border border-border" style={{ background: game.coverColor }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={game.imagePath} alt={`${game.title} 커버`} className="w-full h-full object-cover" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2 mb-1">
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-bold text-[#F8FAFC] leading-tight truncate">{game.title}</p>
-            <p className="text-[11px] text-[#64748B] mt-0.5 truncate">{store.name}</p>
+            <p className="text-[13px] font-bold text-foreground leading-tight truncate">{game.title}</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{store.name}</p>
           </div>
-          <p className="text-[10px] text-[#475569] flex-shrink-0">{relativeTime(item.updatedAt)}</p>
+          <p className="text-[10px] text-muted-foreground flex-shrink-0">{relativeTime(item.updatedAt)}</p>
         </div>
         <StockBadge status={item.stockStatus} count={item.stockCount} />
       </div>
@@ -106,23 +106,23 @@ function GameWishlistCard({ item, onViewGame }: { item: GameWishlistItem; onView
     <button
       type="button"
       onClick={() => onViewGame(item.gameId, item.storeId)}
-      className="w-full bg-[#1E293B] rounded-[16px] border border-[#334155] p-3.5 flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
+      className="w-full bg-card rounded-[16px] border border-border p-3.5 flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
     >
-      <div className="w-12 h-[68px] rounded-xl overflow-hidden flex-shrink-0 border border-[#334155]" style={{ background: game.coverColor }}>
+      <div className="w-12 h-[68px] rounded-xl overflow-hidden flex-shrink-0 border border-border" style={{ background: game.coverColor }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={game.imagePath} alt={`${game.title} 커버`} className="w-full h-full object-cover" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2 mb-1">
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-bold text-[#F8FAFC] leading-tight truncate">{game.title}</p>
-            <p className="text-[11px] text-[#64748B] mt-0.5 truncate">{store.name}</p>
+            <p className="text-[13px] font-bold text-foreground leading-tight truncate">{game.title}</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{store.name}</p>
           </div>
-          <p className="text-[10px] text-[#475569] flex-shrink-0">{relativeTime(item.updatedAt)}</p>
+          <p className="text-[10px] text-muted-foreground flex-shrink-0">{relativeTime(item.updatedAt)}</p>
         </div>
         <div className="flex items-center gap-2">
           <StockBadge status={item.stockStatus} count={item.stockCount} />
-          <span className="text-[10px] text-[#475569]">전체 잔여 {totalStock}개</span>
+          <span className="text-[10px] text-muted-foreground">전체 잔여 {totalStock}개</span>
         </div>
       </div>
     </button>
@@ -152,29 +152,29 @@ export function NotificationsView({ favoriteStoreIds, restockAlerts, onViewGame 
   const totalCount = storeItems.length + gameItems.length
 
   return (
-    <div className="flex flex-col h-full bg-[#0F172A]">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <header className="px-4 pt-14 pb-3 bg-[#0F172A] border-b border-[#1E293B]">
+      <header className="px-4 pt-14 pb-3 bg-background border-b border-border">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-[11px] text-[#475569] font-semibold uppercase tracking-widest">새 소식</p>
-            <h1 className="text-2xl font-extrabold text-[#F8FAFC] tracking-tight">알림</h1>
+            <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-widest">새 소식</p>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">알림</h1>
           </div>
           {totalCount > 0 && (
-            <span className="bg-[#EF4444] text-white text-xs font-extrabold min-w-[26px] h-[26px] rounded-full flex items-center justify-center px-1.5">
+            <span className="bg-destructive text-white text-xs font-extrabold min-w-[26px] h-[26px] rounded-full flex items-center justify-center px-1.5">
               {totalCount}
             </span>
           )}
         </div>
 
         {/* 탭 전환 */}
-        <div className="flex gap-1 bg-[#1E293B] border border-[#334155] rounded-xl p-1">
+        <div className="flex gap-1 bg-muted border border-border rounded-xl p-1">
           <button
             type="button"
             onClick={() => setTab('stock')}
             className={cn(
               'flex-1 h-9 rounded-lg text-xs font-bold transition-colors',
-              tab === 'stock' ? 'bg-[#4F46E5] text-white' : 'text-[#64748B] hover:text-[#CBD5E1]'
+              tab === 'stock' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             )}
           >
             관심 매장 입고 ({storeItems.length})
@@ -184,7 +184,7 @@ export function NotificationsView({ favoriteStoreIds, restockAlerts, onViewGame 
             onClick={() => setTab('restock')}
             className={cn(
               'flex-1 h-9 rounded-lg text-xs font-bold transition-colors',
-              tab === 'restock' ? 'bg-[#4F46E5] text-white' : 'text-[#64748B] hover:text-[#CBD5E1]'
+              tab === 'restock' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             )}
           >
             찜한 게임 재고 ({gameItems.length})
@@ -240,11 +240,11 @@ export function NotificationsView({ favoriteStoreIds, restockAlerts, onViewGame 
 function EmptyState({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-16 h-16 bg-[#1E293B] border border-[#334155] rounded-full flex items-center justify-center mb-4">
+      <div className="w-16 h-16 bg-card border border-border rounded-full flex items-center justify-center mb-4">
         {icon}
       </div>
-      <p className="text-sm font-bold text-[#F8FAFC] mb-1">{title}</p>
-      <p className="text-xs text-[#64748B] max-w-[220px] leading-relaxed">{subtitle}</p>
+      <p className="text-sm font-bold text-foreground mb-1">{title}</p>
+      <p className="text-xs text-muted-foreground max-w-[220px] leading-relaxed">{subtitle}</p>
     </div>
   )
 }
