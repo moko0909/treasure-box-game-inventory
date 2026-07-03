@@ -99,3 +99,18 @@ export async function markPickedUp(id: string) {
     .where(and(eq(reservations.id, id), eq(reservations.userId, userId)))
   revalidatePath('/')
 }
+
+/** 취소된 예약을 완전히 삭제합니다 */
+export async function deleteReservation(id: string) {
+  const userId = await getUserId()
+  await db
+    .delete(reservations)
+    .where(
+      and(
+        eq(reservations.id, id),
+        eq(reservations.userId, userId),
+        eq(reservations.status, 'cancelled'),
+      ),
+    )
+  revalidatePath('/')
+}

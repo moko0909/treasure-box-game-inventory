@@ -84,14 +84,17 @@ function ReservationCard({
   reservation,
   onViewGame,
   onCancel,
+  onDelete,
   t,
 }: {
   reservation: Reservation
   onViewGame: (gameId: string, storeId: string) => void
   onCancel: (id: string) => void
+  onDelete: (id: string) => void
   t: ReturnType<typeof useT>
 }) {
   const [confirming, setConfirming] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const game = getGameById(reservation.gameId)
   const store = getStoreById(reservation.storeId)
   if (!game || !store) return null
@@ -188,6 +191,8 @@ function ReservationCard({
         >
           {t('reservations_view_game')}
         </button>
+
+        {/* 활성 예약: 취소 버튼 */}
         {isActive &&
           (confirming ? (
             <>
@@ -213,6 +218,42 @@ function ReservationCard({
               className="h-10 px-4 rounded-xl bg-card border border-destructive/30 text-destructive text-sm font-bold hover:bg-destructive/10 transition-colors"
             >
               {t('reservations_cancel')}
+            </button>
+          ))}
+
+        {/* 취소된 예약: 삭제 버튼 */}
+        {reservation.status === 'cancelled' &&
+          (confirmingDelete ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(false)}
+                className="h-10 px-3 rounded-xl border border-border text-sm font-bold text-foreground hover:bg-muted/50 transition-colors"
+              >
+                유지
+              </button>
+              <button
+                type="button"
+                onClick={() => onDelete(reservation.id)}
+                className="h-10 px-4 rounded-xl bg-destructive text-white text-sm font-bold hover:opacity-90 transition-opacity"
+              >
+                삭제
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmingDelete(true)}
+              className="h-10 px-3 rounded-xl border border-border text-muted-foreground text-sm font-bold hover:bg-muted/50 transition-colors flex items-center gap-1.5"
+              aria-label="예약 삭제"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                <path d="M10 11v6M14 11v6" />
+                <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+              </svg>
+              삭제
             </button>
           ))}
       </div>
@@ -280,6 +321,7 @@ interface ReservationsViewProps {
   reservations: Reservation[]
   restockAlerts: RestockAlert[]
   onCancelReservation: (id: string) => void
+  onDeleteReservation: (id: string) => void
   onCancelRestock: (id: string) => void
 }
 
@@ -288,6 +330,7 @@ export function ReservationsView({
   reservations,
   restockAlerts,
   onCancelReservation,
+  onDeleteReservation,
   onCancelRestock,
 }: ReservationsViewProps) {
   const t = useT()
@@ -381,7 +424,7 @@ export function ReservationsView({
           ) : (
             <div className="flex flex-col gap-3">
               {filtered.map((r) => (
-                <ReservationCard key={r.id} reservation={r} onViewGame={onViewGame} onCancel={onCancelReservation} t={t} />
+                <ReservationCard key={r.id} reservation={r} onViewGame={onViewGame} onCancel={onCancelReservation} onDelete={onDeleteReservation} t={t} />
               ))}
             </div>
           )
