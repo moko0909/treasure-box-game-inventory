@@ -10,7 +10,7 @@ import { NotificationsView, calcNotificationCount } from '@/components/views/not
 import { ReservationsView } from '@/components/views/reservations-view'
 import { MyPageView } from '@/components/views/mypage-view'
 import { AdminView } from '@/components/views/admin-view'
-import { createReservation, cancelReservation, type CreateReservationInput } from '@/app/actions/reservations'
+import { createReservation, cancelReservation, deleteReservation, type CreateReservationInput } from '@/app/actions/reservations'
 import { toggleFavorite as toggleFavoriteAction } from '@/app/actions/favorites'
 import { requestRestockAlert, cancelRestockAlert } from '@/app/actions/restock'
 import { chargeBalance } from '@/app/actions/balance'
@@ -82,6 +82,13 @@ export function AppShell({
   const handleCancelReservation = (id: string) => {
     startTransition(async () => {
       await cancelReservation(id)
+      router.refresh()
+    })
+  }
+
+  const handleDeleteReservation = (id: string) => {
+    startTransition(async () => {
+      await deleteReservation(id)
       router.refresh()
     })
   }
@@ -195,6 +202,7 @@ export function AppShell({
                 reservations={reservations}
                 restockAlerts={restockAlerts}
                 onCancelReservation={handleCancelReservation}
+                onDeleteReservation={handleDeleteReservation}
                 onCancelRestock={handleCancelRestock}
                 onViewGame={(gId, sId) => {
                   handleNavigate('stores')
