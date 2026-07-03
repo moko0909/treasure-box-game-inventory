@@ -41,12 +41,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko" className="dark bg-background">
-      {/* FOUC 방지: 파싱 즉시 실행, 리액트 하이드레이션 전에 테마 클래스 주입 */}
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: FOUC_SCRIPT }} />
-      </head>
+    // suppressHydrationWarning: FOUC 스크립트가 className을 동적으로 바꾸므로 불일치 경고 억제
+    <html lang="ko" suppressHydrationWarning>
       <body className="font-sans antialiased bg-background">
+        {/* FOUC 방지: body 최상단에서 localStorage 테마를 읽어 html 클래스를 즉시 적용 */}
+        <script dangerouslySetInnerHTML={{ __html: FOUC_SCRIPT }} />
         <SettingsBootstrap />
         {children}
       </body>

@@ -30,13 +30,13 @@ const STATUS_LABEL_MAP: Record<Reservation['status'], string> = {
 function formatDate(iso: string) {
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}. ${pad(d.getMonth() + 1)}. ${pad(d.getDate())}`
+  return `${d.getUTCFullYear()}. ${pad(d.getUTCMonth() + 1)}. ${pad(d.getUTCDate())}`
 }
 
 function formatDateTime(iso: string) {
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${pad(d.getMonth() + 1)}. ${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return `${pad(d.getUTCMonth() + 1)}. ${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`
 }
 
 // 예약 진행 타임라인 (예약 신청 → 픽업 대기 → 수령 완료)
