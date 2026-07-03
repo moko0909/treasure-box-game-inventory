@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 import { STORES, getGameById, type StockStatus, getStockLabel } from '@/lib/data'
 import { StockBadge } from '@/components/stock-badge'
 
 type AdminTab = 'inventory' | 'reservations'
+type AdminReservationStatus = 'pending' | 'ready' | 'picked-up'
 
 interface InventoryItem {
   gameId: string
@@ -15,14 +17,25 @@ interface InventoryItem {
   price: number
 }
 
+interface AdminReservation {
+  id: string
+  code: string
+  game: string
+  customer: string
+  expires: string
+  status: AdminReservationStatus
+}
+
 const STATUS_OPTIONS: StockStatus[] = ['in-stock', 'low-stock', 'sold-out']
 
 function InventoryRow({
   item,
   onUpdate,
+  t,
 }: {
   item: InventoryItem
   onUpdate: (gameId: string, storeId: string, status: StockStatus, count: number) => void
+  t: ReturnType<typeof useT>
 }) {
   const game = getGameById(item.gameId)
   if (!game) return null
@@ -44,7 +57,6 @@ function InventoryRow({
         <StockBadge status={item.stockStatus} size="sm" />
       </div>
 
-      {/* Controls */}
       <div className="flex items-center gap-2">
         <select
           value={item.stockStatus}
@@ -81,16 +93,11 @@ function InventoryRow({
   )
 }
 
-const MOCK_ADMIN_RESERVATIONS = [
-  { id: 'ra1', code: 'TB-4821', game: 'Spider-Man 2',  customer: '김민준', expires: '오늘 오후 6시',   status: 'pending'   as const },
-  { id: 'ra2', code: 'TB-9034', game: 'Zelda: TotK',   customer: '이서연', expires: '내일 오전 10시', status: 'pending'   as const },
-  { id: 'ra3', code: 'TB-2217', game: 'Mario Kart 8',  customer: '박도현', expires: '오늘 오후 8시',   status: 'ready'     as const },
-  { id: 'ra4', code: 'TB-5509', game: 'FF XVI',         customer: '최지우', expires: '1월 14일',      status: 'picked-up' as const },
-]
-
 export function AdminView({ storeLocation }: { storeLocation?: string | null }) {
+  const t = useT()
   const [activeTab, setActiveTab] = useState<AdminTab>('inventory')
   const [selectedStoreId, setSelectedStoreId] = useState(STORES[0].id)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle')
   const [inventory, setInventory] = useState(() =>
     STORES.flatMap((store) =>
       store.games.map((g) => ({
@@ -103,12 +110,22 @@ export function AdminView({ storeLocation }: { storeLocation?: string | null }) 
     )
   )
 
+  const [adminReservations, setAdminReservations] = useState<AdminReservation[]>([
+    { id: 'ra1', code: 'TB-4821', game: 'Spider-Man 2',  customer: '김민준', expires: '오늘 오후 6시',   status: 'pending' },
+    { id: 'ra2', code: 'TB-9034', game: 'Zelda: TotK',   customer: '이서연', expires: '내일 오전 10시', status: 'pending' },
+    { id: 'ra3', code: 'TB-2217', game: 'Mario Kart 8',  customer: '박도현', expires: '오늘 오후 8시',   status: 'ready' },
+    { id: 'ra4', code: 'TB-5509', game: 'FF XVI',         customer: '최지우', expires: '1월 14일',      status: 'picked-up' },
+  ])
+
   const storeInventory = inventory.filter((i) => i.storeId === selectedStoreId)
   const totalInStock = storeInventory.filter((i) => i.stockStatus === 'in-stock').reduce((a, b) => a + b.stockCount, 0)
   const lowStockCount = storeInventory.filter((i) => i.stockStatus === 'low-stock').length
   const soldOutCount  = storeInventory.filter((i) => i.stockStatus === 'sold-out').length
 
+  const todayExpiry = adminReservations.filter((r) => r.status !== 'picked-up' && r.expires.includes('오늘')).length
+
   const updateItem = (gameId: string, storeId: string, status: StockStatus, count: number) => {
+    setSaveStatus('idle')
     setInventory((prev) =>
       prev.map((item) =>
         item.gameId === gameId && item.storeId === storeId
@@ -118,14 +135,30 @@ export function AdminView({ storeLocation }: { storeLocation?: string | null }) 
     )
   }
 
+  const handleSave = () => {
+    // 실제 환경에서는 Server Action 호출 위치
+    setSaveStatus('saved')
+    setTimeout(() => setSaveStatus('idle'), 2500)
+  }
+
+  const advanceReservation = (id: string) => {
+    setAdminReservations((prev) =>
+      prev.map((r) => {
+        if (r.id !== id) return r
+        if (r.status === 'pending') return { ...r, status: 'ready' }
+        if (r.status === 'ready') return { ...r, status: 'picked-up' }
+        return r
+      })
+    )
+  }
+
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
       <header className="bg-background px-4 pt-12 pb-4 border-b border-border">
         <div className="flex items-center justify-between mb-4">
           <div className="min-w-0">
-            <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-widest">관리자</p>
-            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">대시보드</h1>
+            <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-widest">{t('admin_eyebrow')}</p>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">{t('admin_title')}</h1>
             {storeLocation && (
               <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground truncate">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -140,17 +173,17 @@ export function AdminView({ storeLocation }: { storeLocation?: string | null }) 
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
             </svg>
-            <span className="text-xs font-bold">점주</span>
+            <span className="text-xs font-bold">{t('admin_badge')}</span>
           </div>
         </div>
 
-        {/* Store picker */}
+        {/* 매장 선택 */}
         <div className="relative mb-4">
           <select
             value={selectedStoreId}
-            onChange={(e) => setSelectedStoreId(e.target.value)}
+            onChange={(e) => { setSelectedStoreId(e.target.value); setSaveStatus('idle') }}
             className="w-full h-11 pl-4 pr-8 bg-card rounded-xl border border-border text-sm font-semibold text-foreground outline-none focus:border-primary appearance-none"
-            aria-label="매장 선택"
+            aria-label={t('admin_store_select')}
           >
             {STORES.map((store) => (
               <option key={store.id} value={store.id}>{store.name}</option>
@@ -165,23 +198,23 @@ export function AdminView({ storeLocation }: { storeLocation?: string | null }) 
           </svg>
         </div>
 
-        {/* Quick stats */}
+        {/* 빠른 통계 */}
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-2.5 text-center">
             <p className="text-lg font-extrabold text-green-400">{totalInStock}</p>
-            <p className="text-[10px] text-green-500 font-bold">재고 있음</p>
+            <p className="text-[10px] text-green-500 font-bold">{t('admin_stat_in_stock')}</p>
           </div>
           <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-2.5 text-center">
             <p className="text-lg font-extrabold text-yellow-400">{lowStockCount}</p>
-            <p className="text-[10px] text-yellow-500 font-bold">재고 부족</p>
+            <p className="text-[10px] text-yellow-500 font-bold">{t('admin_stat_low_stock')}</p>
           </div>
           <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-2.5 text-center">
             <p className="text-lg font-extrabold text-red-400">{soldOutCount}</p>
-            <p className="text-[10px] text-red-500 font-bold">품절</p>
+            <p className="text-[10px] text-red-500 font-bold">{t('admin_stat_sold_out')}</p>
           </div>
         </div>
 
-        {/* Tab switcher */}
+        {/* 탭 */}
         <div className="flex mt-4 bg-muted rounded-xl border border-border p-1 gap-1">
           {(['inventory', 'reservations'] as AdminTab[]).map((tab) => (
             <button
@@ -195,50 +228,78 @@ export function AdminView({ storeLocation }: { storeLocation?: string | null }) 
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              {tab === 'inventory' ? '재고 관리' : '예약 관리'}
+              {tab === 'inventory' ? t('admin_tab_inventory') : t('admin_tab_reservations')}
             </button>
           ))}
         </div>
       </header>
 
-      {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-4 pb-24 bg-background">
         {activeTab === 'inventory' ? (
           <>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-muted-foreground">타이틀 {storeInventory.length}종 관리 중</p>
-              <button type="button" className="text-xs text-primary font-bold">+ 타이틀 추가</button>
+              <p className="text-xs text-muted-foreground">
+                {t('admin_inventory_count')}{storeInventory.length}{t('admin_inventory_count_suffix')}
+              </p>
+              <div className="flex items-center gap-2">
+                <button type="button" className="text-xs text-primary font-bold">{t('admin_add_title')}</button>
+              </div>
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 mb-4">
               {storeInventory.map((item) => (
                 <InventoryRow
                   key={`${item.storeId}-${item.gameId}`}
                   item={item}
                   onUpdate={updateItem}
+                  t={t}
                 />
               ))}
             </div>
+            {/* 저장 버튼 */}
+            <button
+              type="button"
+              onClick={handleSave}
+              className={cn(
+                'w-full h-12 rounded-2xl text-sm font-bold transition-all',
+                saveStatus === 'saved'
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                  : 'bg-primary text-primary-foreground hover:opacity-90'
+              )}
+            >
+              {saveStatus === 'saved' ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  {t('admin_save_success')}
+                </span>
+              ) : t('admin_save_inventory')}
+            </button>
           </>
         ) : (
           <>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-muted-foreground">예약 {MOCK_ADMIN_RESERVATIONS.length}건</p>
-              <div className="flex items-center gap-1.5 text-xs text-[#F59E0B] font-bold">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                오늘 만료 2건
-              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('admin_reservations_count')}{adminReservations.length}{t('admin_reservations_count_suffix')}
+              </p>
+              {todayExpiry > 0 && (
+                <div className="flex items-center gap-1.5 text-xs text-[#F59E0B] font-bold">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  {t('admin_expiry_alert')} {todayExpiry}{t('admin_expiry_alert_suffix')}
+                </div>
+              )}
             </div>
             <div className="flex flex-col gap-2">
-              {MOCK_ADMIN_RESERVATIONS.map((r) => (
+              {adminReservations.map((r) => (
                 <div key={r.id} className="bg-card rounded-[14px] border border-border p-3">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div>
                       <p className="text-sm font-bold text-foreground">{r.game}</p>
-                      <p className="text-xs text-muted-foreground">고객: {r.customer}</p>
+                      <p className="text-xs text-muted-foreground">{t('admin_customer_label')}: {r.customer}</p>
                     </div>
                     <span className={cn(
                       'text-[11px] font-bold px-2 py-0.5 rounded-full flex-shrink-0',
@@ -246,7 +307,7 @@ export function AdminView({ storeLocation }: { storeLocation?: string | null }) 
                       r.status === 'ready'     && 'bg-green-500/15 text-green-400',
                       r.status === 'picked-up' && 'bg-muted text-muted-foreground border border-border',
                     )}>
-                      {r.status === 'pending' ? '대기 중' : r.status === 'ready' ? '준비 완료' : '수령 완료'}
+                      {r.status === 'pending' ? t('admin_status_pending') : r.status === 'ready' ? t('admin_status_ready') : t('admin_status_picked_up')}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -255,16 +316,17 @@ export function AdminView({ storeLocation }: { storeLocation?: string | null }) 
                         <circle cx="12" cy="12" r="10" />
                         <polyline points="12 6 12 12 16 14" />
                       </svg>
-                      만료: {r.expires}
+                      {t('admin_expiry_label')}: {r.expires}
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-mono text-muted-foreground">{r.code}</span>
                       {r.status !== 'picked-up' && (
                         <button
                           type="button"
+                          onClick={() => advanceReservation(r.id)}
                           className="h-7 px-3 rounded-full bg-primary text-primary-foreground text-[11px] font-bold hover:opacity-90 transition-opacity"
                         >
-                          {r.status === 'pending' ? '준비 완료 처리' : '수령 완료 처리'}
+                          {r.status === 'pending' ? t('admin_btn_mark_ready') : t('admin_btn_mark_done')}
                         </button>
                       )}
                     </div>

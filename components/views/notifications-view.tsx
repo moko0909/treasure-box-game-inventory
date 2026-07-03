@@ -2,20 +2,19 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { getGameById, getStoreById, STORES, GAMES, type RestockAlert } from '@/lib/data'
+import { useT } from '@/lib/i18n'
+import { getGameById, getStoreById, STORES, type RestockAlert } from '@/lib/data'
 
 type NotiTab = 'stock' | 'restock'
 
-// 위시리스트 매장의 게임별 입고 알림 아이템
 interface StoreStockItem {
   storeId: string
   gameId: string
   stockCount: number
   stockStatus: 'in-stock' | 'low-stock'
-  updatedAt: string // ISO
+  updatedAt: string
 }
 
-// 찜한 게임 재고 알림 아이템
 interface GameWishlistItem {
   gameId: string
   storeId: string
@@ -24,7 +23,6 @@ interface GameWishlistItem {
   updatedAt: string
 }
 
-// 더미 알림 데이터 — 위시리스트 매장(s1, s3)의 입고 이벤트
 const STORE_STOCK_NOTIFICATIONS: StoreStockItem[] = [
   { storeId: 's1', gameId: 'g4', stockCount: 2, stockStatus: 'low-stock', updatedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString() },
   { storeId: 's1', gameId: 'g2', stockCount: 5, stockStatus: 'in-stock', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
@@ -32,7 +30,6 @@ const STORE_STOCK_NOTIFICATIONS: StoreStockItem[] = [
   { storeId: 's3', gameId: 'g1', stockCount: 1, stockStatus: 'low-stock', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
 ]
 
-// 더미 알림 데이터 — 찜한 게임(g1, g4) 재고
 const GAME_WISHLIST_NOTIFICATIONS: GameWishlistItem[] = [
   { gameId: 'g1', storeId: 's2', stockCount: 2, stockStatus: 'low-stock', updatedAt: new Date(Date.now() - 1000 * 60 * 45).toISOString() },
   { gameId: 'g4', storeId: 's3', stockCount: 2, stockStatus: 'low-stock', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString() },
@@ -72,10 +69,9 @@ function StoreStockCard({ item, onViewGame }: { item: StoreStockItem; onViewGame
       onClick={() => onViewGame(item.gameId, item.storeId)}
       className="w-full bg-card rounded-[16px] border border-border p-3.5 flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
     >
-      {/* 게임 커버 */}
       <div className="w-12 h-[68px] rounded-xl overflow-hidden flex-shrink-0 border border-border" style={{ background: game.coverColor }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={game.imagePath} alt={`${game.title} 커버`} className="w-full h-full object-cover" />
+        <img src={game.imagePath} alt={`${game.title}`} className="w-full h-full object-cover" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2 mb-1">
@@ -91,12 +87,19 @@ function StoreStockCard({ item, onViewGame }: { item: StoreStockItem; onViewGame
   )
 }
 
-function GameWishlistCard({ item, onViewGame }: { item: GameWishlistItem; onViewGame: (gId: string, sId: string) => void }) {
+function GameWishlistCard({
+  item,
+  onViewGame,
+  t,
+}: {
+  item: GameWishlistItem
+  onViewGame: (gId: string, sId: string) => void
+  t: ReturnType<typeof useT>
+}) {
   const game = getGameById(item.gameId)
   const store = getStoreById(item.storeId)
   if (!game || !store) return null
 
-  // 해당 게임의 전체 재고 합산 (모든 매장)
   const totalStock = STORES.reduce((acc, s) => {
     const inv = s.games.find((g) => g.gameId === item.gameId)
     return acc + (inv && inv.stockStatus !== 'sold-out' ? inv.stockCount : 0)
@@ -110,7 +113,7 @@ function GameWishlistCard({ item, onViewGame }: { item: GameWishlistItem; onView
     >
       <div className="w-12 h-[68px] rounded-xl overflow-hidden flex-shrink-0 border border-border" style={{ background: game.coverColor }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={game.imagePath} alt={`${game.title} 커버`} className="w-full h-full object-cover" />
+        <img src={game.imagePath} alt={`${game.title}`} className="w-full h-full object-cover" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2 mb-1">
@@ -122,7 +125,9 @@ function GameWishlistCard({ item, onViewGame }: { item: GameWishlistItem; onView
         </div>
         <div className="flex items-center gap-2">
           <StockBadge status={item.stockStatus} count={item.stockCount} />
-          <span className="text-[10px] text-muted-foreground">전체 잔여 {totalStock}개</span>
+          <span className="text-[10px] text-muted-foreground">
+            {t('notifications_total_stock_prefix')} {totalStock}{t('notifications_total_stock_suffix')}
+          </span>
         </div>
       </div>
     </button>
@@ -136,29 +141,27 @@ interface NotificationsViewProps {
 }
 
 export function NotificationsView({ favoriteStoreIds, restockAlerts, onViewGame }: NotificationsViewProps) {
+  const t = useT()
   const [tab, setTab] = useState<NotiTab>('stock')
 
-  // 위시리스트 매장 입고 알림 — favoriteStoreIds에 해당하는 매장만 필터
   const storeItems = STORE_STOCK_NOTIFICATIONS.filter((n) => favoriteStoreIds.includes(n.storeId))
 
-  // 찜한 게임 재고 알림 (restockAlerts의 gameId 기준 + 더미 데이터)
   const wishlistGameIds = new Set(restockAlerts.map((a) => a.gameId))
-  // 더미 데이터도 표시 (실제에서는 restockAlerts 연동)
   const DEMO_WISHLIST_IDS = new Set(['g1', 'g4'])
   const gameItems = GAME_WISHLIST_NOTIFICATIONS.filter(
     (n) => wishlistGameIds.has(n.gameId) || DEMO_WISHLIST_IDS.has(n.gameId)
   )
 
+  // 실제 데이터 기반 배지 카운트
   const totalCount = storeItems.length + gameItems.length
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {/* Header */}
       <header className="px-4 pt-14 pb-3 bg-background border-b border-border">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-widest">새 소식</p>
-            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">알림</h1>
+            <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-widest">{t('notifications_eyebrow')}</p>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">{t('notifications_title')}</h1>
           </div>
           {totalCount > 0 && (
             <span className="bg-destructive text-white text-xs font-extrabold min-w-[26px] h-[26px] rounded-full flex items-center justify-center px-1.5">
@@ -167,7 +170,6 @@ export function NotificationsView({ favoriteStoreIds, restockAlerts, onViewGame 
           )}
         </div>
 
-        {/* 탭 전환 */}
         <div className="flex gap-1 bg-muted border border-border rounded-xl p-1">
           <button
             type="button"
@@ -177,7 +179,7 @@ export function NotificationsView({ favoriteStoreIds, restockAlerts, onViewGame 
               tab === 'stock' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            관심 매장 입고 ({storeItems.length})
+            {t('notifications_tab_store')} ({storeItems.length})
           </button>
           <button
             type="button"
@@ -187,24 +189,23 @@ export function NotificationsView({ favoriteStoreIds, restockAlerts, onViewGame 
               tab === 'restock' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            찜한 게임 재고 ({gameItems.length})
+            {t('notifications_tab_game')} ({gameItems.length})
           </button>
         </div>
       </header>
 
-      {/* 목록 */}
       <div className="flex-1 overflow-y-auto px-4 py-4 pb-24 space-y-3">
         {tab === 'stock' ? (
           storeItems.length === 0 ? (
             <EmptyState
               icon={
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1.5" aria-hidden="true">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.5" aria-hidden="true">
                   <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                   <polyline points="9 22 9 12 15 12 15 22" />
                 </svg>
               }
-              title="관심 매장 입고 알림이 없어요"
-              subtitle="매장을 위시리스트에 추가하면 새 입고 소식을 알려드려요"
+              title={t('notifications_store_empty_title')}
+              subtitle={t('notifications_store_empty_subtitle')}
             />
           ) : (
             storeItems.map((item, i) => (
@@ -215,7 +216,7 @@ export function NotificationsView({ favoriteStoreIds, restockAlerts, onViewGame 
           gameItems.length === 0 ? (
             <EmptyState
               icon={
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1.5" aria-hidden="true">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.5" aria-hidden="true">
                   <line x1="6" y1="11" x2="10" y2="11" />
                   <line x1="8" y1="9" x2="8" y2="13" />
                   <line x1="15" y1="12" x2="15.01" y2="12" />
@@ -223,18 +224,29 @@ export function NotificationsView({ favoriteStoreIds, restockAlerts, onViewGame 
                   <rect x="2" y="6" width="20" height="12" rx="6" />
                 </svg>
               }
-              title="찜한 게임 재고 알림이 없어요"
-              subtitle="게임에서 재입고 알림을 신청하면 남은 재고 수를 알려드려요"
+              title={t('notifications_game_empty_title')}
+              subtitle={t('notifications_game_empty_subtitle')}
             />
           ) : (
             gameItems.map((item, i) => (
-              <GameWishlistCard key={`gw-${i}`} item={item} onViewGame={onViewGame} />
+              <GameWishlistCard key={`gw-${i}`} item={item} onViewGame={onViewGame} t={t} />
             ))
           )
         )}
       </div>
     </div>
   )
+}
+
+/** 알림 배지 카운트를 외부에서 계산할 수 있도록 export */
+export function calcNotificationCount(favoriteStoreIds: string[], restockAlerts: RestockAlert[]): number {
+  const storeItems = STORE_STOCK_NOTIFICATIONS.filter((n) => favoriteStoreIds.includes(n.storeId))
+  const wishlistGameIds = new Set(restockAlerts.map((a) => a.gameId))
+  const DEMO_WISHLIST_IDS = new Set(['g1', 'g4'])
+  const gameItems = GAME_WISHLIST_NOTIFICATIONS.filter(
+    (n) => wishlistGameIds.has(n.gameId) || DEMO_WISHLIST_IDS.has(n.gameId)
+  )
+  return storeItems.length + gameItems.length
 }
 
 function EmptyState({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle: string }) {

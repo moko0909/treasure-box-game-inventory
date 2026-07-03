@@ -19,9 +19,11 @@ const SNAP_ORDER: SnapKey[] = ['collapsed', 'half', 'expanded']
 
 interface StoresViewProps {
   onViewGame: (gameId: string, storeId: string) => void
+  favoriteStoreIds?: string[]
+  onToggleFavorite?: (storeId: string) => void
 }
 
-export function StoresView({ onViewGame }: StoresViewProps) {
+export function StoresView({ onViewGame, favoriteStoreIds = [], onToggleFavorite }: StoresViewProps) {
   const [search, setSearch] = useState('')
   const [platforms, setPlatforms] = useState<Set<Platform>>(new Set())
   const [selectedId, setSelectedId] = useState<string>(STORES[0].id)
@@ -293,8 +295,10 @@ export function StoresView({ onViewGame }: StoresViewProps) {
                   key={store.id}
                   store={store}
                   selected={store.id === selectedId}
+                  isFavorite={favoriteStoreIds.includes(store.id)}
                   onClick={() => setSelectedId(store.id)}
                   onViewInventory={() => setSelectedId(store.id)}
+                  onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(store.id) : undefined}
                 />
               ))}
             </div>

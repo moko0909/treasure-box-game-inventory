@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 import {
   GAMES,
   getAllGenres,
@@ -20,11 +21,6 @@ const PLATFORM_LABELS: Record<Platform, string> = {
 }
 
 type SortKey = 'stock' | 'newest' | 'rating'
-const SORTS: { id: SortKey; label: string }[] = [
-  { id: 'stock', label: '재고 우선' },
-  { id: 'newest', label: '최신순' },
-  { id: 'rating', label: '평점순' },
-]
 
 interface GamesViewProps {
   onViewGame: (gameId: string, storeId: string) => void
@@ -48,8 +44,7 @@ function GameCard({
     <button
       type="button"
       onClick={handleClick}
-      className="w-full flex gap-3.5 rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform border border-[#2A2A2A]"
-      style={{ background: '#1A1A1A' }}
+      className="w-full flex gap-3.5 rounded-2xl p-3.5 text-left active:scale-[0.98] transition-transform border border-border bg-card"
     >
       {/* 커버 이미지 */}
       <div
@@ -68,7 +63,7 @@ function GameCard({
       <div className="flex-1 min-w-0 flex flex-col py-0.5">
         {/* 제목 + 플랫폼 뱃지 */}
         <div className="flex items-start justify-between gap-2 mb-1">
-          <h3 className="text-[15px] font-bold text-[#F8FAFC] leading-snug flex-1 line-clamp-2">
+          <h3 className="text-[15px] font-bold text-foreground leading-snug flex-1 line-clamp-2">
             {game.title}
           </h3>
           <span
@@ -86,27 +81,27 @@ function GameCard({
           <svg width="12" height="12" viewBox="0 0 24 24" fill="#FBBF24" aria-hidden="true">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
           </svg>
-          <span className="font-bold text-[#CBD5E1]">{game.rating}</span>
-          <span className="text-[#334155]">·</span>
-          <span className="text-[#64748B]">{game.genre}</span>
-          <span className="text-[#334155]">·</span>
-          <span className="text-[#64748B]">{game.releaseYear}</span>
+          <span className="font-bold text-foreground">{game.rating}</span>
+          <span className="text-border">·</span>
+          <span className="text-muted-foreground">{game.genre}</span>
+          <span className="text-border">·</span>
+          <span className="text-muted-foreground">{game.releaseYear}</span>
         </div>
 
         {/* 재고 + 가격 */}
         <div className="flex items-center justify-between mt-auto pt-2.5">
           {hasStock ? (
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[#BB86FC]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#BB86FC]" aria-hidden="true" />
+            <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-primary">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" aria-hidden="true" />
               {summary.availableStoreCount}개 매장 재고
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[#CF6679]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#CF6679]" aria-hidden="true" />
+            <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-destructive">
+              <span className="w-1.5 h-1.5 rounded-full bg-destructive" aria-hidden="true" />
               전 매장 품절
             </span>
           )}
-          <span className="text-[14px] font-extrabold text-[#F8FAFC]">
+          <span className="text-[14px] font-extrabold text-foreground">
             ${summary.lowestPrice.toFixed(2)}
           </span>
         </div>
@@ -116,12 +111,19 @@ function GameCard({
 }
 
 export function GamesView({ onViewGame }: GamesViewProps) {
+  const t = useT()
   const [search, setSearch] = useState('')
   const [platforms, setPlatforms] = useState<Set<Platform>>(new Set())
   const [genre, setGenre] = useState<string | null>(null)
   const [sort, setSort] = useState<SortKey>('stock')
 
   const genres = useMemo(() => getAllGenres(), [])
+
+  const SORTS: { id: SortKey; label: string }[] = [
+    { id: 'stock', label: t('games_sort_stock') },
+    { id: 'newest', label: t('games_sort_newest') },
+    { id: 'rating', label: t('games_sort_rating') },
+  ]
 
   const togglePlatform = (p: Platform) => {
     setPlatforms((prev) => {
@@ -163,18 +165,18 @@ export function GamesView({ onViewGame }: GamesViewProps) {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden" style={{ background: '#121212' }}>
+    <div className="flex flex-col h-full overflow-hidden bg-background">
       {/* 헤더 영역 */}
       <div className="px-5 pt-14 pb-4">
-        <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#6200EE' }}>게임 찾기</p>
-        <h1 className="text-[28px] font-extrabold text-white leading-tight mb-4">
-          게임 검색
+        <p className="text-[11px] font-semibold mb-0.5 text-primary">{t('games_subtitle')}</p>
+        <h1 className="text-[28px] font-extrabold text-foreground leading-tight mb-4">
+          {t('games_title')}
         </h1>
 
         {/* 검색창 */}
         <div className="relative mb-4">
           <svg
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4A4A4A]"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
             width="17"
             height="17"
             viewBox="0 0 24 24"
@@ -190,10 +192,9 @@ export function GamesView({ onViewGame }: GamesViewProps) {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="게임명 또는 개발사 검색"
-            aria-label="게임 검색"
-            className="w-full h-12 pl-11 pr-4 rounded-full text-[14px] text-white placeholder-[#4A4A4A] outline-none border border-[#2C2C2C] focus:border-[#6200EE] transition-colors"
-            style={{ background: '#1E1E1E' }}
+            placeholder={t('games_search_placeholder')}
+            aria-label={t('games_title')}
+            className="w-full h-12 pl-11 pr-4 rounded-full text-[14px] text-foreground bg-card placeholder:text-muted-foreground outline-none border border-border focus:border-primary transition-colors"
           />
         </div>
 
@@ -201,7 +202,7 @@ export function GamesView({ onViewGame }: GamesViewProps) {
         <div
           className="flex gap-2 overflow-x-auto scrollbar-hide mb-3"
           role="group"
-          aria-label="플랫폼 필터"
+          aria-label={t('games_platform_filter')}
         >
           <button
             type="button"
@@ -210,12 +211,11 @@ export function GamesView({ onViewGame }: GamesViewProps) {
             className={cn(
               'h-9 px-5 rounded-full text-[14px] font-bold flex-shrink-0 transition-all',
               platforms.size === 0
-                ? 'text-white glow-purple'
-                : 'text-[#6A6A6A] border border-[#2C2C2C]'
+                ? 'bg-primary text-primary-foreground glow-purple'
+                : 'text-muted-foreground border border-border bg-card'
             )}
-            style={platforms.size === 0 ? { background: 'linear-gradient(135deg,#6200EE,#9C27B0)' } : { background: '#1E1E1E' }}
           >
-            전체
+            {t('games_all')}
           </button>
           {PLATFORMS.map((p) => (
             <button
@@ -226,10 +226,9 @@ export function GamesView({ onViewGame }: GamesViewProps) {
               className={cn(
                 'h-9 px-5 rounded-full text-[14px] font-bold flex-shrink-0 transition-all',
                 platforms.has(p)
-                  ? 'text-white'
-                  : 'text-[#6A6A6A] border border-[#2C2C2C]'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground border border-border bg-card'
               )}
-              style={platforms.has(p) ? { background: 'linear-gradient(135deg,#6200EE,#9C27B0)' } : { background: '#1E1E1E' }}
             >
               {PLATFORM_LABELS[p]}
             </button>
@@ -240,7 +239,7 @@ export function GamesView({ onViewGame }: GamesViewProps) {
         <div
           className="flex gap-2 overflow-x-auto scrollbar-hide"
           role="group"
-          aria-label="장르 필터"
+          aria-label={t('games_genre_filter')}
         >
           <button
             type="button"
@@ -249,11 +248,11 @@ export function GamesView({ onViewGame }: GamesViewProps) {
             className={cn(
               'h-8 px-4 rounded-full text-[12px] font-semibold flex-shrink-0 whitespace-nowrap transition-all',
               genre === null
-                ? 'text-[#BB86FC] border border-[#6200EE]/50'
-                : 'text-[#4A4A4A] border border-[#2C2C2C]'
+                ? 'text-primary border border-primary/50 bg-primary/10'
+                : 'text-muted-foreground border border-border bg-card'
             )}
           >
-            모든 장르
+            {t('games_all_genres')}
           </button>
           {genres.map((gn) => (
             <button
@@ -264,8 +263,8 @@ export function GamesView({ onViewGame }: GamesViewProps) {
               className={cn(
                 'h-8 px-4 rounded-full text-[12px] font-semibold flex-shrink-0 whitespace-nowrap transition-all',
                 genre === gn
-                  ? 'text-[#BB86FC] border border-[#6200EE]/50'
-                  : 'text-[#4A4A4A] border border-[#2C2C2C]'
+                  ? 'text-primary border border-primary/50 bg-primary/10'
+                  : 'text-muted-foreground border border-border bg-card'
               )}
             >
               {gn}
@@ -276,12 +275,11 @@ export function GamesView({ onViewGame }: GamesViewProps) {
 
       {/* 결과 수 + 정렬 */}
       <div className="flex items-center justify-between px-5 pb-3">
-        <p className="text-[14px] font-bold text-[#F8FAFC]">{results.length}개 게임</p>
+        <p className="text-[14px] font-bold text-foreground">{results.length}{t('games_count_suffix')}</p>
         <div
-          className="flex items-center gap-0.5 rounded-full p-1 border border-[#2C2C2C]"
-          style={{ background: '#1A1A1A' }}
+          className="flex items-center gap-0.5 rounded-full p-1 border border-border bg-card"
           role="group"
-          aria-label="정렬"
+          aria-label={t('games_sort_label')}
         >
           {SORTS.map((s) => (
             <button
@@ -290,9 +288,10 @@ export function GamesView({ onViewGame }: GamesViewProps) {
               onClick={() => setSort(s.id)}
               className={cn(
                 'h-7 px-3 rounded-full text-[12px] font-bold transition-all whitespace-nowrap',
-                sort === s.id ? 'text-white' : 'text-[#4A4A4A]'
+                sort === s.id
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground'
               )}
-              style={sort === s.id ? { background: 'linear-gradient(135deg,#6200EE,#9C27B0)' } : {}}
             >
               {s.label}
             </button>
@@ -304,22 +303,21 @@ export function GamesView({ onViewGame }: GamesViewProps) {
       <div className="flex-1 overflow-y-auto px-4 pb-24">
         {results.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 border border-[#2C2C2C]" style={{ background: '#1E1E1E' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" strokeWidth="1.5" aria-hidden="true">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 border border-border bg-card">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.5" aria-hidden="true">
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
             </div>
-            <p className="text-[15px] font-bold text-white mb-1">검색 결과가 없어요</p>
-            <p className="text-[13px] mb-5" style={{ color: '#6A6A6A' }}>다른 검색어나 필터를 사용해 보세요</p>
+            <p className="text-[15px] font-bold text-foreground mb-1">{t('games_empty_title')}</p>
+            <p className="text-[13px] text-muted-foreground mb-5">{t('games_empty_subtitle')}</p>
             {hasActiveFilter && (
               <button
                 type="button"
                 onClick={clearAll}
-                className="h-9 px-5 rounded-full border border-[#2C2C2C] text-[13px] font-bold text-[#BB86FC]"
-                style={{ background: '#1E1E1E' }}
+                className="h-9 px-5 rounded-full border border-border bg-card text-[13px] font-bold text-primary"
               >
-                필터 초기화
+                {t('games_clear_filter')}
               </button>
             )}
           </div>

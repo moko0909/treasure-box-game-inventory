@@ -7,16 +7,20 @@ import { StockBadge } from './stock-badge'
 interface StoreCardProps {
   store: Store
   selected?: boolean
+  isFavorite?: boolean
   onClick?: () => void
   onViewInventory?: () => void
+  onToggleFavorite?: () => void
   className?: string
 }
 
 export function StoreCard({
   store,
   selected,
+  isFavorite = false,
   onClick,
   onViewInventory,
+  onToggleFavorite,
   className,
 }: StoreCardProps) {
   const inStockCount = store.games.filter((g) => g.stockStatus === 'in-stock').length
@@ -54,20 +58,47 @@ export function StoreCard({
           </div>
           <p className="text-xs mt-0.5 truncate text-muted-foreground">{store.address}</p>
         </div>
-        <div className="flex flex-col items-end gap-1 flex-shrink-0">
-          <span
-            className={cn(
-              'text-xs font-bold px-2 py-0.5 rounded-full',
-              store.isOpen
-                ? 'bg-primary/15 text-primary'
-                : 'bg-muted text-muted-foreground'
-            )}
-          >
-            {store.isOpen ? '영업 중' : `${store.opensAt} 오픈`}
-          </span>
-          <span className="text-[11px] text-muted-foreground">
-            {store.closesAt} 마감
-          </span>
+        <div className="flex items-start gap-2 flex-shrink-0">
+          {onToggleFavorite && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleFavorite()
+              }}
+              aria-label={isFavorite ? '관심 매장 해제' : '관심 매장 추가'}
+              aria-pressed={isFavorite}
+              className="w-8 h-8 flex items-center justify-center rounded-full transition-all active:scale-90 hover:bg-muted/60"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill={isFavorite ? '#CF6679' : 'none'}
+                stroke={isFavorite ? '#CF6679' : 'currentColor'}
+                strokeWidth="2"
+                className={isFavorite ? '' : 'text-muted-foreground'}
+                aria-hidden="true"
+              >
+                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+              </svg>
+            </button>
+          )}
+          <div className="flex flex-col items-end gap-1">
+            <span
+              className={cn(
+                'text-xs font-bold px-2 py-0.5 rounded-full',
+                store.isOpen
+                  ? 'bg-primary/15 text-primary'
+                  : 'bg-muted text-muted-foreground'
+              )}
+            >
+              {store.isOpen ? '영업 중' : `${store.opensAt} 오픈`}
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              {store.closesAt} 마감
+            </span>
+          </div>
         </div>
       </div>
 
