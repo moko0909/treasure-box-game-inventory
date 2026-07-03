@@ -148,7 +148,7 @@ function ReservationCard({
           <p className="text-[10px] text-[#475569] uppercase tracking-widest mb-0.5 font-semibold">
             {isActive ? '픽업 기한' : '예약일'}
           </p>
-          <p className="text-sm font-bold text-[#F8FAFC]">
+          <p className="text-sm font-bold text-[#F8FAFC]" suppressHydrationWarning>
             {isActive ? formatDateTime(reservation.expiresAt) : formatDate(reservation.createdAt)}
           </p>
         </div>
@@ -248,7 +248,7 @@ function RestockCard({
             </span>
           </div>
           <p className="text-xs text-[#64748B] mb-1 truncate">{store.name}</p>
-          <p className="text-[11px] text-[#475569]">{formatDate(alert.createdAt)} 신청 · 입고 시 알림</p>
+          <p className="text-[11px] text-[#475569]" suppressHydrationWarning>{formatDate(alert.createdAt)} 신청 · 입고 시 알림</p>
         </div>
       </div>
       <div className="flex gap-2 mt-3">

@@ -2,22 +2,6 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { SettingsBootstrap } from '@/components/settings-bootstrap'
 
-// FOUC 방지: 렌더 전에 localStorage에서 테마를 읽어 html 클래스를 적용
-const FOUC_SCRIPT = `
-(function(){
-  try {
-    var s = JSON.parse(localStorage.getItem('treasure-box-settings') || '{}');
-    var theme = (s.state && s.state.theme) || 'dark';
-    var resolved = theme === 'system'
-      ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-      : theme;
-    document.documentElement.classList.add(resolved);
-  } catch(e) {
-    document.documentElement.classList.add('dark');
-  }
-})();
-`
-
 export const metadata: Metadata = {
   title: '보물상자 — 게임 스토어 & 예약 플랫폼',
   description:
@@ -41,11 +25,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    // suppressHydrationWarning: FOUC 스크립트가 className을 동적으로 바꾸므로 불일치 경고 억제
-    <html lang="ko" suppressHydrationWarning>
+    <html lang="ko" className="dark">
       <body className="font-sans antialiased bg-background">
-        {/* FOUC 방지: body 최상단에서 localStorage 테마를 읽어 html 클래스를 즉시 적용 */}
-        <script dangerouslySetInnerHTML={{ __html: FOUC_SCRIPT }} />
         <SettingsBootstrap />
         {children}
       </body>

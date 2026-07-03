@@ -211,7 +211,7 @@ export function GameDetailView({
             </svg>
             <div>
               <p className="text-[11px] font-bold" style={{ color: '#00E5FF' }}>픽업 기한</p>
-              <p className="text-sm font-bold text-white">{formatDateTime(result.expiresAt)}까지</p>
+              <p className="text-sm font-bold text-white" suppressHydrationWarning>{formatDateTime(result.expiresAt)}까지</p>
             </div>
           </div>
 
