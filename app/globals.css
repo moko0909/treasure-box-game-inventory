@@ -250,3 +250,9 @@ html.light {
   70%  { transform: scale(1.15); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
+
+/* 매장 재고 패널 슬라이드업 */
+@keyframes slideUpPanel {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
