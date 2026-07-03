@@ -2,12 +2,13 @@
 
 import { Store, Gamepad2, Bell, CalendarDays, User, LayoutGrid } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT, type TranslationKey } from '@/lib/i18n'
 
 export type Tab = 'stores' | 'games' | 'notifications' | 'reservations' | 'mypage' | 'admin'
 
 interface TabItem {
   id: Tab
-  label: string
+  labelKey: TranslationKey
   Icon: React.ComponentType<{ className?: string }>
 }
 
@@ -20,14 +21,14 @@ interface BottomNavProps {
 }
 
 const NAV_ITEMS: TabItem[] = [
-  { id: 'stores',        label: '매장',      Icon: Store },
-  { id: 'games',         label: '게임',      Icon: Gamepad2 },
-  { id: 'notifications', label: '알림',      Icon: Bell },
-  { id: 'reservations',  label: '예약',      Icon: CalendarDays },
-  { id: 'mypage',        label: '마이페이지', Icon: User },
+  { id: 'stores',        labelKey: 'nav_stores',        Icon: Store },
+  { id: 'games',         labelKey: 'nav_games',         Icon: Gamepad2 },
+  { id: 'notifications', labelKey: 'nav_notifications', Icon: Bell },
+  { id: 'reservations',  labelKey: 'nav_reservations',  Icon: CalendarDays },
+  { id: 'mypage',        labelKey: 'nav_mypage',        Icon: User },
 ]
 
-const ADMIN_ITEM: TabItem = { id: 'admin', label: '관리', Icon: LayoutGrid }
+const ADMIN_ITEM: TabItem = { id: 'admin', labelKey: 'nav_admin', Icon: LayoutGrid }
 
 export function BottomNav({
   active,
@@ -36,6 +37,7 @@ export function BottomNav({
   notificationCount = 0,
   activeReservationCount = 0,
 }: BottomNavProps) {
+  const t = useT()
   const items = showAdmin ? [...NAV_ITEMS, ADMIN_ITEM] : NAV_ITEMS
 
   return (
@@ -96,7 +98,7 @@ export function BottomNav({
                   />
                 </span>
                 <span className={cn('text-[9px] leading-none whitespace-nowrap relative', isActive ? 'font-bold text-[#BB86FC]' : '')} style={{ zIndex: 5 }}>
-                  {item.label}
+                  {t(item.labelKey)}
                 </span>
               </button>
             </li>

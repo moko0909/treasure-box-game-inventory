@@ -1,15 +1,14 @@
 'use client'
 
-import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useSettingsStore, type Language, type Theme } from '@/lib/settings-store'
+import { useT } from '@/lib/i18n'
+import { useState } from 'react'
 
 interface SettingsPanelProps {
   role: 'user' | 'owner'
   onBack: () => void
 }
-
-type Language = 'ko' | 'en' | 'ja'
-type Theme = 'dark' | 'light' | 'system'
 
 const LANGUAGES: { id: Language; label: string; native: string }[] = [
   { id: 'ko', label: 'Korean', native: '한국어' },
@@ -84,8 +83,12 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function SettingsPanel({ role, onBack }: SettingsPanelProps) {
-  const [language, setLanguage] = useState<Language>('ko')
-  const [theme, setTheme] = useState<Theme>('dark')
+  const t = useT()
+  // 전역 스토어 — 변경 즉시 앱 전체에 반영
+  const language = useSettingsStore((s) => s.language)
+  const theme = useSettingsStore((s) => s.theme)
+  const setLanguage = useSettingsStore((s) => s.setLanguage)
+  const setTheme = useSettingsStore((s) => s.setTheme)
   const [pushNotif, setPushNotif] = useState(true)
   const [stockAlerts, setStockAlerts] = useState(true)
   const [reservationAlerts, setReservationAlerts] = useState(true)
@@ -105,12 +108,12 @@ export function SettingsPanel({ role, onBack }: SettingsPanelProps) {
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <h1 className="text-lg font-extrabold text-[#F8FAFC] tracking-tight">설정</h1>
+        <h1 className="text-lg font-extrabold text-[#F8FAFC] tracking-tight">{t('settings_title')}</h1>
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">
         {/* Language */}
-        <SectionLabel>사용자 언어</SectionLabel>
+        <SectionLabel>{t('settings_language')}</SectionLabel>
         <div className="bg-[#1E293B] rounded-[18px] border border-[#334155] overflow-hidden">
           {LANGUAGES.map((lang, i) => (
             <button
@@ -136,58 +139,58 @@ export function SettingsPanel({ role, onBack }: SettingsPanelProps) {
         </div>
 
         {/* Theme */}
-        <SectionLabel>테마</SectionLabel>
+        <SectionLabel>{t('settings_theme')}</SectionLabel>
         <div className="flex gap-2">
-          {THEMES.map((t) => (
+          {THEMES.map((themeItem) => (
             <button
-              key={t.id}
+              key={themeItem.id}
               type="button"
-              onClick={() => setTheme(t.id)}
+              onClick={() => setTheme(themeItem.id)}
               className={cn(
                 'flex-1 flex flex-col items-center gap-2 py-4 rounded-[16px] border transition-colors',
-                theme === t.id
-                  ? 'bg-[#4F46E5]/15 border-[#4F46E5] text-[#818CF8]'
-                  : 'bg-[#1E293B] border-[#334155] text-[#64748B]'
+                theme === themeItem.id
+                  ? 'bg-[#6200EE]/15 border-[#6200EE] text-[#BB86FC]'
+                  : 'bg-[#1E1E1E] border-[#2C2C2C] text-[#6A6A6A]'
               )}
             >
-              {t.icon}
-              <span className={cn('text-xs font-bold', theme === t.id ? 'text-[#F8FAFC]' : 'text-[#94A3B8]')}>
-                {t.label}
+              {themeItem.icon}
+              <span className={cn('text-xs font-bold', theme === themeItem.id ? 'text-white' : 'text-[#9E9E9E]')}>
+                {t(themeItem.id === 'dark' ? 'settings_theme_dark' : themeItem.id === 'light' ? 'settings_theme_light' : 'settings_theme_system')}
               </span>
             </button>
           ))}
         </div>
 
         {/* Notifications */}
-        <SectionLabel>알림</SectionLabel>
-        <div className="bg-[#1E293B] rounded-[18px] border border-[#334155] overflow-hidden">
+        <SectionLabel>{t('settings_notifications')}</SectionLabel>
+        <div className="bg-[#1E1E1E] rounded-[18px] border border-[#2C2C2C] overflow-hidden">
           <div className="flex items-center gap-3 px-4 py-3.5 min-h-[52px]">
             <div className="flex-1">
-              <p className="text-sm font-semibold text-[#F8FAFC]">푸시 알림</p>
-              <p className="text-[11px] text-[#64748B]">앱 전체 푸시 알림 받기</p>
+              <p className="text-sm font-semibold text-white">{t('settings_push')}</p>
+              <p className="text-[11px] text-[#6A6A6A]">{t('settings_push_desc')}</p>
             </div>
-            <Toggle on={pushNotif} onToggle={() => setPushNotif((v) => !v)} label="푸시 알림" />
+            <Toggle on={pushNotif} onToggle={() => setPushNotif((v) => !v)} label={t('settings_push')} />
           </div>
-          <div className="flex items-center gap-3 px-4 py-3.5 min-h-[52px] border-t border-[#334155]">
+          <div className="flex items-center gap-3 px-4 py-3.5 min-h-[52px] border-t border-[#2C2C2C]">
             <div className="flex-1">
-              <p className="text-sm font-semibold text-[#F8FAFC]">재고 입고 알림</p>
-              <p className="text-[11px] text-[#64748B]">찜한 게임 입고 시 알림</p>
+              <p className="text-sm font-semibold text-white">{t('settings_stock_alerts')}</p>
+              <p className="text-[11px] text-[#6A6A6A]">{t('settings_stock_alerts_desc')}</p>
             </div>
-            <Toggle on={stockAlerts} onToggle={() => setStockAlerts((v) => !v)} label="재고 입고 알림" />
+            <Toggle on={stockAlerts} onToggle={() => setStockAlerts((v) => !v)} label={t('settings_stock_alerts')} />
           </div>
-          <div className="flex items-center gap-3 px-4 py-3.5 min-h-[52px] border-t border-[#334155]">
+          <div className="flex items-center gap-3 px-4 py-3.5 min-h-[52px] border-t border-[#2C2C2C]">
             <div className="flex-1">
-              <p className="text-sm font-semibold text-[#F8FAFC]">예약 알림</p>
-              <p className="text-[11px] text-[#64748B]">예약 상태 및 만료 알림</p>
+              <p className="text-sm font-semibold text-white">{t('settings_reservation_alerts')}</p>
+              <p className="text-[11px] text-[#6A6A6A]">{t('settings_reservation_alerts_desc')}</p>
             </div>
-            <Toggle on={reservationAlerts} onToggle={() => setReservationAlerts((v) => !v)} label="예약 알림" />
+            <Toggle on={reservationAlerts} onToggle={() => setReservationAlerts((v) => !v)} label={t('settings_reservation_alerts')} />
           </div>
-          <div className="flex items-center gap-3 px-4 py-3.5 min-h-[52px] border-t border-[#334155]">
+          <div className="flex items-center gap-3 px-4 py-3.5 min-h-[52px] border-t border-[#2C2C2C]">
             <div className="flex-1">
-              <p className="text-sm font-semibold text-[#F8FAFC]">마케팅 알림</p>
-              <p className="text-[11px] text-[#64748B]">할인 및 이벤트 소식</p>
+              <p className="text-sm font-semibold text-white">{t('settings_marketing')}</p>
+              <p className="text-[11px] text-[#6A6A6A]">{t('settings_marketing_desc')}</p>
             </div>
-            <Toggle on={marketing} onToggle={() => setMarketing((v) => !v)} label="마케팅 알림" />
+            <Toggle on={marketing} onToggle={() => setMarketing((v) => !v)} label={t('settings_marketing')} />
           </div>
         </div>
 

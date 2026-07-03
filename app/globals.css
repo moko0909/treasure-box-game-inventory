@@ -121,6 +121,55 @@
   --sidebar-ring: #6200EE;
 }
 
+/* ── 라이트 모드 오버라이드 ── */
+html.light {
+  color-scheme: light;
+
+  --background: #F5F5F5;
+  --foreground: #121212;
+  --card: #FFFFFF;
+  --card-foreground: #121212;
+  --popover: #FFFFFF;
+  --popover-foreground: #121212;
+
+  --primary: #6200EE;
+  --primary-foreground: #FFFFFF;
+
+  --secondary: #EDE7F6;
+  --secondary-foreground: #6200EE;
+
+  --muted: #EEEEEE;
+  --muted-foreground: #616161;
+
+  --accent: #00B8D4;
+  --accent-foreground: #FFFFFF;
+
+  --destructive: #B00020;
+
+  --border: #E0E0E0;
+  --input: #E0E0E0;
+  --ring: #6200EE;
+
+  --brand-indigo: #6200EE;
+  --brand-purple: #7C4DFF;
+  --brand-gold: #FF6D00;
+  --stock-in: #7C4DFF;
+  --stock-low: #FF6D00;
+  --stock-out: #B00020;
+  --surface: #FFFFFF;
+  --surface-raised: #F5F5F5;
+  --divider: #E0E0E0;
+
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #121212;
+  --sidebar-primary: #6200EE;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EDE7F6;
+  --sidebar-accent-foreground: #6200EE;
+  --sidebar-border: #E0E0E0;
+  --sidebar-ring: #6200EE;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
