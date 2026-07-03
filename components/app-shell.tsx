@@ -13,6 +13,7 @@ import { AdminView } from '@/components/views/admin-view'
 import { createReservation, cancelReservation, type CreateReservationInput } from '@/app/actions/reservations'
 import { toggleFavorite as toggleFavoriteAction } from '@/app/actions/favorites'
 import { requestRestockAlert, cancelRestockAlert } from '@/app/actions/restock'
+import { chargeBalance } from '@/app/actions/balance'
 import type { Reservation, RestockAlert } from '@/lib/data'
 
 interface GameDetailState {
@@ -28,6 +29,7 @@ export interface AppShellProps {
   reservations: Reservation[]
   favoriteStoreIds: string[]
   restockAlerts: RestockAlert[]
+  initialBalance: number
 }
 
 export function AppShell({
@@ -38,12 +40,14 @@ export function AppShell({
   reservations,
   favoriteStoreIds,
   restockAlerts,
+  initialBalance,
 }: AppShellProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [activeTab, setActiveTab] = useState<Tab>('stores')
   const [gameDetail, setGameDetail] = useState<GameDetailState | null>(null)
   const [reserveToast, setReserveToast] = useState<string | null>(null)
+  const [balance, setBalance] = useState(initialBalance)
 
   const isOwner = role === 'owner'
 
@@ -93,6 +97,11 @@ export function AppShell({
       await cancelRestockAlert(id)
       router.refresh()
     })
+  }
+
+  const handleCharge = async (amount: number) => {
+    const result = await chargeBalance(amount)
+    setBalance(result.balance)
   }
 
   const handleNavigate = (tab: Tab) => {
@@ -181,7 +190,9 @@ export function AppShell({
                 role={role}
                 reservations={reservations}
                 favoriteStoreIds={favoriteStoreIds}
+                balance={balance}
                 onToggleFavorite={handleToggleFavorite}
+                onCharge={handleCharge}
                 onViewGame={(gId, sId) => {
                   handleNavigate('stores')
                   setTimeout(() => openGameDetail(gId, sId), 50)

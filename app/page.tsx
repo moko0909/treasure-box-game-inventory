@@ -5,16 +5,18 @@ import { AppShell } from '@/components/app-shell'
 import { getReservations } from '@/app/actions/reservations'
 import { getFavoriteStoreIds } from '@/app/actions/favorites'
 import { getRestockAlerts } from '@/app/actions/restock'
+import { getBalance } from '@/app/actions/balance'
 import type { Reservation, RestockAlert } from '@/lib/data'
 
 export default async function TreasureBoxApp() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) redirect('/sign-in')
 
-  const [rows, favoriteStoreIds, alertRows] = await Promise.all([
+  const [rows, favoriteStoreIds, alertRows, balance] = await Promise.all([
     getReservations(),
     getFavoriteStoreIds(),
     getRestockAlerts(),
+    getBalance(),
   ])
 
   const reservations: Reservation[] = rows.map((r) => ({
@@ -51,6 +53,7 @@ export default async function TreasureBoxApp() {
       reservations={reservations}
       favoriteStoreIds={favoriteStoreIds}
       restockAlerts={restockAlerts}
+      initialBalance={balance}
     />
   )
 }

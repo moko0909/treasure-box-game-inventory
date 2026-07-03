@@ -14,7 +14,9 @@ interface MyPageViewProps {
   role: 'user' | 'owner'
   reservations: Reservation[]
   favoriteStoreIds: string[]
+  balance: number
   onToggleFavorite: (storeId: string) => void
+  onCharge: (amount: number) => Promise<void>
   onViewGame: (gameId: string, storeId: string) => void
 }
 
@@ -29,11 +31,12 @@ function DepositChargeModal({
 }: {
   balance: number
   onClose: () => void
-  onCharge: (amount: number) => void
+  onCharge: (amount: number) => Promise<void>
 }) {
   const [selected, setSelected] = useState<number | null>(null)
   const [custom, setCustom] = useState('')
   const [step, setStep] = useState<'select' | 'confirm' | 'done'>('select')
+  const [charging, setCharging] = useState(false)
 
   const amount = selected ?? (Number(custom.replace(/,/g, '')) || 0)
 
@@ -42,8 +45,10 @@ function DepositChargeModal({
     setStep('confirm')
   }
 
-  const handleCharge = () => {
-    onCharge(amount)
+  const handleCharge = async () => {
+    setCharging(true)
+    await onCharge(amount)
+    setCharging(false)
     setStep('done')
   }
 
@@ -99,9 +104,10 @@ function DepositChargeModal({
               <button
                 type="button"
                 onClick={handleCharge}
-                className="flex-1 h-12 rounded-[14px] bg-primary text-primary-foreground font-bold text-sm"
+                disabled={charging}
+                className="flex-1 h-12 rounded-[14px] bg-primary text-primary-foreground font-bold text-sm disabled:opacity-60"
               >
-                충전하기
+                {charging ? '처리 중...' : '충전하기'}
               </button>
             </div>
           </div>
@@ -194,14 +200,15 @@ export function MyPageView({
   role,
   reservations,
   favoriteStoreIds,
+  balance,
   onToggleFavorite,
+  onCharge,
   onViewGame,
 }: MyPageViewProps) {
   const router = useRouter()
   const t = useT()
   const [showSettings, setShowSettings] = useState(false)
   const [showCharge, setShowCharge] = useState(false)
-  const [balance, setBalance] = useState(15000) // 더미 잔액
   const favoriteIds = new Set(favoriteStoreIds)
 
   const favoriteStores = STORES.filter((s) => favoriteIds.has(s.id))
@@ -214,8 +221,8 @@ export function MyPageView({
     router.refresh()
   }
 
-  const handleCharge = (amount: number) => {
-    setBalance((prev) => prev + amount)
+  const handleCharge = async (amount: number) => {
+    await onCharge(amount)
   }
 
   if (showSettings) {

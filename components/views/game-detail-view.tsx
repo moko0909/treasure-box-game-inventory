@@ -183,60 +183,59 @@ export function GameDetailView({
   // ---------------- 완료 화면 ----------------
   if (mode === 'complete' && result) {
     return (
-      <div className="flex flex-col h-full" style={{ background: '#121212' }}>
+      <div className="flex flex-col h-full bg-background">
         <div className="flex-1 overflow-y-auto px-4 pt-14 pb-8">
           <div className="flex flex-col items-center text-center mb-6">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3" style={{ background: 'rgba(98,0,238,0.15)', boxShadow: '0 0 24px rgba(98,0,238,0.3)' }}>
-              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#BB86FC" strokeWidth="2.5" aria-hidden="true">
+            <div className="w-16 h-16 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center mb-3" style={{ boxShadow: '0 0 24px rgba(98,0,238,0.3)' }}>
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-primary" strokeWidth="2.5" aria-hidden="true">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">예약이 완료되었어요</h1>
-            <p className="text-sm mt-1" style={{ color: '#6A6A6A' }}>매장에서 아래 예약 코드를 보여주세요</p>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">예약이 완료되었어요</h1>
+            <p className="text-sm text-muted-foreground mt-1">매장에서 아래 예약 코드를 보여주세요</p>
           </div>
 
           {/* 바코드 카드 */}
-          <div className="rounded-[18px] p-5 mb-4" style={{ background: '#F5F5F5' }}>
+          <div className="rounded-[18px] bg-white dark:bg-card border border-border p-5 mb-4">
             <Barcode code={result.code} />
-            <p className="text-center text-2xl font-extrabold tracking-[0.2em] mt-3" style={{ color: '#121212' }}>
+            <p className="text-center text-2xl font-extrabold tracking-[0.2em] mt-3 text-foreground">
               {result.code}
             </p>
           </div>
 
           {/* 픽업 기한 */}
-          <div className="rounded-[14px] p-4 mb-4 flex items-center gap-3 border border-[#00E5FF]/25" style={{ background: 'rgba(0,229,255,0.08)' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" strokeWidth="2.5" aria-hidden="true">
+          <div className="rounded-[14px] p-4 mb-4 flex items-center gap-3 border border-accent/25 bg-accent/8">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-accent flex-shrink-0" strokeWidth="2.5" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
               <polyline points="12 7 12 12 15 14" />
             </svg>
             <div>
-              <p className="text-[11px] font-bold" style={{ color: '#00E5FF' }}>픽업 기한</p>
-              <p className="text-sm font-bold text-white" suppressHydrationWarning>{formatDateTime(result.expiresAt)}까지</p>
+              <p className="text-[11px] font-bold text-accent">픽업 기한</p>
+              <p className="text-sm font-bold text-foreground" suppressHydrationWarning>{formatDateTime(result.expiresAt)}까지</p>
             </div>
           </div>
 
           {/* 요약 */}
-          <div className="rounded-[18px] border border-[#2A2A2A] divide-y divide-[#2A2A2A]" style={{ background: '#1A1A1A' }}>
+          <div className="rounded-[18px] border border-border bg-card divide-y divide-border">
             <SummaryRow label="게임" value={game.title} />
             <SummaryRow label="매장" value={currentStore.name} />
             <SummaryRow label="수량" value={`${quantity}개`} />
             {notes.trim() && <SummaryRow label="요청사항" value={notes.trim()} />}
           </div>
 
-          <p className="text-[12px] leading-relaxed mt-4 text-center" style={{ color: '#6A6A6A' }}>
+          <p className="text-[12px] leading-relaxed mt-4 text-center text-muted-foreground">
             기한 내 미방문 시 예약이 자동 취소되며, 노쇼가 반복되면 예약 이용이 제한될 수 있어요.
           </p>
         </div>
 
         <div
-          className="border-t border-[#2A2A2A] px-4 py-4"
-          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)', background: '#1A1A1A' }}
+          className="border-t border-border px-4 py-4 bg-card"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
         >
           <button
             type="button"
             onClick={onBack}
-            className="w-full h-[52px] rounded-[14px] text-black text-base font-extrabold transition-all active:scale-[0.98] glow-cyan"
-            style={{ background: '#00E5FF' }}
+            className="w-full h-[52px] rounded-[14px] bg-accent text-accent-foreground text-base font-extrabold transition-all active:scale-[0.98] glow-cyan"
           >
             확인
           </button>
@@ -382,7 +381,7 @@ export function GameDetailView({
                 <p className="text-xs font-bold text-white mb-2">노쇼 규정 안내</p>
                 <ul className="text-[12px] leading-relaxed list-disc pl-4 space-y-1" style={{ color: '#6A6A6A' }}>
                   <li>픽업 기한 내 미방문 시 예약이 자동 취소됩니다.</li>
-                  <li>노쇼가 3회 누적되면 30일��� ��약이 제한됩��다.</li>
+                  <li>노쇼가 3회 누적되면 30일��� ���약이 제한됩��다.</li>
                   <li>방문이 어려운 경우 미리 예약을 취소해 주세요.</li>
                 </ul>
                 <label className="flex items-center gap-2.5 mt-3 cursor-pointer">
@@ -621,8 +620,8 @@ export function GameDetailView({
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3">
-      <span className="text-xs flex-shrink-0" style={{ color: '#6A6A6A' }}>{label}</span>
-      <span className="text-sm font-bold text-white text-right">{value}</span>
+      <span className="text-xs flex-shrink-0 text-muted-foreground">{label}</span>
+      <span className="text-sm font-bold text-foreground text-right">{value}</span>
     </div>
   )
 }
