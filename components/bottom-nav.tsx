@@ -62,26 +62,40 @@ export function BottomNav({
                   isActive ? 'text-[#BB86FC]' : 'text-[#4A4A4A] hover:text-[#6A6A6A]'
                 )}
               >
-                {/* 뱃지 */}
+                {/* 뱃지 — 항상 최상위 레이어 */}
                 {badge > 0 && (
                   <span
                     className="absolute top-1 right-1/2 translate-x-[14px] min-w-[16px] h-[16px] rounded-full bg-[#CF6679] text-white text-[9px] font-extrabold flex items-center justify-center px-1 pointer-events-none"
+                    style={{ zIndex: 10 }}
                     aria-label={`${badge}개 알림`}
                   >
                     {badge > 99 ? '99+' : badge}
                   </span>
                 )}
-                {/* 활성 탭 글로우 인디케이터 */}
+                {/* 활성 탭 글로우 인디케이터 — 뱃지 위, 아이콘 위 */}
                 {isActive && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-[#6200EE]" style={{ boxShadow: '0 0 8px 2px rgba(98,0,238,0.7)' }} aria-hidden="true" />
+                  <span
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-[#6200EE]"
+                    style={{ boxShadow: '0 0 8px 2px rgba(98,0,238,0.7)', zIndex: 5 }}
+                    aria-hidden="true"
+                  />
                 )}
-                <item.Icon
+                {/* 아이콘 — 눌리면 z-index가 뱃지(10) 아래(1)로 내려가며 scale+translate */}
+                <span
                   className={cn(
-                    'h-[20px] w-[20px] transition-transform duration-150',
-                    isActive ? 'stroke-[2.5px] scale-110' : 'stroke-[2px]'
+                    'relative flex items-center justify-center transition-all duration-100',
+                    'active:scale-75 active:translate-y-[3px]',
                   )}
-                />
-                <span className={cn('text-[9px] leading-none whitespace-nowrap', isActive ? 'font-bold text-[#BB86FC]' : '')}>
+                  style={{ zIndex: 1 }}
+                >
+                  <item.Icon
+                    className={cn(
+                      'h-[20px] w-[20px]',
+                      isActive ? 'stroke-[2.5px] scale-110' : 'stroke-[2px]'
+                    )}
+                  />
+                </span>
+                <span className={cn('text-[9px] leading-none whitespace-nowrap relative', isActive ? 'font-bold text-[#BB86FC]' : '')} style={{ zIndex: 5 }}>
                   {item.label}
                 </span>
               </button>
