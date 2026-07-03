@@ -31,6 +31,7 @@ export interface AppShellProps {
   favoriteStoreIds: string[]
   restockAlerts: RestockAlert[]
   initialBalance: number
+  initialImage: string | null
 }
 
 export function AppShell({
@@ -42,6 +43,7 @@ export function AppShell({
   favoriteStoreIds,
   restockAlerts,
   initialBalance,
+  initialImage,
 }: AppShellProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -50,6 +52,7 @@ export function AppShell({
   const [reserveToast, setReserveToast] = useState<string | null>(null)
   const [balance, setBalance] = useState(initialBalance)
   const [localUserName, setLocalUserName] = useState(userName)
+  const [localUserImage, setLocalUserImage] = useState<string | null>(initialImage)
 
   const isOwner = role === 'owner'
 
@@ -109,6 +112,11 @@ export function AppShell({
   const handleUpdateProfile = async (name: string) => {
     const result = await updateProfile({ name })
     setLocalUserName(result.name)
+    if (result.image) setLocalUserImage(result.image)
+  }
+
+  const handleUpdateImage = (url: string) => {
+    setLocalUserImage(url)
   }
 
   const handleNavigate = (tab: Tab) => {
@@ -194,7 +202,9 @@ export function AppShell({
               <MyPageView
                 userName={localUserName}
                 userEmail={userEmail}
+                userImage={localUserImage}
                 onUpdateProfile={handleUpdateProfile}
+                onUpdateImage={handleUpdateImage}
                 role={role}
                 reservations={reservations}
                 favoriteStoreIds={favoriteStoreIds}

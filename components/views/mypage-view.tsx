@@ -11,6 +11,7 @@ import { useT } from '@/lib/i18n'
 interface MyPageViewProps {
   userName: string
   userEmail: string
+  userImage: string | null
   role: 'user' | 'owner'
   reservations: Reservation[]
   favoriteStoreIds: string[]
@@ -18,6 +19,7 @@ interface MyPageViewProps {
   onToggleFavorite: (storeId: string) => void
   onCharge: (amount: number) => Promise<void>
   onUpdateProfile: (name: string) => Promise<void>
+  onUpdateImage: (url: string) => void
   onViewGame: (gameId: string, storeId: string) => void
 }
 
@@ -403,6 +405,7 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 export function MyPageView({
   userName,
   userEmail,
+  userImage,
   role,
   reservations,
   favoriteStoreIds,
@@ -410,6 +413,7 @@ export function MyPageView({
   onToggleFavorite,
   onCharge,
   onUpdateProfile,
+  onUpdateImage,
   onViewGame,
 }: MyPageViewProps) {
   const router = useRouter()
@@ -500,10 +504,14 @@ export function MyPageView({
         <ProfileEditModal
           currentName={userName}
           currentEmail={userEmail}
+          currentImage={userImage}
           onClose={() => setShowEditProfile(false)}
           onSave={async (name) => {
             await onUpdateProfile(name)
             setShowEditProfile(false)
+          }}
+          onImageUpdate={(url) => {
+            onUpdateImage(url)
           }}
         />
       )}
@@ -515,10 +523,20 @@ export function MyPageView({
           style={{ background: 'linear-gradient(135deg, #3A0080 0%, #1A0040 60%, var(--background) 100%)' }}
         >
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-primary/30 flex items-center justify-center flex-shrink-0 border-2 border-primary/40">
-              <span className="text-foreground text-2xl font-extrabold" aria-hidden="true">
-                {userName.charAt(0).toUpperCase()}
-              </span>
+            <div className="relative flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-primary/30 border-2 border-primary/40 overflow-hidden flex items-center justify-center">
+                {userImage ? (
+                  <img
+                    src={userImage}
+                    alt={userName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-foreground text-2xl font-extrabold" aria-hidden="true">
+                    {userName.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-extrabold text-foreground tracking-tight truncate">{userName}</h1>
@@ -723,27 +741,66 @@ export function MyPageView({
 function ProfileEditModal({
   currentName,
   currentEmail,
+  currentImage,
   onClose,
   onSave,
+  onImageUpdate,
 }: {
   currentName: string
   currentEmail: string
+  currentImage: string | null
   onClose: () => void
   onSave: (name: string) => Promise<void>
+  onImageUpdate: (url: string) => void
 }) {
   const [name, setName] = useState(currentName)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  const [previewUrl, setPreviewUrl] = useState<string | null>(currentImage)
+  const [uploadError, setUploadError] = useState('')
+  const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // 마운트 시 입력창 포커스
+  // 마운트 시 이름 입력창 포커스
   useEffect(() => {
     const t = setTimeout(() => inputRef.current?.focus(), 150)
     return () => clearTimeout(t)
   }, [])
 
   const hasChanged = name.trim() !== currentName
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadError('')
+
+    // 클라이언트 사이드 미리보기
+    const reader = new FileReader()
+    reader.onload = (ev) => setPreviewUrl(ev.target?.result as string)
+    reader.readAsDataURL(file)
+
+    // 업로드
+    setUploading(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/upload/avatar', { method: 'POST', body: form })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? '업로드 실패')
+      setPreviewUrl(data.url)
+      onImageUpdate(data.url)
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : '업로드에 실패했습니다')
+      setPreviewUrl(currentImage) // 실패 시 원본으로 복원
+    } finally {
+      setUploading(false)
+      // input 초기화 (같은 파일 재선택 허용)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -821,14 +878,74 @@ function ProfileEditModal({
               </button>
             </div>
 
-            {/* 아바타 미리보기 */}
+            {/* 프로필 사진 변경 */}
             <div className="flex flex-col items-center gap-2">
-              <div className="w-16 h-16 rounded-full bg-primary/30 border-2 border-primary/40 flex items-center justify-center">
-                <span className="text-foreground text-2xl font-extrabold" aria-hidden="true">
-                  {(name.trim() || currentName).charAt(0).toUpperCase()}
-                </span>
+              {/* 숨김 파일 input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="sr-only"
+                aria-label="프로필 사진 선택"
+                onChange={handleFileChange}
+              />
+
+              {/* 아바타 + 카메라 버튼 */}
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full bg-primary/30 border-2 border-primary/40 overflow-hidden flex items-center justify-center">
+                  {previewUrl ? (
+                    <img
+                      src={previewUrl}
+                      alt="프로필 미리보기"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-foreground text-3xl font-extrabold" aria-hidden="true">
+                      {(name.trim() || currentName).charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  {/* 업로드 중 오버레이 */}
+                  {uploading && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
+                      <svg
+                        width="22" height="22" viewBox="0 0 24 24"
+                        fill="none" stroke="white" strokeWidth="2.5"
+                        aria-hidden="true"
+                        style={{ animation: 'spin 0.8s linear infinite' }}
+                      >
+                        <path d="M21 12a9 9 0 11-6.219-8.56" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+
+                {/* 카메라 버튼 */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  aria-label="프로필 사진 변경"
+                  className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary border-2 border-card flex items-center justify-center transition-transform active:scale-90 disabled:opacity-60"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" aria-hidden="true">
+                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                </button>
               </div>
-              <p className="text-xs text-muted-foreground">아바타는 이름 첫 글자로 자동 생성됩니다</p>
+
+              {uploadError ? (
+                <p className="text-[11px] text-destructive font-medium flex items-center gap-1" role="alert">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  {uploadError}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {uploading ? '업로드 중...' : '사진을 탭해서 변경하세요'}
+                </p>
+              )}
             </div>
 
             {/* 이름 입력 */}

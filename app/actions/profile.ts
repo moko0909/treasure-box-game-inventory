@@ -19,6 +19,19 @@ export interface UpdateProfileInput {
 
 export interface UpdateProfileResult {
   name: string
+  image: string | null
+}
+
+/** 현재 사용자의 프로필(이름, 이미지)을 조회합니다 */
+export async function getProfile(): Promise<UpdateProfileResult> {
+  const userId = await getUserId()
+  const rows = await db
+    .select({ name: user.name, image: user.image })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1)
+
+  return { name: rows[0].name, image: rows[0].image }
 }
 
 /** 사용자 이름을 업데이트합니다 */
@@ -34,8 +47,8 @@ export async function updateProfile(
     .update(user)
     .set({ name, updatedAt: new Date() })
     .where(eq(user.id, userId))
-    .returning({ name: user.name })
+    .returning({ name: user.name, image: user.image })
 
   revalidatePath('/')
-  return { name: rows[0].name }
+  return { name: rows[0].name, image: rows[0].image }
 }
