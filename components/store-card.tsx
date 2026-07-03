@@ -29,6 +29,7 @@ export function StoreCard({
 
   return (
     <div
+      id={`store-card-${store.id}`}
       role="button"
       tabIndex={0}
       onClick={onClick}

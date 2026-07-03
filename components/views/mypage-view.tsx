@@ -20,6 +20,7 @@ interface MyPageViewProps {
   onCharge: (amount: number) => Promise<void>
   onUpdateProfile: (name: string) => Promise<void>
   onUpdateImage: (url: string) => void
+  onNavigateToStore: (storeId: string) => void
   onViewGame: (gameId: string, storeId: string) => void
 }
 
@@ -414,6 +415,7 @@ export function MyPageView({
   onCharge,
   onUpdateProfile,
   onUpdateImage,
+  onNavigateToStore,
   onViewGame,
 }: MyPageViewProps) {
   const router = useRouter()
@@ -421,6 +423,7 @@ export function MyPageView({
   const [showSettings, setShowSettings] = useState(false)
   const [showCharge, setShowCharge] = useState(false)
   const [showEditProfile, setShowEditProfile] = useState(false)
+  const [showAllFavorites, setShowAllFavorites] = useState(false)
   const favoriteIds = new Set(favoriteStoreIds)
 
   const favoriteStores = STORES.filter((s) => favoriteIds.has(s.id))
@@ -620,52 +623,180 @@ export function MyPageView({
         </div>
 
         {/* 관심 매장 */}
-        <div className="px-4 mt-5">
-          <div className="flex items-center justify-between mb-3">
+        <div className="mt-5">
+          <div className="flex items-center justify-between mb-3 px-4">
             <h2 className="text-sm font-extrabold text-foreground">{t('mypage_favorite_stores_section')}</h2>
-            <button type="button" className="text-xs text-primary font-bold">{t('mypage_view_all')}</button>
+            {favoriteStores.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowAllFavorites(true)}
+                className="text-xs text-primary font-bold flex items-center gap-1"
+              >
+                {t('mypage_view_all')}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            )}
           </div>
+
           {favoriteStores.length === 0 ? (
-            <div className="bg-card rounded-[18px] border border-border p-6 text-center">
+            <div className="mx-4 bg-card rounded-[18px] border border-border p-6 text-center">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground/40 mx-auto mb-2" aria-hidden="true">
+                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+              </svg>
               <p className="text-xs text-muted-foreground">{t('mypage_no_favorites')}</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
+            /* 가로 스크롤 칩 목록 */
+            <div className="flex gap-2.5 overflow-x-auto px-4 pb-1 scrollbar-hide">
               {favoriteStores.map((store) => {
-                const inStockCount = store.games.filter((g) => g.stockStatus === 'in-stock').length
+                const inStockCount = store.games.filter((g) => g.stockStatus !== 'sold-out').length
                 return (
-                  <div
+                  <button
                     key={store.id}
-                    className="bg-card rounded-[14px] border border-border p-3 flex items-center justify-between gap-3"
+                    type="button"
+                    onClick={() => onNavigateToStore(store.id)}
+                    className="flex-shrink-0 bg-card border border-border rounded-[16px] px-3.5 py-2.5 text-left active:scale-95 transition-transform min-w-[130px] max-w-[160px]"
                   >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-foreground truncate">{store.name}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className={cn('text-[11px] font-semibold', store.isOpen ? 'text-[#BB86FC]' : 'text-muted-foreground')}>
-                          {store.isOpen ? '영업 중' : '영업 종료'}
-                        </span>
-                        <span className="text-border text-[11px]">·</span>
-                        <span className="text-[11px] text-muted-foreground">{store.distance} km</span>
-                        <span className="text-border text-[11px]">·</span>
-                        <span className="text-[11px] text-[#BB86FC] font-semibold">재고 {inStockCount}종</span>
-                      </div>
+                    {/* 매장명 */}
+                    <p className="text-[13px] font-bold text-foreground truncate leading-tight">{store.name}</p>
+
+                    {/* 영업 상태 */}
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className={cn(
+                        'inline-block w-1.5 h-1.5 rounded-full flex-shrink-0',
+                        store.isOpen ? 'bg-green-400' : 'bg-muted-foreground/40'
+                      )} aria-hidden="true" />
+                      <span className={cn(
+                        'text-[11px] font-semibold',
+                        store.isOpen ? 'text-green-400' : 'text-muted-foreground'
+                      )}>
+                        {store.isOpen ? '영업 중' : '영업 종료'}
+                      </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => onToggleFavorite(store.id)}
-                      aria-label={`${store.name} 관심 매장에서 삭제`}
-                      className="text-destructive hover:opacity-80 transition-opacity min-w-[44px] min-h-[44px] flex items-center justify-center"
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-                      </svg>
-                    </button>
-                  </div>
+
+                    {/* 거리 + 예약 가능 재고 */}
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-border">
+                      <span className="text-[11px] text-muted-foreground">{store.distance} km</span>
+                      <span className="text-[11px] font-bold text-primary">{inStockCount}종 예약 가능</span>
+                    </div>
+                  </button>
                 )
               })}
             </div>
           )}
         </div>
+
+        {/* 관심 매장 전체 보기 패널 */}
+        {showAllFavorites && (
+          <div
+            className="absolute inset-0 z-50 flex flex-col bg-background"
+            style={{ animation: 'slideUpPanel 0.28s cubic-bezier(0.32, 0.72, 0, 1) both' }}
+          >
+            {/* 헤더 */}
+            <div className="flex items-center gap-3 px-4 pt-12 pb-4 border-b border-border flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowAllFavorites(false)}
+                aria-label="뒤로 가기"
+                className="w-9 h-9 rounded-full bg-muted flex items-center justify-center active:scale-90 transition-transform"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <div>
+                <h2 className="text-base font-extrabold text-foreground">관심 매장</h2>
+                <p className="text-xs text-muted-foreground">{favoriteStores.length}개 매장</p>
+              </div>
+            </div>
+
+            {/* 매장 목록 */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
+              {favoriteStores.map((store) => {
+                const inStockGames = store.games.filter((g) => g.stockStatus !== 'sold-out')
+                const soldOutCount = store.games.filter((g) => g.stockStatus === 'sold-out').length
+                return (
+                  <button
+                    key={store.id}
+                    type="button"
+                    onClick={() => {
+                      setShowAllFavorites(false)
+                      onNavigateToStore(store.id)
+                    }}
+                    className="w-full bg-card rounded-[18px] border border-border p-4 text-left active:scale-[0.98] transition-transform"
+                  >
+                    {/* 매장 상단 */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-[15px] font-extrabold text-foreground">{store.name}</p>
+                          {store.tag && (
+                            <span className="text-[10px] font-bold bg-primary/15 text-primary px-2 py-0.5 rounded-full">
+                              {store.tag}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{store.address}</p>
+                      </div>
+                      {/* 하트 삭제 버튼 */}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onToggleFavorite(store.id) }}
+                        aria-label={`${store.name} 관심 매장에서 삭제`}
+                        className="flex-shrink-0 w-9 h-9 rounded-full bg-destructive/10 flex items-center justify-center active:scale-90 transition-transform"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-destructive" aria-hidden="true">
+                          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* 메타 정보 */}
+                    <div className="flex items-center gap-2.5 mt-2.5">
+                      <span className={cn(
+                        'inline-flex items-center gap-1 text-[11px] font-semibold',
+                        store.isOpen ? 'text-green-400' : 'text-muted-foreground'
+                      )}>
+                        <span className={cn('w-1.5 h-1.5 rounded-full', store.isOpen ? 'bg-green-400' : 'bg-muted-foreground/40')} aria-hidden="true" />
+                        {store.isOpen ? `영업 중 · ${store.closesAt} 마감` : `영업 종료 · ${store.opensAt ?? ''} 오픈`}
+                      </span>
+                      <span className="text-border text-[11px]" aria-hidden="true">·</span>
+                      <span className="text-[11px] text-muted-foreground">{store.distance} km</span>
+                      <span className="text-border text-[11px]" aria-hidden="true">·</span>
+                      <span className="text-[11px] text-muted-foreground">★ {store.rating}</span>
+                    </div>
+
+                    {/* 재고 요약 바 */}
+                    <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-primary" aria-hidden="true" />
+                          <span className="text-[11px] text-muted-foreground">예약 가능</span>
+                          <span className="text-[11px] font-bold text-foreground ml-0.5">{inStockGames.length}종</span>
+                        </div>
+                        {soldOutCount > 0 && (
+                          <div className="flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-muted-foreground/30" aria-hidden="true" />
+                            <span className="text-[11px] text-muted-foreground">품절</span>
+                            <span className="text-[11px] font-bold text-muted-foreground ml-0.5">{soldOutCount}종</span>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-primary font-bold flex items-center gap-0.5">
+                        매장 보기
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                          <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                      </span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* 최근 픽업 */}
         <div className="px-4 mt-5">

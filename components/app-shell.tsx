@@ -211,6 +211,14 @@ export function AppShell({
                 balance={balance}
                 onToggleFavorite={handleToggleFavorite}
                 onCharge={handleCharge}
+                onNavigateToStore={(storeId) => {
+                  handleNavigate('stores')
+                  // StoresView가 마운트된 뒤 해당 매장을 선택 상태로 포커싱
+                  setTimeout(() => {
+                    const el = document.getElementById(`store-card-${storeId}`)
+                    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                  }, 80)
+                }}
                 onViewGame={(gId, sId) => {
                   handleNavigate('stores')
                   setTimeout(() => openGameDetail(gId, sId), 50)
