@@ -382,7 +382,7 @@ export function GameDetailView({
                 <p className="text-xs font-bold text-white mb-2">노쇼 규정 안내</p>
                 <ul className="text-[12px] leading-relaxed list-disc pl-4 space-y-1" style={{ color: '#6A6A6A' }}>
                   <li>픽업 기한 내 미방문 시 예약이 자동 취소됩니다.</li>
-                  <li>노쇼가 3회 누적되면 30일��� 예약이 제한됩��다.</li>
+                  <li>노쇼가 3회 누적되면 30일��� ��약이 제한됩��다.</li>
                   <li>방문이 어려운 경우 미리 예약을 취소해 주세요.</li>
                 </ul>
                 <label className="flex items-center gap-2.5 mt-3 cursor-pointer">
@@ -399,8 +399,8 @@ export function GameDetailView({
 
             {/* 확정 버튼 */}
             <div
-              className="border-t border-[#2A2A2A] px-4 py-4"
-              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)', background: '#1A1A1A' }}
+              className="border-t border-border px-4 py-4 bg-card"
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
             >
               <button
                 type="button"
@@ -409,10 +409,9 @@ export function GameDetailView({
                 className={cn(
                   'w-full h-[52px] rounded-[14px] text-base font-extrabold tracking-wide transition-all active:scale-[0.98]',
                   agreed && !submitting
-                    ? 'text-black glow-cyan'
-                    : 'text-[#4A4A4A] cursor-not-allowed border border-[#2A2A2A]'
+                    ? 'bg-accent text-accent-foreground glow-cyan'
+                    : 'bg-muted text-muted-foreground cursor-not-allowed border border-border'
                 )}
-                style={agreed && !submitting ? { background: '#00E5FF' } : { background: '#1E1E1E' }}
               >
                 {submitting ? '예약 처리 중...' : '예약 확정'}
               </button>
@@ -425,7 +424,7 @@ export function GameDetailView({
 
   // ---------------- 상세 화면 ----------------
   return (
-    <div className="flex flex-col h-full" style={{ background: '#121212' }}>
+    <div className="flex flex-col h-full bg-background">
       <div className="relative">
         <div
           className="relative w-full h-[300px]"
@@ -436,7 +435,7 @@ export function GameDetailView({
           )}
           <div
             className="absolute bottom-0 left-0 right-0 h-32"
-            style={{ background: 'linear-gradient(to top, #121212, transparent)' }}
+            style={{ background: 'linear-gradient(to top, var(--background), transparent)' }}
             aria-hidden="true"
           />
         </div>
@@ -445,10 +444,9 @@ export function GameDetailView({
           type="button"
           onClick={onBack}
           aria-label="뒤로"
-          className="absolute top-12 left-4 w-10 h-10 rounded-full backdrop-blur border border-[#2A2A2A] flex items-center justify-center"
-          style={{ background: 'rgba(18,18,18,0.85)' }}
+          className="absolute top-12 left-4 w-10 h-10 rounded-full backdrop-blur border border-border flex items-center justify-center bg-background/85"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8FAFC" strokeWidth="2.5" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-foreground" strokeWidth="2.5" aria-hidden="true">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
@@ -463,7 +461,7 @@ export function GameDetailView({
       <div className="flex-1 overflow-y-auto pb-32">
         <div className="px-4 -mt-4">
           <div className="flex items-start justify-between gap-3 mb-2">
-            <h1 className="text-2xl font-extrabold text-[#F8FAFC] leading-tight flex-1 text-balance tracking-tight">
+            <h1 className="text-2xl font-extrabold text-foreground leading-tight flex-1 text-balance tracking-tight">
               {game.title}
             </h1>
             {currentInventory && (
@@ -475,22 +473,22 @@ export function GameDetailView({
 
           <div className="flex items-center gap-3 mb-1">
             <StarRating rating={game.rating} />
-            <span className="text-xs text-[#64748B]">{game.genre}</span>
-            <span className="text-xs text-[#64748B]">{game.releaseYear}</span>
+            <span className="text-xs text-muted-foreground">{game.genre}</span>
+            <span className="text-xs text-muted-foreground">{game.releaseYear}</span>
           </div>
-          <p className="text-xs text-[#475569] mb-4">개발사 {game.developer}</p>
+          <p className="text-xs text-muted-foreground mb-4">개발사 {game.developer}</p>
 
-          <div className="rounded-[18px] border border-[#2A2A2A] p-4 mb-4" style={{ background: '#1A1A1A' }}>
+          <div className="rounded-[18px] border border-border bg-card p-4 mb-4">
             <div className="flex items-center justify-between mb-2">
               <div>
-                <p className="text-[11px] font-medium" style={{ color: '#6A6A6A' }}>판매 매장</p>
-                <p className="text-sm font-bold text-white truncate">{currentStore.name}</p>
+                <p className="text-[11px] font-medium text-muted-foreground">판매 매장</p>
+                <p className="text-sm font-bold text-foreground truncate">{currentStore.name}</p>
               </div>
-              <p className="text-2xl font-extrabold text-white">
+              <p className="text-2xl font-extrabold text-foreground">
                 ${currentInventory?.price.toFixed(2) ?? game.price.toFixed(2)}
               </p>
             </div>
-            <div className="flex items-center gap-2 text-xs" style={{ color: '#6A6A6A' }}>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
                 <circle cx="12" cy="10" r="3" />
@@ -500,7 +498,7 @@ export function GameDetailView({
             </div>
           </div>
 
-          <div className="flex border-b border-[#2A2A2A] mb-4">
+          <div className="flex border-b border-border mb-4">
             {(['info', 'stores'] as const).map((tab) => (
               <button
                 key={tab}
@@ -508,7 +506,7 @@ export function GameDetailView({
                 onClick={() => setActiveTab(tab)}
                 className={cn(
                   'flex-1 py-2.5 text-sm font-bold transition-colors',
-                  activeTab === tab ? 'text-[#BB86FC] border-b-2 border-[#6200EE] -mb-px' : 'text-[#4A4A4A]'
+                  activeTab === tab ? 'text-primary border-b-2 border-primary -mb-px' : 'text-muted-foreground'
                 )}
               >
                 {tab === 'info' ? '게임 정보' : '판매 매장'}
@@ -518,10 +516,10 @@ export function GameDetailView({
 
           {activeTab === 'info' ? (
             <div>
-              <h2 className="text-sm font-bold text-[#F8FAFC] mb-2">소개</h2>
-              <p className="text-sm text-[#94A3B8] leading-relaxed mb-6">{game.description}</p>
+              <h2 className="text-sm font-bold text-foreground mb-2">소개</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-6">{game.description}</p>
 
-              <h2 className="text-sm font-bold text-[#F8FAFC] mb-3">상세 정보</h2>
+              <h2 className="text-sm font-bold text-foreground mb-3">상세 정보</h2>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { label: '플랫폼', value: game.platform },
@@ -529,27 +527,27 @@ export function GameDetailView({
                   { label: '개발사', value: game.developer },
                   { label: '출시연도', value: String(game.releaseYear) },
                 ].map(({ label, value }) => (
-                  <div key={label} className="rounded-xl border border-[#2A2A2A] p-3" style={{ background: '#1A1A1A' }}>
-                    <p className="text-[11px] mb-0.5" style={{ color: '#6A6A6A' }}>{label}</p>
-                    <p className="text-xs font-bold text-white">{value}</p>
+                  <div key={label} className="rounded-xl border border-border bg-card p-3">
+                    <p className="text-[11px] mb-0.5 text-muted-foreground">{label}</p>
+                    <p className="text-xs font-bold text-foreground">{value}</p>
                   </div>
                 ))}
               </div>
             </div>
           ) : (
             <div>
-              <h2 className="text-sm font-bold text-[#F8FAFC] mb-3">
+              <h2 className="text-sm font-bold text-foreground mb-3">
                 이 타이틀을 보유한 매장 {storesWithGame.length}곳
               </h2>
               {storesWithGame.length === 0 ? (
                 <div className="text-center py-12 px-6">
-                  <div className="w-12 h-12 mx-auto rounded-full bg-[#1E293B] border border-[#334155] flex items-center justify-center mb-3">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" aria-hidden="true">
+                  <div className="w-12 h-12 mx-auto rounded-full bg-card border border-border flex items-center justify-center mb-3">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-muted-foreground" strokeWidth="2" aria-hidden="true">
                       <rect x="3" y="8" width="18" height="12" rx="2" />
                       <path d="M3 8l3-4h12l3 4M12 12v4" />
                     </svg>
                   </div>
-                  <p className="text-[#94A3B8] text-sm font-medium">현재 등록된 재고 정보가 없습니다.</p>
+                  <p className="text-muted-foreground text-sm font-medium">현재 등록된 재고 정보가 없습니다.</p>
                 </div>
               ) : (
               <div className="flex flex-col gap-2">
@@ -557,14 +555,13 @@ export function GameDetailView({
                   <div
                     key={store.id}
                     className={cn(
-                      'rounded-[14px] border p-3 flex items-center justify-between gap-3',
-                      store.id === storeId ? 'border-[#6200EE]' : 'border-[#2A2A2A]'
+                      'rounded-[14px] border bg-card p-3 flex items-center justify-between gap-3',
+                      store.id === storeId ? 'border-primary bg-primary/5' : 'border-border'
                     )}
-                    style={{ background: store.id === storeId ? 'rgba(98,0,238,0.08)' : '#1A1A1A' }}
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-[#F8FAFC] truncate">{store.name}</p>
-                      <p className="text-xs text-[#64748B]">{store.distance} km · ${inv.price.toFixed(2)}</p>
+                      <p className="text-sm font-bold text-foreground truncate">{store.name}</p>
+                      <p className="text-xs text-muted-foreground">{store.distance} km · ${inv.price.toFixed(2)}</p>
                     </div>
                     <StockBadge status={inv.stockStatus} count={inv.stockCount} size="sm" />
                   </div>
@@ -578,8 +575,8 @@ export function GameDetailView({
 
       {/* 하단 CTA */}
       <div
-        className="absolute bottom-0 left-0 right-0 border-t border-[#2A2A2A] px-4 py-4"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)', background: '#1A1A1A' }}
+        className="absolute bottom-0 left-0 right-0 border-t border-border px-4 py-4 bg-card"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
       >
         {isSoldOut ? (
           restockRequested ? (

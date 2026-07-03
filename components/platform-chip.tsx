@@ -27,7 +27,7 @@ export function PlatformChip({ platform, selected, onClick, className }: Platfor
         'h-9 px-4 rounded-full text-sm font-semibold border transition-all duration-150 flex-shrink-0',
         selected
           ? config.activeColor
-          : 'bg-[#1E1E1E] text-[#6A6A6A] border-[#2C2C2C] hover:border-[#6200EE]/50',
+          : 'bg-card text-muted-foreground border-border hover:border-primary/50',
         className
       )}
     >

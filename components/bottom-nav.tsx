@@ -43,7 +43,7 @@ export function BottomNav({
   return (
     <nav
       aria-label="주요 내비게이션"
-      className="w-full bg-[#0D0D0D]/96 backdrop-blur-md border-t border-[#2C2C2C] z-50 flex-shrink-0"
+      className="w-full bg-background/96 backdrop-blur-md border-t border-border z-50 flex-shrink-0"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <ul className="flex items-center justify-around h-[60px]">
@@ -61,13 +61,13 @@ export function BottomNav({
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
                   'relative flex w-full flex-col items-center justify-center gap-1 py-1 transition-colors duration-200',
-                  isActive ? 'text-[#BB86FC]' : 'text-[#4A4A4A] hover:text-[#6A6A6A]'
+                  isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 {/* 뱃지 — 항상 최상위 레이어 */}
                 {badge > 0 && (
                   <span
-                    className="absolute top-1 right-1/2 translate-x-[14px] min-w-[16px] h-[16px] rounded-full bg-[#CF6679] text-white text-[9px] font-extrabold flex items-center justify-center px-1 pointer-events-none"
+                    className="absolute top-1 right-1/2 translate-x-[14px] min-w-[16px] h-[16px] rounded-full bg-destructive text-white text-[9px] font-extrabold flex items-center justify-center px-1 pointer-events-none"
                     style={{ zIndex: 10 }}
                     aria-label={`${badge}개 알림`}
                   >
@@ -77,7 +77,7 @@ export function BottomNav({
                 {/* 활성 탭 글로우 인디케이터 — 뱃지 위, 아이콘 위 */}
                 {isActive && (
                   <span
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-[#6200EE]"
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-primary"
                     style={{ boxShadow: '0 0 8px 2px rgba(98,0,238,0.7)', zIndex: 5 }}
                     aria-hidden="true"
                   />
@@ -97,7 +97,7 @@ export function BottomNav({
                     )}
                   />
                 </span>
-                <span className={cn('text-[9px] leading-none whitespace-nowrap relative', isActive ? 'font-bold text-[#BB86FC]' : '')} style={{ zIndex: 5 }}>
+                <span className={cn('text-[9px] leading-none whitespace-nowrap relative', isActive ? 'font-bold text-primary' : '')} style={{ zIndex: 5 }}>
                   {t(item.labelKey)}
                 </span>
               </button>
