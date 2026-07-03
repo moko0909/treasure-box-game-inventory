@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { STORES, GAMES, getGameById, type Reservation } from '@/lib/data'
@@ -23,6 +23,45 @@ interface MyPageViewProps {
 // 충전 금액 선택지
 const CHARGE_AMOUNTS = [5000, 10000, 30000, 50000, 100000]
 
+// 동전 파티클 타입
+interface Particle {
+  id: number
+  x: number
+  vx: number
+  vy: number
+  rotate: number
+  scale: number
+  color: string
+}
+
+// 숫자 카운트업 훅
+function useCountUp(target: number, duration = 900, active = false) {
+  const [display, setDisplay] = useState(0)
+  const rafRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (!active) return
+    const start = performance.now()
+    const from = 0
+
+    const tick = (now: number) => {
+      const elapsed = now - start
+      const progress = Math.min(elapsed / duration, 1)
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setDisplay(Math.round(from + (target - from) * eased))
+      if (progress < 1) rafRef.current = requestAnimationFrame(tick)
+    }
+
+    rafRef.current = requestAnimationFrame(tick)
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
+  }, [active, target, duration])
+
+  return display
+}
+
+const PARTICLE_COLORS = ['#BB86FC', '#6200EE', '#00E5FF', '#FFD600', '#CF6679']
+
 // 예약금 충전 모달
 function DepositChargeModal({
   balance,
@@ -35,63 +74,196 @@ function DepositChargeModal({
 }) {
   const [selected, setSelected] = useState<number | null>(null)
   const [custom, setCustom] = useState('')
-  const [step, setStep] = useState<'select' | 'confirm' | 'done'>('select')
-  const [charging, setCharging] = useState(false)
+  const [step, setStep] = useState<'select' | 'confirm' | 'charging' | 'done'>('select')
+  const [particles, setParticles] = useState<Particle[]>([])
+  const [checkVisible, setCheckVisible] = useState(false)
+  const [amount] = [selected ?? (Number(custom.replace(/,/g, '')) || 0)]
 
-  const amount = selected ?? (Number(custom.replace(/,/g, '')) || 0)
+  const finalAmount = selected ?? (Number(custom.replace(/,/g, '')) || 0)
+  const countedAmount = useCountUp(finalAmount, 900, step === 'done')
 
   const handleConfirm = () => {
-    if (amount <= 0) return
+    if (finalAmount <= 0) return
     setStep('confirm')
   }
 
+  const spawnParticles = () => {
+    const list: Particle[] = Array.from({ length: 18 }, (_, i) => ({
+      id: i,
+      x: 40 + Math.random() * 20,  // 중앙 부근에서 시작 (%)
+      vx: (Math.random() - 0.5) * 120,
+      vy: -(60 + Math.random() * 80),
+      rotate: Math.random() * 360,
+      scale: 0.6 + Math.random() * 0.8,
+      color: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)],
+    }))
+    setParticles(list)
+    setTimeout(() => setParticles([]), 1200)
+  }
+
   const handleCharge = async () => {
-    setCharging(true)
-    await onCharge(amount)
-    setCharging(false)
+    setStep('charging')
+    await onCharge(finalAmount)
+    spawnParticles()
     setStep('done')
+    setTimeout(() => setCheckVisible(true), 100)
   }
 
   return (
-    <div className="absolute inset-0 z-50 flex items-end bg-black/70" onClick={onClose}>
+    <div className="absolute inset-0 z-50 flex items-end bg-black/70" onClick={step === 'done' || step === 'select' ? onClose : undefined}>
       <div
-        className="w-full bg-card rounded-t-[28px] border-t border-x border-border p-5 pb-10"
+        className="w-full bg-card rounded-t-[28px] border-t border-x border-border p-5 pb-10 overflow-hidden relative"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* 파티클 레이어 */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+          {particles.map((p) => (
+            <div
+              key={p.id}
+              className="absolute w-3 h-3 rounded-sm"
+              style={{
+                left: `${p.x}%`,
+                top: '40%',
+                backgroundColor: p.color,
+                transform: `scale(${p.scale}) rotate(${p.rotate}deg)`,
+                animation: `particleFly 1.1s ease-out forwards`,
+                // CSS 변수로 방향 전달
+                ['--vx' as string]: `${p.vx}px`,
+                ['--vy' as string]: `${p.vy}px`,
+              }}
+            />
+          ))}
+        </div>
+
         {/* 핸들 */}
         <div className="w-10 h-1 rounded-full bg-border mx-auto mb-5" aria-hidden="true" />
 
+        {/* === 완료 화면 === */}
         {step === 'done' ? (
-          <div className="flex flex-col items-center py-6 gap-4">
-            <div className="w-16 h-16 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-primary" strokeWidth="2.5" aria-hidden="true">
+          <div className="flex flex-col items-center py-4 gap-3">
+            {/* 체크 아이콘 — 팡 스케일 */}
+            <div
+              className="w-20 h-20 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center"
+              style={{
+                transform: checkVisible ? 'scale(1)' : 'scale(0)',
+                transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                boxShadow: checkVisible ? '0 0 32px rgba(98,0,238,0.35)' : 'none',
+              }}
+            >
+              <svg
+                width="36"
+                height="36"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                className="text-primary"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                style={{
+                  strokeDasharray: 30,
+                  strokeDashoffset: checkVisible ? 0 : 30,
+                  transition: 'stroke-dashoffset 0.4s ease 0.2s',
+                }}
+              >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
+
+            {/* 충전 금액 카운트업 */}
             <div className="text-center">
-              <p className="text-lg font-extrabold text-foreground">충전 완료</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {amount.toLocaleString()}원이 충전되었습니다
+              <p
+                className="text-3xl font-extrabold text-primary tabular-nums"
+                style={{
+                  opacity: checkVisible ? 1 : 0,
+                  transform: checkVisible ? 'translateY(0)' : 'translateY(8px)',
+                  transition: 'opacity 0.4s ease 0.3s, transform 0.4s ease 0.3s',
+                }}
+              >
+                +{countedAmount.toLocaleString()}원
+              </p>
+              <p
+                className="text-sm text-muted-foreground mt-1"
+                style={{
+                  opacity: checkVisible ? 1 : 0,
+                  transition: 'opacity 0.4s ease 0.5s',
+                }}
+              >
+                충전이 완료됐어요
               </p>
             </div>
+
+            {/* 충전 후 잔액 */}
+            <div
+              className="w-full bg-muted rounded-[16px] border border-border p-3 flex items-center justify-between"
+              style={{
+                opacity: checkVisible ? 1 : 0,
+                transform: checkVisible ? 'translateY(0)' : 'translateY(10px)',
+                transition: 'opacity 0.4s ease 0.6s, transform 0.4s ease 0.6s',
+              }}
+            >
+              <span className="text-xs text-muted-foreground">새 잔액</span>
+              <span className="text-base font-extrabold text-foreground tabular-nums">
+                {(balance + finalAmount).toLocaleString()}원
+              </span>
+            </div>
+
             <button
               type="button"
               onClick={onClose}
-              className="w-full h-12 rounded-[14px] bg-primary text-primary-foreground font-bold text-sm mt-2"
+              className="w-full h-12 rounded-[14px] bg-primary text-primary-foreground font-bold text-sm mt-1"
+              style={{
+                opacity: checkVisible ? 1 : 0,
+                transition: 'opacity 0.3s ease 0.8s',
+              }}
             >
               확인
             </button>
           </div>
+
+        ) : step === 'charging' ? (
+          /* === 처리 중 화면 === */
+          <div className="flex flex-col items-center py-10 gap-5">
+            {/* 스피너 링 */}
+            <div className="relative w-20 h-20">
+              <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 80 80" aria-hidden="true">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="currentColor" className="text-muted" strokeWidth="6" />
+                <circle
+                  cx="40" cy="40" r="34"
+                  fill="none"
+                  stroke="currentColor"
+                  className="text-primary"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeDasharray="213"
+                  strokeDashoffset="53"
+                  style={{ animation: 'spin 0.9s linear infinite' }}
+                />
+              </svg>
+              {/* 동전 아이콘 */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-primary" strokeWidth="2" aria-hidden="true">
+                  <circle cx="12" cy="12" r="8" />
+                  <path d="M12 8v1m0 6v1M9.5 10.5c0-.83.67-1.5 2.5-1.5s2.5.67 2.5 1.5c0 1.5-2.5 2-2.5 3.5" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-base font-bold text-foreground">충전 처리 중...</p>
+            <p className="text-sm text-muted-foreground">{finalAmount.toLocaleString()}원</p>
+          </div>
+
         ) : step === 'confirm' ? (
+          /* === 확인 화면 === */
           <div className="flex flex-col gap-4">
             <h2 className="text-lg font-extrabold text-foreground">충전 확인</h2>
             <div className="bg-muted rounded-[16px] border border-border p-4 flex items-center justify-between">
               <span className="text-sm text-muted-foreground">충전 금액</span>
-              <span className="text-xl font-extrabold text-foreground">{amount.toLocaleString()}원</span>
+              <span className="text-xl font-extrabold text-foreground">{finalAmount.toLocaleString()}원</span>
             </div>
             <div className="bg-muted rounded-[16px] border border-border p-4 flex items-center justify-between">
               <span className="text-sm text-muted-foreground">충전 후 잔액</span>
-              <span className="text-xl font-extrabold text-primary">{(balance + amount).toLocaleString()}원</span>
+              <span className="text-xl font-extrabold text-primary">{(balance + finalAmount).toLocaleString()}원</span>
             </div>
             <div className="flex gap-2 mt-2">
               <button
@@ -104,14 +276,15 @@ function DepositChargeModal({
               <button
                 type="button"
                 onClick={handleCharge}
-                disabled={charging}
-                className="flex-1 h-12 rounded-[14px] bg-primary text-primary-foreground font-bold text-sm disabled:opacity-60"
+                className="flex-1 h-12 rounded-[14px] bg-primary text-primary-foreground font-bold text-sm"
               >
-                {charging ? '처리 중...' : '충전하기'}
+                충전하기
               </button>
             </div>
           </div>
+
         ) : (
+          /* === 금액 선택 화면 === */
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-extrabold text-foreground">예약금 충전</h2>
@@ -169,13 +342,13 @@ function DepositChargeModal({
             <button
               type="button"
               onClick={handleConfirm}
-              disabled={amount <= 0}
+              disabled={finalAmount <= 0}
               className={cn(
                 'w-full h-12 rounded-[14px] font-bold text-sm transition-colors',
-                amount > 0 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground cursor-not-allowed'
+                finalAmount > 0 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground cursor-not-allowed'
               )}
             >
-              {amount > 0 ? `${amount.toLocaleString()}원 충전` : '금액을 선택하세요'}
+              {finalAmount > 0 ? `${finalAmount.toLocaleString()}원 충전` : '금액을 선택하세요'}
             </button>
           </div>
         )}

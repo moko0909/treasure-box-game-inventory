@@ -222,3 +222,24 @@ html.light {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* 충전 파티클 애니메이션 */
+@keyframes particleFly {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(var(--scale, 1));
+  }
+  60% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--vx, 0px), var(--vy, -80px)) rotate(540deg) scale(0);
+  }
+}
+
+/* 스피너 */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
