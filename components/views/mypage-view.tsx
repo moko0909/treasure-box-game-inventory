@@ -11,12 +11,16 @@ import { useT } from '@/lib/i18n'
 interface MyPageViewProps {
   userName: string
   userEmail: string
+  userImage: string | null
   role: 'user' | 'owner'
   reservations: Reservation[]
   favoriteStoreIds: string[]
   balance: number
   onToggleFavorite: (storeId: string) => void
   onCharge: (amount: number) => Promise<void>
+  onUpdateProfile: (name: string) => Promise<void>
+  onUpdateImage: (url: string) => void
+  onNavigateToStore: (storeId: string) => void
   onViewGame: (gameId: string, storeId: string) => void
 }
 
@@ -34,7 +38,7 @@ interface Particle {
   color: string
 }
 
-// 숫자 카운트업 훅
+// 숫자 카운트업 훅 — from → to 범위 지원
 function useCountUp(target: number, duration = 900, active = false) {
   const [display, setDisplay] = useState(0)
   const rafRef = useRef<number | null>(null)
@@ -47,7 +51,6 @@ function useCountUp(target: number, duration = 900, active = false) {
     const tick = (now: number) => {
       const elapsed = now - start
       const progress = Math.min(elapsed / duration, 1)
-      // ease-out cubic
       const eased = 1 - Math.pow(1 - progress, 3)
       setDisplay(Math.round(from + (target - from) * eased))
       if (progress < 1) rafRef.current = requestAnimationFrame(tick)
@@ -56,6 +59,39 @@ function useCountUp(target: number, duration = 900, active = false) {
     rafRef.current = requestAnimationFrame(tick)
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
   }, [active, target, duration])
+
+  return display
+}
+
+// 잔액 카운트업 훅 — balance prop 변화 감지 후 이전값→새값 애니메이션
+function useBalanceCountUp(balance: number, duration = 1000) {
+  const [display, setDisplay] = useState(balance)
+  const prevRef = useRef(balance)
+  const rafRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    const from = prevRef.current
+    const to = balance
+    if (from === to) return
+
+    prevRef.current = to
+    const start = performance.now()
+
+    const tick = (now: number) => {
+      const elapsed = now - start
+      const progress = Math.min(elapsed / duration, 1)
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setDisplay(Math.round(from + (to - from) * eased))
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick)
+      }
+    }
+
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(tick)
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
+  }, [balance, duration])
 
   return display
 }
@@ -370,18 +406,24 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 export function MyPageView({
   userName,
   userEmail,
+  userImage,
   role,
   reservations,
   favoriteStoreIds,
   balance,
   onToggleFavorite,
   onCharge,
+  onUpdateProfile,
+  onUpdateImage,
+  onNavigateToStore,
   onViewGame,
 }: MyPageViewProps) {
   const router = useRouter()
   const t = useT()
   const [showSettings, setShowSettings] = useState(false)
   const [showCharge, setShowCharge] = useState(false)
+  const [showEditProfile, setShowEditProfile] = useState(false)
+  const [showAllFavorites, setShowAllFavorites] = useState(false)
   const favoriteIds = new Set(favoriteStoreIds)
 
   const favoriteStores = STORES.filter((s) => favoriteIds.has(s.id))
@@ -397,6 +439,8 @@ export function MyPageView({
   const handleCharge = async (amount: number) => {
     await onCharge(amount)
   }
+
+  const displayBalance = useBalanceCountUp(balance)
 
   if (showSettings) {
     return <SettingsPanel role={role} onBack={() => setShowSettings(false)} />
@@ -458,6 +502,23 @@ export function MyPageView({
         />
       )}
 
+      {/* 프로필 편집 모달 */}
+      {showEditProfile && (
+        <ProfileEditModal
+          currentName={userName}
+          currentEmail={userEmail}
+          currentImage={userImage}
+          onClose={() => setShowEditProfile(false)}
+          onSave={async (name) => {
+            await onUpdateProfile(name)
+            setShowEditProfile(false)
+          }}
+          onImageUpdate={(url) => {
+            onUpdateImage(url)
+          }}
+        />
+      )}
+
       <div className="flex-1 overflow-y-auto pb-24 bg-background">
         {/* Profile hero */}
         <div
@@ -465,10 +526,20 @@ export function MyPageView({
           style={{ background: 'linear-gradient(135deg, #3A0080 0%, #1A0040 60%, var(--background) 100%)' }}
         >
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-primary/30 flex items-center justify-center flex-shrink-0 border-2 border-primary/40">
-              <span className="text-foreground text-2xl font-extrabold" aria-hidden="true">
-                {userName.charAt(0).toUpperCase()}
-              </span>
+            <div className="relative flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-primary/30 border-2 border-primary/40 overflow-hidden flex items-center justify-center">
+                {userImage ? (
+                  <img
+                    src={userImage}
+                    alt={userName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-foreground text-2xl font-extrabold" aria-hidden="true">
+                    {userName.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-extrabold text-foreground tracking-tight truncate">{userName}</h1>
@@ -483,7 +554,8 @@ export function MyPageView({
             <button
               type="button"
               aria-label="프로필 편집"
-              className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center"
+              onClick={() => setShowEditProfile(true)}
+              className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center transition-transform active:scale-90"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-primary" strokeWidth="2" aria-hidden="true">
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
@@ -527,8 +599,15 @@ export function MyPageView({
             </div>
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-2xl font-extrabold text-foreground">
-                  {balance.toLocaleString()}<span className="text-base font-bold text-muted-foreground ml-1">원</span>
+                <p
+                  key={balance}
+                  className="text-2xl font-extrabold tabular-nums"
+                  style={{
+                    color: displayBalance !== balance ? 'var(--primary)' : 'var(--foreground)',
+                    transition: 'color 0.3s ease',
+                  }}
+                >
+                  {displayBalance.toLocaleString()}<span className="text-base font-bold text-muted-foreground ml-1">원</span>
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">{t('mypage_deposit_auto_deduct')}</p>
               </div>
@@ -544,52 +623,180 @@ export function MyPageView({
         </div>
 
         {/* 관심 매장 */}
-        <div className="px-4 mt-5">
-          <div className="flex items-center justify-between mb-3">
+        <div className="mt-5">
+          <div className="flex items-center justify-between mb-3 px-4">
             <h2 className="text-sm font-extrabold text-foreground">{t('mypage_favorite_stores_section')}</h2>
-            <button type="button" className="text-xs text-primary font-bold">{t('mypage_view_all')}</button>
+            {favoriteStores.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowAllFavorites(true)}
+                className="text-xs text-primary font-bold flex items-center gap-1"
+              >
+                {t('mypage_view_all')}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            )}
           </div>
+
           {favoriteStores.length === 0 ? (
-            <div className="bg-card rounded-[18px] border border-border p-6 text-center">
+            <div className="mx-4 bg-card rounded-[18px] border border-border p-6 text-center">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground/40 mx-auto mb-2" aria-hidden="true">
+                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+              </svg>
               <p className="text-xs text-muted-foreground">{t('mypage_no_favorites')}</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
+            /* 가로 스크롤 칩 목록 */
+            <div className="flex gap-2.5 overflow-x-auto px-4 pb-1 scrollbar-hide">
               {favoriteStores.map((store) => {
-                const inStockCount = store.games.filter((g) => g.stockStatus === 'in-stock').length
+                const inStockCount = store.games.filter((g) => g.stockStatus !== 'sold-out').length
                 return (
-                  <div
+                  <button
                     key={store.id}
-                    className="bg-card rounded-[14px] border border-border p-3 flex items-center justify-between gap-3"
+                    type="button"
+                    onClick={() => onNavigateToStore(store.id)}
+                    className="flex-shrink-0 bg-card border border-border rounded-[16px] px-3.5 py-2.5 text-left active:scale-95 transition-transform min-w-[130px] max-w-[160px]"
                   >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-foreground truncate">{store.name}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className={cn('text-[11px] font-semibold', store.isOpen ? 'text-[#BB86FC]' : 'text-muted-foreground')}>
-                          {store.isOpen ? '영업 중' : '영업 종료'}
-                        </span>
-                        <span className="text-border text-[11px]">·</span>
-                        <span className="text-[11px] text-muted-foreground">{store.distance} km</span>
-                        <span className="text-border text-[11px]">·</span>
-                        <span className="text-[11px] text-[#BB86FC] font-semibold">재고 {inStockCount}종</span>
-                      </div>
+                    {/* 매장명 */}
+                    <p className="text-[13px] font-bold text-foreground truncate leading-tight">{store.name}</p>
+
+                    {/* 영업 상태 */}
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className={cn(
+                        'inline-block w-1.5 h-1.5 rounded-full flex-shrink-0',
+                        store.isOpen ? 'bg-green-400' : 'bg-muted-foreground/40'
+                      )} aria-hidden="true" />
+                      <span className={cn(
+                        'text-[11px] font-semibold',
+                        store.isOpen ? 'text-green-400' : 'text-muted-foreground'
+                      )}>
+                        {store.isOpen ? '영업 중' : '영업 종료'}
+                      </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => onToggleFavorite(store.id)}
-                      aria-label={`${store.name} 관심 매장에서 삭제`}
-                      className="text-destructive hover:opacity-80 transition-opacity min-w-[44px] min-h-[44px] flex items-center justify-center"
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-                      </svg>
-                    </button>
-                  </div>
+
+                    {/* 거리 + 예약 가능 재고 */}
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-border">
+                      <span className="text-[11px] text-muted-foreground">{store.distance} km</span>
+                      <span className="text-[11px] font-bold text-primary">{inStockCount}종 예약 가능</span>
+                    </div>
+                  </button>
                 )
               })}
             </div>
           )}
         </div>
+
+        {/* 관심 매장 전체 보기 패널 */}
+        {showAllFavorites && (
+          <div
+            className="absolute inset-0 z-50 flex flex-col bg-background"
+            style={{ animation: 'slideUpPanel 0.28s cubic-bezier(0.32, 0.72, 0, 1) both' }}
+          >
+            {/* 헤더 */}
+            <div className="flex items-center gap-3 px-4 pt-12 pb-4 border-b border-border flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowAllFavorites(false)}
+                aria-label="뒤로 가기"
+                className="w-9 h-9 rounded-full bg-muted flex items-center justify-center active:scale-90 transition-transform"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <div>
+                <h2 className="text-base font-extrabold text-foreground">관심 매장</h2>
+                <p className="text-xs text-muted-foreground">{favoriteStores.length}개 매장</p>
+              </div>
+            </div>
+
+            {/* 매장 목록 */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
+              {favoriteStores.map((store) => {
+                const inStockGames = store.games.filter((g) => g.stockStatus !== 'sold-out')
+                const soldOutCount = store.games.filter((g) => g.stockStatus === 'sold-out').length
+                return (
+                  <button
+                    key={store.id}
+                    type="button"
+                    onClick={() => {
+                      setShowAllFavorites(false)
+                      onNavigateToStore(store.id)
+                    }}
+                    className="w-full bg-card rounded-[18px] border border-border p-4 text-left active:scale-[0.98] transition-transform"
+                  >
+                    {/* 매장 상단 */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-[15px] font-extrabold text-foreground">{store.name}</p>
+                          {store.tag && (
+                            <span className="text-[10px] font-bold bg-primary/15 text-primary px-2 py-0.5 rounded-full">
+                              {store.tag}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{store.address}</p>
+                      </div>
+                      {/* 하트 삭제 버튼 */}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onToggleFavorite(store.id) }}
+                        aria-label={`${store.name} 관심 매장에서 삭제`}
+                        className="flex-shrink-0 w-9 h-9 rounded-full bg-destructive/10 flex items-center justify-center active:scale-90 transition-transform"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-destructive" aria-hidden="true">
+                          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* 메타 정보 */}
+                    <div className="flex items-center gap-2.5 mt-2.5">
+                      <span className={cn(
+                        'inline-flex items-center gap-1 text-[11px] font-semibold',
+                        store.isOpen ? 'text-green-400' : 'text-muted-foreground'
+                      )}>
+                        <span className={cn('w-1.5 h-1.5 rounded-full', store.isOpen ? 'bg-green-400' : 'bg-muted-foreground/40')} aria-hidden="true" />
+                        {store.isOpen ? `영업 중 · ${store.closesAt} 마감` : `영업 종료 · ${store.opensAt ?? ''} 오픈`}
+                      </span>
+                      <span className="text-border text-[11px]" aria-hidden="true">·</span>
+                      <span className="text-[11px] text-muted-foreground">{store.distance} km</span>
+                      <span className="text-border text-[11px]" aria-hidden="true">·</span>
+                      <span className="text-[11px] text-muted-foreground">★ {store.rating}</span>
+                    </div>
+
+                    {/* 재고 요약 바 */}
+                    <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-primary" aria-hidden="true" />
+                          <span className="text-[11px] text-muted-foreground">예약 가능</span>
+                          <span className="text-[11px] font-bold text-foreground ml-0.5">{inStockGames.length}종</span>
+                        </div>
+                        {soldOutCount > 0 && (
+                          <div className="flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-muted-foreground/30" aria-hidden="true" />
+                            <span className="text-[11px] text-muted-foreground">품절</span>
+                            <span className="text-[11px] font-bold text-muted-foreground ml-0.5">{soldOutCount}종</span>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-primary font-bold flex items-center gap-0.5">
+                        매장 보기
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                          <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                      </span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* 최근 픽업 */}
         <div className="px-4 mt-5">
@@ -656,6 +863,309 @@ export function MyPageView({
             {t('mypage_logout')}
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ── 프로필 편집 모달 ───────────────────────────────────────────────────────────
+function ProfileEditModal({
+  currentName,
+  currentEmail,
+  currentImage,
+  onClose,
+  onSave,
+  onImageUpdate,
+}: {
+  currentName: string
+  currentEmail: string
+  currentImage: string | null
+  onClose: () => void
+  onSave: (name: string) => Promise<void>
+  onImageUpdate: (url: string) => void
+}) {
+  const [name, setName] = useState(currentName)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+  const [previewUrl, setPreviewUrl] = useState<string | null>(currentImage)
+  const [uploadError, setUploadError] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // 마운트 시 이름 입력창 포커스
+  useEffect(() => {
+    const t = setTimeout(() => inputRef.current?.focus(), 150)
+    return () => clearTimeout(t)
+  }, [])
+
+  const hasChanged = name.trim() !== currentName
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadError('')
+
+    // 클라이언트 사이드 미리보기
+    const reader = new FileReader()
+    reader.onload = (ev) => setPreviewUrl(ev.target?.result as string)
+    reader.readAsDataURL(file)
+
+    // 업로드
+    setUploading(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/upload/avatar', { method: 'POST', body: form })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? '업로드 실패')
+      setPreviewUrl(data.url)
+      onImageUpdate(data.url)
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : '업로드에 실패했습니다')
+      setPreviewUrl(currentImage) // 실패 시 원본으로 복원
+    } finally {
+      setUploading(false)
+      // input 초기화 (같은 파일 재선택 허용)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = name.trim()
+    if (!trimmed) { setError('이름을 입력해주세요'); return }
+    if (trimmed.length > 20) { setError('이름은 20자 이내로 입력해주세요'); return }
+    setError('')
+    setSaving(true)
+    try {
+      await onSave(trimmed)
+      setSaved(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '저장에 실패했습니다')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div
+      className="absolute inset-0 z-50 flex items-end bg-black/70"
+      onClick={saved ? onClose : onClose}
+    >
+      <div
+        className="w-full bg-card rounded-t-[28px] border-t border-x border-border p-5 pb-10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 핸들 */}
+        <div className="w-10 h-1 rounded-full bg-border mx-auto mb-5" aria-hidden="true" />
+
+        {saved ? (
+          /* ── 저장 완료 화면 ── */
+          <div className="flex flex-col items-center py-6 gap-4">
+            <div
+              className="w-16 h-16 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center"
+              style={{ animation: 'profileSavePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}
+            >
+              <svg
+                width="28" height="28" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" className="text-primary"
+                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-extrabold text-foreground">저장 완료</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                이름이 <span className="text-primary font-bold">{name.trim()}</span>으로 변경됐어요
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full h-12 rounded-[14px] bg-primary text-primary-foreground font-bold text-sm mt-1"
+            >
+              확인
+            </button>
+          </div>
+        ) : (
+          /* ── 편집 화면 ── */
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-extrabold text-foreground">프로필 편집</h2>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
+                aria-label="닫기"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-muted-foreground" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            {/* 프로필 사진 변경 */}
+            <div className="flex flex-col items-center gap-2">
+              {/* 숨김 파일 input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="sr-only"
+                aria-label="프로필 사진 선택"
+                onChange={handleFileChange}
+              />
+
+              {/* 아바타 + 카메라 버튼 */}
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full bg-primary/30 border-2 border-primary/40 overflow-hidden flex items-center justify-center">
+                  {previewUrl ? (
+                    <img
+                      src={previewUrl}
+                      alt="프로필 미리보기"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-foreground text-3xl font-extrabold" aria-hidden="true">
+                      {(name.trim() || currentName).charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  {/* 업로드 중 오버레이 */}
+                  {uploading && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
+                      <svg
+                        width="22" height="22" viewBox="0 0 24 24"
+                        fill="none" stroke="white" strokeWidth="2.5"
+                        aria-hidden="true"
+                        style={{ animation: 'spin 0.8s linear infinite' }}
+                      >
+                        <path d="M21 12a9 9 0 11-6.219-8.56" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+
+                {/* 카메라 버튼 */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  aria-label="프로필 사진 변경"
+                  className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary border-2 border-card flex items-center justify-center transition-transform active:scale-90 disabled:opacity-60"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" aria-hidden="true">
+                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                </button>
+              </div>
+
+              {uploadError ? (
+                <p className="text-[11px] text-destructive font-medium flex items-center gap-1" role="alert">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  {uploadError}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {uploading ? '업로드 중...' : '사진을 탭해서 변경하세요'}
+                </p>
+              )}
+            </div>
+
+            {/* 이름 입력 */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="profile-name" className="text-xs font-bold text-muted-foreground">
+                이름
+              </label>
+              <div className="relative">
+                <input
+                  ref={inputRef}
+                  id="profile-name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => { setName(e.target.value); setError('') }}
+                  maxLength={20}
+                  autoComplete="name"
+                  className={cn(
+                    'w-full h-12 rounded-[12px] bg-muted border px-4 pr-14 text-sm font-bold text-foreground placeholder:text-muted-foreground outline-none transition-colors',
+                    error ? 'border-destructive focus:border-destructive' : 'border-border focus:border-primary',
+                  )}
+                  placeholder="이름 입력"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground tabular-nums">
+                  {name.length}/20
+                </span>
+              </div>
+              {error && (
+                <p className="text-[11px] text-destructive font-medium flex items-center gap-1" role="alert">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  {error}
+                </p>
+              )}
+            </div>
+
+            {/* 이메일 (읽기 전용) */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="profile-email" className="text-xs font-bold text-muted-foreground">
+                이메일 <span className="text-muted-foreground/60 font-normal">(변경 불가)</span>
+              </label>
+              <div className="relative">
+                <input
+                  id="profile-email"
+                  type="email"
+                  value={currentEmail}
+                  readOnly
+                  disabled
+                  className="w-full h-12 rounded-[12px] bg-muted/50 border border-border px-4 text-sm text-muted-foreground outline-none cursor-not-allowed"
+                />
+                <svg
+                  width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/50"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+              </div>
+            </div>
+
+            {/* 저장 버튼 */}
+            <button
+              type="submit"
+              disabled={saving || !hasChanged}
+              className={cn(
+                'w-full h-12 rounded-[14px] font-bold text-sm transition-all',
+                hasChanged && !saving
+                  ? 'bg-primary text-primary-foreground active:scale-[0.98]'
+                  : 'bg-muted text-muted-foreground cursor-not-allowed',
+              )}
+            >
+              {saving ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg
+                    className="text-primary-foreground" width="16" height="16" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"
+                    style={{ animation: 'spin 0.8s linear infinite' }}
+                  >
+                    <path d="M21 12a9 9 0 11-6.219-8.56" />
+                  </svg>
+                  저장 중...
+                </span>
+              ) : hasChanged ? '저장하기' : '변경사항 없음'}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   )

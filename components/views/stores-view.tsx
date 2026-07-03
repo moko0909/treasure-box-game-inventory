@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
-import { STORES, GAMES, type Platform } from '@/lib/data'
+import { STORES, GAMES, getStoreById, type Platform } from '@/lib/data'
 import { PlatformChip } from '@/components/platform-chip'
 import { StoreCard } from '@/components/store-card'
 import { NaverMap } from '@/components/naver-map'
+import { StoreInventoryPanel } from '@/components/store-inventory-panel'
 
 const PLATFORMS: Platform[] = ['PS5', 'Nintendo Switch', 'Xbox']
 
@@ -21,13 +22,16 @@ interface StoresViewProps {
   onViewGame: (gameId: string, storeId: string) => void
   favoriteStoreIds?: string[]
   onToggleFavorite?: (storeId: string) => void
+  isGuest?: boolean
 }
 
-export function StoresView({ onViewGame, favoriteStoreIds = [], onToggleFavorite }: StoresViewProps) {
+export function StoresView({ onViewGame, favoriteStoreIds = [], onToggleFavorite, isGuest = false }: StoresViewProps) {
   const [search, setSearch] = useState('')
   const [platforms, setPlatforms] = useState<Set<Platform>>(new Set())
   const [selectedId, setSelectedId] = useState<string>(STORES[0].id)
   const [snap, setSnap] = useState<SnapKey>('half')
+  // 재고 패널에서 표시할 매장 id (null이면 패널 닫힘)
+  const [inventoryStoreId, setInventoryStoreId] = useState<string | null>(null)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const drag = useRef<{ startY: number; startTop: number; height: number; active: boolean } | null>(null)
@@ -137,6 +141,23 @@ export function StoresView({ onViewGame, favoriteStoreIds = [], onToggleFavorite
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-background">
+      {/* ── 매장 재고 패널 ── */}
+      {inventoryStoreId && (() => {
+        const panelStore = getStoreById(inventoryStoreId)
+        if (!panelStore) return null
+        return (
+          <StoreInventoryPanel
+            store={panelStore}
+            onClose={() => setInventoryStoreId(null)}
+            isGuest={isGuest}
+            onReserve={(gameId, storeId) => {
+              setInventoryStoreId(null)
+              onViewGame(gameId, storeId)
+            }}
+          />
+        )
+      })()}
+
       {/* ── 지도 (전체 배경) ── */}
       <div className="absolute inset-0" style={{ zIndex: 0 }}>
         <NaverMap
@@ -296,8 +317,11 @@ export function StoresView({ onViewGame, favoriteStoreIds = [], onToggleFavorite
                   store={store}
                   selected={store.id === selectedId}
                   isFavorite={favoriteStoreIds.includes(store.id)}
-                  onClick={() => setSelectedId(store.id)}
-                  onViewInventory={() => setSelectedId(store.id)}
+                  onClick={() => selectStore(store.id)}
+                  onViewInventory={() => {
+                    selectStore(store.id)
+                    setInventoryStoreId(store.id)
+                  }}
                   onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(store.id) : undefined}
                 />
               ))}

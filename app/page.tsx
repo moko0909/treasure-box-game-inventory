@@ -6,17 +6,19 @@ import { getReservations } from '@/app/actions/reservations'
 import { getFavoriteStoreIds } from '@/app/actions/favorites'
 import { getRestockAlerts } from '@/app/actions/restock'
 import { getBalance } from '@/app/actions/balance'
+import { getProfile } from '@/app/actions/profile'
 import type { Reservation, RestockAlert } from '@/lib/data'
 
 export default async function TreasureBoxApp() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) redirect('/sign-in')
 
-  const [rows, favoriteStoreIds, alertRows, balance] = await Promise.all([
+  const [rows, favoriteStoreIds, alertRows, balance, profile] = await Promise.all([
     getReservations(),
     getFavoriteStoreIds(),
     getRestockAlerts(),
     getBalance(),
+    getProfile(),
   ])
 
   const reservations: Reservation[] = rows.map((r) => ({
@@ -41,7 +43,9 @@ export default async function TreasureBoxApp() {
     notifiedAt: a.notifiedAt,
   }))
 
-  const role = (session.user as { role?: string }).role === 'owner' ? 'owner' : 'user'
+  const rawRole = (session.user as { role?: string }).role
+  const role = rawRole === 'owner' ? 'owner' : 'user'
+  const isGuest = rawRole === 'guest'
   const storeLocation = (session.user as { storeLocation?: string }).storeLocation ?? null
 
   return (
@@ -49,11 +53,13 @@ export default async function TreasureBoxApp() {
       userName={session.user.name}
       userEmail={session.user.email}
       role={role}
+      isGuest={isGuest}
       storeLocation={storeLocation}
       reservations={reservations}
       favoriteStoreIds={favoriteStoreIds}
       restockAlerts={restockAlerts}
       initialBalance={balance}
+      initialImage={profile.image}
     />
   )
 }

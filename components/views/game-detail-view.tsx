@@ -19,6 +19,7 @@ interface GameDetailViewProps {
   onBack: () => void
   onReserve: (input: CreateReservationInput) => Promise<{ code: string; expiresAt: string }>
   onRequestRestock: (gameId: string, storeId: string) => Promise<{ alreadyExists: boolean }>
+  isGuest?: boolean
 }
 
 // 재고 선점 유지 시간 (초) — 3분
@@ -90,9 +91,12 @@ export function GameDetailView({
   onBack,
   onReserve,
   onRequestRestock,
+  isGuest = false,
 }: GameDetailViewProps) {
   const [mode, setMode] = useState<Mode>('detail')
   const [activeTab, setActiveTab] = useState<'info' | 'stores'>('info')
+  const [selectedStoreId, setSelectedStoreId] = useState(storeId)
+  const [showStorePicker, setShowStorePicker] = useState(false)
 
   // 예약 폼 상태
   const [quantity, setQuantity] = useState(1)
@@ -113,7 +117,7 @@ export function GameDetailView({
   const [restockBusy, setRestockBusy] = useState(false)
 
   const game = getGameById(gameId)
-  const currentStore = getStoreById(storeId)
+  const currentStore = getStoreById(selectedStoreId) ?? getStoreById(storeId)
   const currentInventory = currentStore?.games.find((g) => g.gameId === gameId)
 
   // 선점 카운트다운
@@ -154,7 +158,7 @@ export function GameDetailView({
     try {
       const res = await onReserve({
         gameId,
-        storeId,
+        storeId: selectedStoreId,
         quantity,
         pickupAt: new Date(pickupAt).toISOString(),
         notes: notes.trim() || null,
@@ -382,7 +386,7 @@ export function GameDetailView({
                 <ul className="text-[12px] leading-relaxed list-disc pl-4 space-y-1" style={{ color: '#6A6A6A' }}>
                   <li>픽업 기한 내 미방문 시 예약이 자동 취소됩니다.</li>
                   <li>노쇼가 3회 누적되면 30일��� ���약이 제한됩��다.</li>
-                  <li>방문이 어려운 경우 미리 예약을 취소해 주세요.</li>
+                  <li>방문이 어��운 경우 미리 예약을 취소해 주세요.</li>
                 </ul>
                 <label className="flex items-center gap-2.5 mt-3 cursor-pointer">
                   <input
@@ -423,7 +427,123 @@ export function GameDetailView({
 
   // ---------------- 상세 화면 ----------------
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-background relative">
+      {/* 매장 선택 바텀시트 */}
+      {showStorePicker && (
+        <>
+          {/* 딤 */}
+          <div
+            className="absolute inset-0 z-40 bg-black/60"
+            onClick={() => setShowStorePicker(false)}
+            aria-hidden="true"
+          />
+          {/* 시트 */}
+          <div
+            className="absolute bottom-0 left-0 right-0 z-50 bg-card rounded-t-[28px] border-t border-x border-border flex flex-col"
+            style={{ maxHeight: '80%', animation: 'slideUpPanel 0.26s cubic-bezier(0.32,0.72,0,1) both' }}
+          >
+            {/* 핸들 + 헤더 */}
+            <div className="px-5 pt-4 pb-3 flex-shrink-0">
+              <div className="w-10 h-1 rounded-full bg-border mx-auto mb-4" aria-hidden="true" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-extrabold text-foreground">매장 선택</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">{game.title} 재고 있는 매장 {storesWithGame.filter(({inv}) => inv.stockStatus !== 'sold-out').length}곳</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowStorePicker(false)}
+                  className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
+                  aria-label="닫기"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-muted-foreground" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* 매장 목록 */}
+            <div className="flex-1 overflow-y-auto px-5 pb-3 flex flex-col gap-2.5">
+              {storesWithGame.map(({ store, inv }) => {
+                const isSelected = store.id === selectedStoreId
+                const canSelect = inv.stockStatus !== 'sold-out'
+                return (
+                  <button
+                    key={store.id}
+                    type="button"
+                    onClick={() => {
+                      if (!canSelect) return
+                      setSelectedStoreId(store.id)
+                      setShowStorePicker(false)
+                    }}
+                    disabled={!canSelect}
+                    className={cn(
+                      'w-full rounded-[16px] border p-4 text-left transition-all active:scale-[0.98]',
+                      isSelected
+                        ? 'border-primary bg-primary/8'
+                        : canSelect
+                          ? 'border-border bg-background hover:border-primary/40'
+                          : 'border-border bg-background opacity-50 cursor-not-allowed'
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* 라디오 */}
+                      <div className={cn(
+                        'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors',
+                        isSelected ? 'border-primary bg-primary' : 'border-muted-foreground/40'
+                      )} aria-hidden="true">
+                        {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        {/* 매장명 + 태그 */}
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <p className="text-[15px] font-extrabold text-foreground">{store.name}</p>
+                          {store.tag && (
+                            <span className="text-[10px] font-bold bg-primary/15 text-primary px-2 py-0.5 rounded-full">{store.tag}</span>
+                          )}
+                        </div>
+                        {/* 주소 */}
+                        <p className="text-[11px] text-muted-foreground truncate mb-2">{store.address}</p>
+                        {/* 메타 행 */}
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center gap-1">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-muted-foreground" aria-hidden="true">
+                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
+                            </svg>
+                            <span className="text-[11px] text-muted-foreground">{store.distance} km</span>
+                          </div>
+                          <span className={cn('text-[11px] font-semibold', store.isOpen ? 'text-green-400' : 'text-muted-foreground')}>
+                            {store.isOpen ? `영업 중 · ${store.closesAt} 마감` : `영업 종료 · ${store.opensAt ?? ''} 오픈`}
+                          </span>
+                          <span className="text-[11px] font-bold text-foreground">${inv.price.toFixed(2)}</span>
+                        </div>
+                      </div>
+
+                      {/* 재고 뱃지 */}
+                      <div className="flex-shrink-0">
+                        <StockBadge status={inv.stockStatus} count={inv.stockCount} size="sm" />
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* 하단 확인 버튼 */}
+            <div className="flex-shrink-0 px-5 pt-3 pb-8 border-t border-border">
+              <button
+                type="button"
+                onClick={() => setShowStorePicker(false)}
+                className="w-full h-12 rounded-[14px] bg-primary text-primary-foreground font-bold text-sm"
+              >
+                {currentStore.name} 선택 완료
+              </button>
+            </div>
+          </div>
+        </>
+      )}
       <div className="relative">
         <div
           className="relative w-full h-[300px]"
@@ -477,25 +597,38 @@ export function GameDetailView({
           </div>
           <p className="text-xs text-muted-foreground mb-4">개발사 {game.developer}</p>
 
-          <div className="rounded-[18px] border border-border bg-card p-4 mb-4">
+          <button
+            type="button"
+            onClick={() => setShowStorePicker(true)}
+            className="w-full rounded-[18px] border border-border bg-card p-4 mb-4 text-left transition-colors active:bg-card/80 hover:border-primary/40"
+            aria-label="판매 매장 변경"
+          >
             <div className="flex items-center justify-between mb-2">
-              <div>
+              <div className="flex-1 min-w-0">
                 <p className="text-[11px] font-medium text-muted-foreground">판매 매장</p>
-                <p className="text-sm font-bold text-foreground truncate">{currentStore.name}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-bold text-foreground truncate">{currentStore.name}</p>
+                  <span className="flex-shrink-0 text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">변경</span>
+                </div>
               </div>
-              <p className="text-2xl font-extrabold text-foreground">
+              <p className="text-2xl font-extrabold text-foreground ml-3">
                 ${currentInventory?.price.toFixed(2) ?? game.price.toFixed(2)}
               </p>
             </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              {currentStore.distance} km ·{' '}
-              {currentStore.isOpen ? `${currentStore.closesAt}까지 영업` : `${currentStore.opensAt} 오픈`}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                {currentStore.distance} km ·{' '}
+                {currentStore.isOpen ? `${currentStore.closesAt}까지 영업` : `${currentStore.opensAt} 오픈`}
+              </div>
+              {currentInventory && (
+                <StockBadge status={currentInventory.stockStatus} count={currentInventory.stockCount} size="sm" />
+              )}
             </div>
-          </div>
+          </button>
 
           <div className="flex border-b border-border mb-4">
             {(['info', 'stores'] as const).map((tab) => (
@@ -535,9 +668,12 @@ export function GameDetailView({
             </div>
           ) : (
             <div>
-              <h2 className="text-sm font-bold text-foreground mb-3">
-                이 타이틀을 보유한 매장 {storesWithGame.length}곳
-              </h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-bold text-foreground">
+                  이 타이틀 보유 매장 {storesWithGame.length}곳
+                </h2>
+                <span className="text-[11px] text-muted-foreground">탭해서 매장 선택</span>
+              </div>
               {storesWithGame.length === 0 ? (
                 <div className="text-center py-12 px-6">
                   <div className="w-12 h-12 mx-auto rounded-full bg-card border border-border flex items-center justify-center mb-3">
@@ -550,21 +686,47 @@ export function GameDetailView({
                 </div>
               ) : (
               <div className="flex flex-col gap-2">
-                {storesWithGame.map(({ store, inv }) => (
-                  <div
-                    key={store.id}
-                    className={cn(
-                      'rounded-[14px] border bg-card p-3 flex items-center justify-between gap-3',
-                      store.id === storeId ? 'border-primary bg-primary/5' : 'border-border'
-                    )}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-foreground truncate">{store.name}</p>
-                      <p className="text-xs text-muted-foreground">{store.distance} km · ${inv.price.toFixed(2)}</p>
-                    </div>
-                    <StockBadge status={inv.stockStatus} count={inv.stockCount} size="sm" />
-                  </div>
-                ))}
+                {storesWithGame.map(({ store, inv }) => {
+                  const isSelected = store.id === selectedStoreId
+                  const canSelect = inv.stockStatus !== 'sold-out'
+                  return (
+                    <button
+                      key={store.id}
+                      type="button"
+                      onClick={() => canSelect && setSelectedStoreId(store.id)}
+                      disabled={!canSelect}
+                      className={cn(
+                        'rounded-[14px] border bg-card p-3.5 flex items-center gap-3 text-left transition-all active:scale-[0.98]',
+                        isSelected ? 'border-primary bg-primary/5' : canSelect ? 'border-border hover:border-primary/40' : 'border-border opacity-60 cursor-not-allowed'
+                      )}
+                    >
+                      {/* 선택 라디오 */}
+                      <div className={cn(
+                        'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors',
+                        isSelected ? 'border-primary bg-primary' : 'border-border bg-transparent'
+                      )} aria-hidden="true">
+                        {isSelected && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <p className="text-sm font-bold text-foreground truncate">{store.name}</p>
+                          {store.tag && (
+                            <span className="text-[10px] font-bold bg-accent/15 text-accent px-1.5 py-0.5 rounded-full flex-shrink-0">{store.tag}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{store.distance} km</span>
+                          <span aria-hidden="true">·</span>
+                          <span className={store.isOpen ? 'text-green-400' : ''}>{store.isOpen ? '영업 중' : '영업 종료'}</span>
+                          <span aria-hidden="true">·</span>
+                          <span className="font-semibold text-foreground">${inv.price.toFixed(2)}</span>
+                        </div>
+                      </div>
+                      <StockBadge status={inv.stockStatus} count={inv.stockCount} size="sm" />
+                    </button>
+                  )
+                })}
               </div>
               )}
             </div>
@@ -597,6 +759,16 @@ export function GameDetailView({
               {restockBusy ? '신청 중...' : '재입고 알림 신청'}
             </button>
           )
+        ) : isGuest ? (
+          <a
+            href="/sign-in"
+            className="w-full h-[52px] rounded-[14px] text-base font-extrabold tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2 bg-muted text-muted-foreground border border-border"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
+            </svg>
+            로그인 후 예약하기
+          </a>
         ) : (
           <button
             type="button"
@@ -610,7 +782,9 @@ export function GameDetailView({
         <p className="text-[11px] text-center mt-2" style={{ color: '#4A4A4A' }}>
           {isSoldOut
             ? '입고되면 알림으로 알려드려요'
-            : '무료 예약 · 결제는 매장 방문 시 · 노쇼 규정 적용'}
+            : isGuest
+              ? '예약 기능은 로그인 후 이용할 수 있습니다'
+              : '무료 예약 · 결제는 매장 방문 시 · 노쇼 규정 적용'}
         </p>
       </div>
     </div>

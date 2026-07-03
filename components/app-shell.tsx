@@ -14,6 +14,7 @@ import { createReservation, cancelReservation, type CreateReservationInput } fro
 import { toggleFavorite as toggleFavoriteAction } from '@/app/actions/favorites'
 import { requestRestockAlert, cancelRestockAlert } from '@/app/actions/restock'
 import { chargeBalance } from '@/app/actions/balance'
+import { updateProfile } from '@/app/actions/profile'
 import type { Reservation, RestockAlert } from '@/lib/data'
 
 interface GameDetailState {
@@ -25,22 +26,26 @@ export interface AppShellProps {
   userName: string
   userEmail: string
   role: 'user' | 'owner'
+  isGuest?: boolean
   storeLocation: string | null
   reservations: Reservation[]
   favoriteStoreIds: string[]
   restockAlerts: RestockAlert[]
   initialBalance: number
+  initialImage: string | null
 }
 
 export function AppShell({
   userName,
   userEmail,
   role,
+  isGuest = false,
   storeLocation,
   reservations,
   favoriteStoreIds,
   restockAlerts,
   initialBalance,
+  initialImage,
 }: AppShellProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -48,6 +53,8 @@ export function AppShell({
   const [gameDetail, setGameDetail] = useState<GameDetailState | null>(null)
   const [reserveToast, setReserveToast] = useState<string | null>(null)
   const [balance, setBalance] = useState(initialBalance)
+  const [localUserName, setLocalUserName] = useState(userName)
+  const [localUserImage, setLocalUserImage] = useState<string | null>(initialImage)
 
   const isOwner = role === 'owner'
 
@@ -104,6 +111,16 @@ export function AppShell({
     setBalance(result.balance)
   }
 
+  const handleUpdateProfile = async (name: string) => {
+    const result = await updateProfile({ name })
+    setLocalUserName(result.name)
+    if (result.image) setLocalUserImage(result.image)
+  }
+
+  const handleUpdateImage = (url: string) => {
+    setLocalUserImage(url)
+  }
+
   const handleNavigate = (tab: Tab) => {
     if (tab === 'admin' && !isOwner) return
     setGameDetail(null)
@@ -141,6 +158,7 @@ export function AppShell({
                 onBack={closeGameDetail}
                 onReserve={handleReserve}
                 onRequestRestock={handleRequestRestock}
+                isGuest={isGuest}
               />
             </div>
           )}
@@ -153,6 +171,7 @@ export function AppShell({
                   onViewGame={openGameDetail}
                   favoriteStoreIds={favoriteStoreIds}
                   onToggleFavorite={handleToggleFavorite}
+                  isGuest={isGuest}
                 />
               </div>
             )}
@@ -185,14 +204,25 @@ export function AppShell({
             </div>
             <div className={activeTab === 'mypage' ? 'flex flex-col h-full' : 'hidden'}>
               <MyPageView
-                userName={userName}
+                userName={localUserName}
                 userEmail={userEmail}
+                userImage={localUserImage}
+                onUpdateProfile={handleUpdateProfile}
+                onUpdateImage={handleUpdateImage}
                 role={role}
                 reservations={reservations}
                 favoriteStoreIds={favoriteStoreIds}
                 balance={balance}
                 onToggleFavorite={handleToggleFavorite}
                 onCharge={handleCharge}
+                onNavigateToStore={(storeId) => {
+                  handleNavigate('stores')
+                  // StoresView가 마운트된 뒤 해당 매장을 선택 상태로 포커싱
+                  setTimeout(() => {
+                    const el = document.getElementById(`store-card-${storeId}`)
+                    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                  }, 80)
+                }}
                 onViewGame={(gId, sId) => {
                   handleNavigate('stores')
                   setTimeout(() => openGameDetail(gId, sId), 50)

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { authClient } from '@/lib/auth-client'
 import { Gamepad2, Loader2, User, Store } from 'lucide-react'
+import { ensureGuestAccount } from '@/app/actions/guest'
 
 type Role = 'user' | 'owner'
 
@@ -18,6 +19,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const [storeLocation, setStoreLocation] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [guestLoading, setGuestLoading] = useState(false)
 
   const isSignUp = mode === 'sign-up'
   const isOwner = role === 'owner'
@@ -53,6 +55,21 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
     } catch (err) {
       setError(err instanceof Error ? err.message : '문제가 발생했습니다')
       setLoading(false)
+    }
+  }
+
+  async function handleGuestLogin() {
+    setGuestLoading(true)
+    setError(null)
+    try {
+      const { email: gEmail, password: gPw } = await ensureGuestAccount()
+      const { error: signInError } = await authClient.signIn.email({ email: gEmail, password: gPw })
+      if (signInError) throw new Error(signInError.message || '게스트 로그인 실패')
+      router.push('/')
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '게스트 로그인에 실패했습니다')
+      setGuestLoading(false)
     }
   }
 
@@ -218,6 +235,34 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
           >
             {isSignUp ? '로그인' : '회원가입'}
           </Link>
+        </p>
+
+        {/* 구분선 */}
+        <div className="mt-6 flex items-center gap-3">
+          <div className="flex-1 h-px bg-[#243049]" aria-hidden="true" />
+          <span className="text-xs text-slate-500 font-medium">또는</span>
+          <div className="flex-1 h-px bg-[#243049]" aria-hidden="true" />
+        </div>
+
+        {/* 게스트 로그인 */}
+        <button
+          type="button"
+          onClick={handleGuestLogin}
+          disabled={guestLoading || loading}
+          className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl border border-[#243049] bg-[#111A2E] px-4 py-3 text-sm font-semibold text-slate-300 transition-colors hover:border-[#334568] hover:text-white disabled:opacity-50"
+        >
+          {guestLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          )}
+          게스트로 둘러보기
+        </button>
+        <p className="mt-2 text-center text-[11px] text-slate-500">
+          게스트는 재고 조회만 가능하며 예약 기능은 제한됩니다.
         </p>
       </div>
     </div>
