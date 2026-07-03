@@ -34,7 +34,7 @@ interface Particle {
   color: string
 }
 
-// 숫자 카운트업 훅
+// 숫자 카운트업 훅 — from → to 범위 지원
 function useCountUp(target: number, duration = 900, active = false) {
   const [display, setDisplay] = useState(0)
   const rafRef = useRef<number | null>(null)
@@ -47,7 +47,6 @@ function useCountUp(target: number, duration = 900, active = false) {
     const tick = (now: number) => {
       const elapsed = now - start
       const progress = Math.min(elapsed / duration, 1)
-      // ease-out cubic
       const eased = 1 - Math.pow(1 - progress, 3)
       setDisplay(Math.round(from + (target - from) * eased))
       if (progress < 1) rafRef.current = requestAnimationFrame(tick)
@@ -56,6 +55,39 @@ function useCountUp(target: number, duration = 900, active = false) {
     rafRef.current = requestAnimationFrame(tick)
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
   }, [active, target, duration])
+
+  return display
+}
+
+// 잔액 카운트업 훅 — balance prop 변화 감지 후 이전값→새값 애니메이션
+function useBalanceCountUp(balance: number, duration = 1000) {
+  const [display, setDisplay] = useState(balance)
+  const prevRef = useRef(balance)
+  const rafRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    const from = prevRef.current
+    const to = balance
+    if (from === to) return
+
+    prevRef.current = to
+    const start = performance.now()
+
+    const tick = (now: number) => {
+      const elapsed = now - start
+      const progress = Math.min(elapsed / duration, 1)
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setDisplay(Math.round(from + (to - from) * eased))
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick)
+      }
+    }
+
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(tick)
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
+  }, [balance, duration])
 
   return display
 }
@@ -398,6 +430,8 @@ export function MyPageView({
     await onCharge(amount)
   }
 
+  const displayBalance = useBalanceCountUp(balance)
+
   if (showSettings) {
     return <SettingsPanel role={role} onBack={() => setShowSettings(false)} />
   }
@@ -527,8 +561,15 @@ export function MyPageView({
             </div>
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-2xl font-extrabold text-foreground">
-                  {balance.toLocaleString()}<span className="text-base font-bold text-muted-foreground ml-1">원</span>
+                <p
+                  key={balance}
+                  className="text-2xl font-extrabold tabular-nums"
+                  style={{
+                    color: displayBalance !== balance ? 'var(--primary)' : 'var(--foreground)',
+                    transition: 'color 0.3s ease',
+                  }}
+                >
+                  {displayBalance.toLocaleString()}<span className="text-base font-bold text-muted-foreground ml-1">원</span>
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">{t('mypage_deposit_auto_deduct')}</p>
               </div>
