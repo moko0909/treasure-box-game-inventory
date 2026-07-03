@@ -28,40 +28,26 @@ export function StoresView({ onViewGame, favoriteStoreIds = [], onToggleFavorite
   const [platforms, setPlatforms] = useState<Set<Platform>>(new Set())
   const [selectedId, setSelectedId] = useState<string>(STORES[0].id)
   const [snap, setSnap] = useState<SnapKey>('half')
-  // 실제 위치 기반 거리 (GPS 성공 시 덮어씀)
-  const [liveDistances, setLiveDistances] = useState<Record<string, number>>({})
 
   const containerRef = useRef<HTMLDivElement>(null)
   const drag = useRef<{ startY: number; startTop: number; height: number; active: boolean } | null>(null)
   const [dragTop, setDragTop] = useState<number | null>(null) // px, null이면 CSS 스냅 사용
 
-  // ── 실시간 거리로 STORES 보정 ──
-  const storesWithLiveDistance = useMemo(() => {
-    if (Object.keys(liveDistances).length === 0) return STORES
-    return STORES.map((s) =>
-      liveDistances[s.id] !== undefined
-        ? { ...s, distance: liveDistances[s.id] }
-        : s
-    )
-  }, [liveDistances])
-
-  // ── 필터링 + 거리순 정렬 ──
+  // ── 필터링된 매장 목록 ──
   const stores = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return storesWithLiveDistance
-      .filter((s) => {
-        const matchQ =
-          !q || s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q)
-        const matchP =
-          platforms.size === 0 ||
-          s.games.some((sg) => {
-            const g = GAMES.find((x) => x.id === sg.gameId)
-            return g && platforms.has(g.platform)
-          })
-        return matchQ && matchP
-      })
-      .sort((a, b) => a.distance - b.distance)
-  }, [search, platforms, storesWithLiveDistance])
+    return STORES.filter((s) => {
+      const matchQ =
+        !q || s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q)
+      const matchP =
+        platforms.size === 0 ||
+        s.games.some((sg) => {
+          const g = GAMES.find((x) => x.id === sg.gameId)
+          return g && platforms.has(g.platform)
+        })
+      return matchQ && matchP
+    })
+  }, [search, platforms])
 
   const togglePlatform = useCallback((p: Platform) => {
     setPlatforms((prev) => {
@@ -157,7 +143,6 @@ export function StoresView({ onViewGame, favoriteStoreIds = [], onToggleFavorite
           stores={stores}
           selectedStoreId={selectedId}
           onSelectStore={selectStore}
-          onDistancesUpdate={setLiveDistances}
           className="w-full h-full rounded-none"
         />
       </div>
